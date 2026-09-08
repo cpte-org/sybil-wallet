@@ -8,7 +8,13 @@ The canonical contracts are [../ZNS-contract/contracts/ZcashNameService.sol](../
 
 Registration locks one fixed cbZEC deposit, read from the registry, with 365-day initial maturity. Owner-authorized refresh keeps the name current for another 365 days plus 90 days of grace. Updating the address or claiming vested rewards also refreshes it; none resets maturity. Names accrue reward credits immediately, including during grace, and can claim after maturity. Early release forfeits the entire deposit and unvested rewards to other participating names. Without other participants, forfeitures remain in reserve until a later early exit can distribute them. There is no treasury or administrator revenue.
 
-After grace, resolution and reward participation stop; the original owner's funds remain claimable. A reused name gets a new position ID. Old-claims withdrawal is separate from releasing a current name. Releases and withdrawals return **cbZEC on Base**; there is no automatic conversion back to native or shielded ZEC.
+After grace, resolution and reward participation stop; the last NFT owner's funds remain claimable. A reused name gets a new position ID. Old-claims withdrawal is separate from releasing a current name. Releases and withdrawals return **cbZEC on Base**; there is no automatic conversion back to native or shielded ZEC.
+
+An account can register and hold multiple ERC-721 name NFTs. The Names inventory fetches 20 per page and binds management to the selected registration ID. Register influencer names normally, then use **Review name transfer** to donate them to a Base address.
+
+Transfer gives the recipient control, the full locked deposit and all unclaimed rewards, including fractions. Maturity and refresh/grace dates stay unchanged. The old Zcash address clears; the recipient sets their own before receiving payments. A mature gift can be released immediately; an immature gift retains the ordinary early-release penalty. Expired NFTs have an individual withdrawal action. Materialized old claims and previously withdrawn rewards are separate from the gift.
+
+Pending work retains its own ID or exact registration label independently of the inventory. Recovery binds the new NFT protocol and recipient; earlier prototype journals are rejected. The delegated account accepts safe ERC-721 gifts through its receiver callback.
 
 Use FVM with the pinned Flutter **3.41.6** SDK and the repository's normal native build prerequisites:
 
@@ -42,9 +48,9 @@ Intent, commitment secret, funding plan and signed transactions are persisted be
 
 Names holdings show remaining ETH/cbZEC and old deposits/rewards to withdraw. Converted assets stay in that Base account if registration fails. Name payments re-resolve and bind the current position identity before the ordinary Zcash send review.
 
-Validation passed **13 offline Rust core tests**, **2 native wallet identity tests**, and **8 local runtime checks**. The runtime report is [scripts/zns/output/qualification.json](scripts/zns/output/qualification.json); it covers Rust/Solidity commitment parity, EIP-7702 registration and rollback, reorg recovery, management operations, maximum-length registration and executor authorization. It does not exercise paid Zcash funding, live liquidity, Base fees or the complete Flutter signing flow.
+Validation passed **14 offline Rust core tests**, **2 native wallet identity tests**, and **10 local runtime checks**. The runtime report is [scripts/zns/output/qualification.json](scripts/zns/output/qualification.json); it covers Rust/Solidity commitment parity, EIP-7702 registration and rollback, reorg recovery, management operations, maximum-length registration and executor authorization. It does not exercise paid Zcash funding, live liquidity, Base fees or the complete Flutter signing flow.
 
-After the final recovery, fee and quote-expiry fixes, **82 Flutter tests** passed: 36 engine, 10 recovery, 8 confirmed-transaction decoder, 16 data, 8 UI behavior and 4 desktop captures. A separate **4 mobile captures** passed. Scoped analysis was clean, including touched entrypoints and the swap sender; the final **Linux debug build configured for regtest passed**.
+The NFT update passed **94 Flutter main-suite tests** and scoped analysis. **Six separate mobile layout checks** and the final Linux debug build passed; details are recorded in [the implementation handoff](../ZNS-IMPLEMENTATION.md). The tests cover inventory paging, recipient-bound recovery, cleared payment addresses, transfer consent and ownership changes as well as the existing funding and lifecycle checks.
 
 The local runtime check can be reproduced without a fork:
 

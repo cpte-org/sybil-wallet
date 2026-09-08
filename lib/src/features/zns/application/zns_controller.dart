@@ -280,7 +280,7 @@ class ZnsController extends Notifier<ZnsViewData> {
     }),
   );
 
-  void manage(String kind) => unawaited(
+  void manage(String kind, {String recipient = ''}) => unawaited(
     _run(() async {
       final epoch = _epoch, network = _network, currentUa = _ua;
       final engine = _engine;
@@ -310,8 +310,48 @@ class ZnsController extends Notifier<ZnsViewData> {
         name: position?.name ?? '',
         ua: ua,
         kind: kind,
+        recipient: recipient,
       );
       if (epoch == _epoch && _unlocked) _review = review;
+    }),
+  );
+
+  void selectName(String id) => unawaited(
+    _run(() async {
+      final engine = _engine, gateway = _gateway;
+      if (engine == null ||
+          gateway == null ||
+          _review != null ||
+          (engine.operation != null && !engine.operation!.isComplete)) {
+        return;
+      }
+      final value = BigInt.parse(id);
+      if (!(gateway.lastSnapshot?.positions.any((p) => p.positionId == value) ??
+          false)) {
+        throw StateError(
+          'Refresh the name inventory before selecting this registration.',
+        );
+      }
+      if (engine.operation?.isComplete == true) await engine.archive();
+      gateway.selectedPositionId = value;
+      await engine.refresh();
+    }),
+  );
+
+  void namesPage(int offset) => unawaited(
+    _run(() async {
+      final engine = _engine, gateway = _gateway;
+      if (engine == null ||
+          gateway == null ||
+          offset < 0 ||
+          _review != null ||
+          (engine.operation != null && !engine.operation!.isComplete)) {
+        return;
+      }
+      if (engine.operation?.isComplete == true) await engine.archive();
+      gateway.inventoryOffset = offset;
+      gateway.selectedPositionId = null;
+      await engine.refresh();
     }),
   );
 
@@ -504,6 +544,9 @@ class ZnsController extends Notifier<ZnsViewData> {
     onWithdrawClaims: () => manage('withdrawClaims'),
     onUpdateAddress: () => manage('update'),
     onRelease: () => manage('release'),
+    onTransfer: (recipient) => manage('transfer', recipient: recipient),
+    onSelectName: selectName,
+    onNamesPage: namesPage,
     onSaveConfiguration: saveConfiguration,
     onShowRecovery: onShowRecovery,
     onSendToName: onSendToName,
@@ -523,7 +566,12 @@ class ZnsController extends Notifier<ZnsViewData> {
     final chain = locked ? null : _engine?.chain;
     final op = locked ? null : _engine?.operation;
     final review = locked ? null : _review;
-    final owned = chain?.position?.retired == false ? chain?.position : null;
+    final owned =
+        chain?.position?.retired == false &&
+            chain?.position?.owner.toLowerCase() == _owner.toLowerCase()
+        ? chain?.position
+        : null;
+    final inventory = locked ? null : _gateway?.lastSnapshot;
     final phase = op?.phase ?? '';
     final registration = op?.kind == 'register';
     final phases = registration
@@ -534,6 +582,7 @@ class ZnsController extends Notifier<ZnsViewData> {
       'claimRewards' => 'Claim rewards',
       'update' => 'Update Zcash address',
       'release' => 'Release name',
+      'transfer' => 'Transfer name',
       'withdrawClaims' => 'Withdraw old claims',
       _ => 'Register name',
     };
@@ -581,6 +630,22 @@ class ZnsController extends Notifier<ZnsViewData> {
       lookup: locked ? null : _lookup,
       error: locked ? null : _error ?? _engine?.error,
       notice: _notice,
+      names:
+          inventory?.positions
+              .map(
+                (p) => ZnsNameChoice(
+                  p.positionId.toString(),
+                  p.name,
+                  expired: !p.participating,
+                ),
+              )
+              .toList() ??
+          const [],
+      inventoryOffset: inventory?.positionOffset ?? 0,
+      hasMoreNames:
+          inventory != null &&
+          BigInt.from(inventory.positionOffset + inventory.positions.length) <
+              inventory.totalPositions,
       ownedName: owned == null
           ? null
           : ZnsOwnedNameView(
@@ -608,16 +673,24 @@ class ZnsController extends Notifier<ZnsViewData> {
           ? null
           : ZnsReviewView(
               positionId: review.positionId.toString(),
+              recipient: review.kind == 'transfer' ? review.recipient : null,
               name: review.name.isEmpty
                   ? 'Old deposits and rewards'
                   : review.name,
               unifiedAddress: review.unifiedAddress,
               maxZec: _amount(review.maxZatoshi, 8),
-              deposit: _amount(review.requiredTokenUnits, 8),
+              deposit: _amount(
+                review.kind == 'transfer'
+                    ? chain?.deposit ?? BigInt.zero
+                    : review.requiredTokenUnits,
+                8,
+              ),
               maturityAt: review.kind == 'register' || review.maturityAt == 0
                   ? null
                   : _date(review.maturityAt),
-              refreshDueAt: chain == null
+              refreshDueAt: review.kind == 'transfer'
+                  ? (owned == null ? null : _date(owned.refreshDueAt))
+                  : chain == null
                   ? null
                   : _date(chain.timestamp + znsHoldingSeconds),
               exitPreview: preview == null
@@ -640,14 +713,16 @@ class ZnsController extends Notifier<ZnsViewData> {
                         previewAmount('rewardsForfeitedScaled'),
                       ),
                     ),
-              rewardsToClaim: _amount(
-                ((review.kind == 'withdrawClaims'
-                            ? chain?.claimableRewardsScaled
-                            : owned?.rewardCreditScaled) ??
-                        BigInt.zero) ~/
-                    znsRewardScale,
-                8,
-              ),
+              rewardsToClaim: review.kind == 'transfer'
+                  ? _reward(owned?.rewardCreditScaled ?? BigInt.zero)
+                  : _amount(
+                      ((review.kind == 'withdrawClaims'
+                                  ? chain?.claimableRewardsScaled
+                                  : owned?.rewardCreditScaled) ??
+                              BigInt.zero) ~/
+                          znsRewardScale,
+                      8,
+                    ),
               gasReserve:
                   '${_amount(review.maxGasFeeWei, 18)} ETH estimated reserve',
               estimatedDuration: (chain?.eth ?? BigInt.zero) >= review.maxEthWei
@@ -674,6 +749,7 @@ class ZnsController extends Notifier<ZnsViewData> {
                 'withdrawClaims' => ZnsReviewKind.withdrawClaims,
                 'update' => ZnsReviewKind.addressUpdate,
                 'release' => ZnsReviewKind.release,
+                'transfer' => ZnsReviewKind.transfer,
                 _ => ZnsReviewKind.registration,
               },
               canConfirm: !locked && !_busy,

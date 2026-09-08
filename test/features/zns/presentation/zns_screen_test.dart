@@ -30,6 +30,72 @@ void main() {
   bool enabled(WidgetTester tester, String key) =>
       tester.widget<AppButton>(find.byKey(Key(key))).onPressed != null;
 
+  testWidgets(
+    'multiple names select stable IDs and keep registration available',
+    (tester) async {
+      String? selected;
+      await show(
+        tester,
+        ZnsPreviewFixtures.active,
+        callbacks: ZnsCallbacks(onSelectName: (id) => selected = id),
+      );
+      await tester.tap(find.byKey(const Key('zns-select-9')));
+      expect(selected, '9');
+      expect(find.byKey(const Key('zns-name')), findsOneWidget);
+    },
+  );
+  testWidgets(
+    'received NFT has no payment address and clears the transfer recipient on selection change',
+    (tester) async {
+      await show(
+        tester,
+        ZnsPreviewFixtures.active,
+        callbacks: ZnsCallbacks(onTransfer: (_) {}),
+      );
+      await tester.enterText(
+        find.byKey(const Key('zns-transfer-recipient')),
+        '0x3333333333333333333333333333333333333333',
+      );
+      await tester.pump();
+      expect(enabled(tester, 'zns-transfer-review'), isTrue);
+      await show(
+        tester,
+        ZnsPreviewFixtures.received,
+        callbacks: ZnsCallbacks(onTransfer: (_) {}),
+      );
+      expect(enabled(tester, 'zns-transfer-review'), isFalse);
+      expect(
+        find.textContaining('cannot receive payments until'),
+        findsOneWidget,
+      );
+    },
+  );
+  testWidgets(
+    'NFT transfer review requires explicit consent and discloses all attached funds',
+    (tester) async {
+      var calls = 0;
+      await show(
+        tester,
+        ZnsPreviewFixtures.transfer,
+        callbacks: ZnsCallbacks(onConfirmRegistration: () => calls++),
+      );
+      expect(enabled(tester, 'zns-confirm'), isFalse);
+      expect(find.text('Deposit transferred'), findsOneWidget);
+      expect(find.text('Unclaimed rewards transferred'), findsOneWidget);
+      expect(
+        find.textContaining('Maturity and refresh deadlines stay unchanged'),
+        findsOneWidget,
+      );
+      await tester.ensureVisible(find.byKey(const Key('zns-review-consent')));
+      await tester.tap(find.byKey(const Key('zns-review-consent')));
+      await tester.pump();
+      expect(enabled(tester, 'zns-confirm'), isTrue);
+      await tester.ensureVisible(find.byKey(const Key('zns-confirm')));
+      await tester.tap(find.byKey(const Key('zns-confirm')));
+      expect(calls, 1);
+    },
+  );
+
   testWidgets('unconfigured registry cannot request a lookup', (tester) async {
     var calls = 0;
     await show(

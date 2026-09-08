@@ -79,6 +79,7 @@ class ZnsOperation {
     required this.requiredTokenUnits,
     required this.maxGasFeeWei,
     required this.createdAt,
+    this.recipient = '',
     this.phase = 'ready',
     this.pending,
     this.funding,
@@ -89,6 +90,7 @@ class ZnsOperation {
     this.exitPreview,
     this.completedAt,
   });
+  final String recipient;
   final ZnsScope scope;
   final String name;
   final String unifiedAddress;
@@ -114,7 +116,8 @@ class ZnsOperation {
 
   Map<String, dynamic> toJson() => {
     'version': 1,
-    'policy': 'deposit365-refresh365-grace90-forfeitAll-reserveCarry',
+    'policy':
+        'deposit365-refresh365-grace90-forfeitAll-reserveCarry-erc721-multiName-clearUA',
     'scope': scope.toJson(),
     'name': name,
     'unifiedAddress': unifiedAddress,
@@ -122,6 +125,7 @@ class ZnsOperation {
     'secret': secret,
     'commitment': commitment,
     'kind': kind,
+    'recipient': recipient,
     'maxZatoshi': maxZatoshi.toString(),
     'maxEthWei': maxEthWei.toString(),
     'requiredTokenUnits': requiredTokenUnits.toString(),
@@ -143,7 +147,7 @@ class ZnsOperation {
     if (value is! Map<String, dynamic> ||
         value['version'] != 1 ||
         value['policy'] !=
-            'deposit365-refresh365-grace90-forfeitAll-reserveCarry' ||
+            'deposit365-refresh365-grace90-forfeitAll-reserveCarry-erc721-multiName-clearUA' ||
         value.containsKey('years') ||
         value['scope'] is! Map) {
       throw const FormatException('Unsupported ZNS recovery record.');
@@ -192,8 +196,17 @@ class ZnsOperation {
           'update',
           'release',
           'withdrawClaims',
+          'transfer',
         ].contains(kind)) {
       throw const FormatException('Invalid ZNS recovery intent.');
+    }
+    final recipient = value['recipient'] as String? ?? '';
+    if (kind == 'transfer' &&
+        (!RegExp(r'^0x[0-9a-f]{40}$').hasMatch(recipient) ||
+            BigInt.parse(recipient.substring(2), radix: 16) == BigInt.zero ||
+            recipient == expected.owner.toLowerCase() ||
+            recipient == expected.registry.toLowerCase())) {
+      throw const FormatException('Invalid saved NFT transfer recipient.');
     }
     final maxZatoshi = savedAmount(value['maxZatoshi'], maximum: maxZcash);
     final maxEthWei = savedAmount(value['maxEthWei']);
@@ -240,6 +253,7 @@ class ZnsOperation {
             'update',
             'release',
             'withdrawClaims',
+            'transfer',
           ].contains(tx['kind']) ||
           (kind != 'register' && tx['kind'] != kind) ||
           [
@@ -386,6 +400,7 @@ class ZnsOperation {
       }
     }
     return ZnsOperation(
+      recipient: recipient,
       scope: expected,
       name: name,
       unifiedAddress: ua,

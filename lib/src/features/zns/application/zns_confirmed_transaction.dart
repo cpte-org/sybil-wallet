@@ -96,6 +96,22 @@ class _IntentDecoder {
       throw const FormatException('Unsupported confirmed transaction target');
     }
     switch (encoded.selector) {
+      case '42842e0e':
+        encoded.exact(96);
+        final recipient = encoded.abi.address(32);
+        if (encoded.abi.address(0) != owner ||
+            recipient == owner ||
+            recipient == config.registryAddress ||
+            recipient == ZnsNetworkConfig.zeroAddress) {
+          throw const FormatException(
+            'Invalid confirmed NFT transfer recipient',
+          );
+        }
+        return {
+          'kind': 'transfer',
+          'positionId': _position(encoded.abi.word(64)),
+          'recipient': recipient,
+        };
       case 'f14fcbc8':
         encoded.exact(32);
         return {'kind': 'commit', 'commitment': encoded.hexAt(0, 32)};

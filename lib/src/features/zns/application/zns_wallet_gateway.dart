@@ -62,6 +62,8 @@ class ZnsWalletGateway implements ZnsEngineGateway {
   void Function()? _fundingGuard;
   BigInt? _fundingFeeLimit;
   ZnsRegistrySnapshot? lastSnapshot;
+  BigInt? selectedPositionId;
+  int inventoryOffset = 0;
   @override
   bool get supportsAtomic => delegate.isNotEmpty;
   void close() {
@@ -105,10 +107,21 @@ class ZnsWalletGateway implements ZnsEngineGateway {
   }
 
   @override
-  Future<ZnsChainView> snapshot(String? commitment) async {
-    final s = await rpc.registrySnapshot(scope.owner, commitment: commitment);
+  Future<ZnsChainView> snapshot(
+    String? commitment, {
+    BigInt? positionId,
+    String? registrationName,
+  }) async {
+    final s = await rpc.registrySnapshot(
+      scope.owner,
+      commitment: commitment,
+      positionId:
+          positionId ?? (registrationName == null ? selectedPositionId : null),
+      registrationName: registrationName,
+      offset: inventoryOffset,
+    );
     lastSnapshot = s;
-    final p = s.latestPosition;
+    final p = s.selectedPosition;
     final record = p == null
         ? null
         : ZnsRecord(
@@ -327,8 +340,11 @@ class ZnsWalletGateway implements ZnsEngineGateway {
     'maxTotalFeeWei':
         (gasRemaining ?? intent?.maxGasFeeWei ?? BigInt.from(10).pow(18))
             .toString(),
-    'maxTokenAmount': (intent?.requiredTokenUnits ?? BigInt.from(10).pow(30))
-        .toString(),
+    'maxTokenAmount':
+        ((intent?.requiredTokenUnits ?? BigInt.zero) > BigInt.zero
+                ? intent!.requiredTokenUnits
+                : lastSnapshot?.fixedDeposit ?? BigInt.one)
+            .toString(),
   };
   @override
   Future<String> secret() => rust.znsRandomSecret();
@@ -511,6 +527,16 @@ class ZnsWalletGateway implements ZnsEngineGateway {
       );
     }
     final nonce = await rpc.pendingNonce(scope.owner);
+    if (operation['kind'] == 'transfer') {
+      final current = await rpc.positionInfo(intent.positionId);
+      if (current.owner != scope.owner.toLowerCase() ||
+          !current.participating ||
+          current.retired) {
+        throw StateError(
+          'This NFT changed ownership or expired. Review again.',
+        );
+      }
+    }
     if (operation['kind'] == 'release' &&
         !znsSameExitPreview(
           intent.exitPreview,

@@ -53,8 +53,11 @@ class ZnsRegistrySnapshot {
     required this.allowance,
     required this.claimablePrincipal,
     required this.claimableRewardsScaled,
-    required this.latestPosition,
+    required this.selectedPosition,
     required this.commitmentTimestamp,
+    required this.positions,
+    required this.totalPositions,
+    required this.positionOffset,
   });
   final ZnsBlock block;
   final String owner, token;
@@ -68,9 +71,12 @@ class ZnsRegistrySnapshot {
       claimablePrincipal,
       claimableRewardsScaled,
       commitmentTimestamp;
-  final ZnsPosition? latestPosition;
+  final ZnsPosition? selectedPosition;
+  final List<ZnsPosition> positions;
+  final BigInt totalPositions;
+  final int positionOffset;
   String get activeName =>
-      latestPosition?.participating == true ? latestPosition!.name : '';
+      selectedPosition?.participating == true ? selectedPosition!.name : '';
   BigInt registrationCost() => fixedDeposit;
 }
 
@@ -279,7 +285,11 @@ class ZnsRpcClient {
   Future<ZnsRegistrySnapshot> registrySnapshot(
     String owner, {
     String? commitment,
+    BigInt? positionId,
+    String? registrationName,
+    int offset = 0,
   }) async {
+    if (offset < 0) throw const FormatException("Invalid inventory offset");
     owner = znsAddress(owner);
     final at = await block();
     await verifyProtocol(at: at);
@@ -309,7 +319,7 @@ class ZnsRpcClient {
       request('eth_getBalance', [owner, tag]).then(znsParseQuantity),
       _uint(token, '0x70a08231$ownerWord', tag),
       _uint(token, '0xdd62ed3e$ownerWord${ZnsAbi.addressWord(registry)}', tag),
-      _uint(registry, '0xe915e8e8$ownerWord', tag),
+      _uint(registry, '0x70a08231$ownerWord', tag),
       commitment == null
           ? Future.value(BigInt.zero)
           : _uint(
@@ -322,13 +332,44 @@ class ZnsRpcClient {
     if (claims.bytes.length != 64) {
       throw const ZnsDataException('Malformed claimable funds response');
     }
-    final position = values[6] == BigInt.zero
-        ? null
-        : await _positionInfo(values[6], at);
-    if (position != null && position.owner != owner) {
-      throw const ZnsDataException(
-        'Registry position belongs to a different owner',
+    // Bound discovery to twenty owned NFTs, all from one canonical block.
+    final total = values[6];
+    final start = BigInt.from(offset) >= total ? 0 : offset;
+    final count = (total - BigInt.from(start)) > BigInt.from(20)
+        ? 20
+        : (total - BigInt.from(start)).toInt();
+    final ids = await Future.wait(
+      List.generate(
+        count,
+        (i) => _uint(
+          registry,
+          '0x2f745c59$ownerWord${ZnsAbi.uintWord(BigInt.from(start + i))}',
+          tag,
+        ),
+      ),
+    );
+    if (ids.toSet().length != ids.length) {
+      throw const ZnsDataException('Duplicate registry inventory');
+    }
+    final positions = await Future.wait(ids.map((id) => _positionInfo(id, at)));
+    if (positions.any((p) => p.owner != owner || p.retired)) {
+      throw const ZnsDataException('Invalid registry NFT inventory');
+    }
+    var selectedId = positionId;
+    if (registrationName != null) {
+      selectedId = await _uint(
+        registry,
+        ZnsAbi.stringCall('0xef6bc988', registrationName),
+        tag,
       );
+    }
+    final ZnsPosition? position;
+    if (selectedId != null) {
+      position = selectedId == BigInt.zero
+          ? null
+          : await _positionInfo(selectedId, at);
+    } else {
+      position = positions.isEmpty ? null : positions.first;
     }
     await _canonical(at);
     if (values[0] <= BigInt.zero ||
@@ -349,7 +390,10 @@ class ZnsRpcClient {
       nativeBalance: values[3],
       tokenBalance: values[4],
       allowance: values[5],
-      latestPosition: position,
+      selectedPosition: position,
+      positions: positions,
+      totalPositions: total,
+      positionOffset: start,
       claimablePrincipal: claims.word(0),
       claimableRewardsScaled: claims.word(32),
       commitmentTimestamp: values[7],

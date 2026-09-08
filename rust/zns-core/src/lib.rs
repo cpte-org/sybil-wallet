@@ -15,7 +15,7 @@ pub type Result<T> = std::result::Result<T, String>;
 
 pub const CBZEC: &str = "0xB2000000000000000000008501b13360000cb2EC";
 pub const KYBER: &str = "0x6131B5fae19EA4f9D964eAc0408E4408b66337b5";
-pub const PROTOCOL_ID: &str = "0xa55518219db4e9d81a6b8137b3ad6baec1e9e027f20a7b2c2b4854f00341aa04";
+pub const PROTOCOL_ID: &str = "0x32820c0b6a02f887a3de9a376a6e3c69a6b64b309f1bb809161039668d593760";
 
 pub fn address(value: &str) -> Result<Address> {
     value.parse().map_err(|_| "Invalid EVM address".into())
@@ -165,6 +165,11 @@ pub enum Operation {
         #[serde(rename = "unifiedAddress")]
         unified_address: String,
     },
+    Transfer {
+        #[serde(rename = "positionId")]
+        position_id: String,
+        recipient: String,
+    },
     WithdrawClaims {},
     Swap {
         data: String,
@@ -292,6 +297,21 @@ pub fn prepare(config: &Config, owner: &str, operation: &Operation) -> Result<Pr
             abi::setUnifiedAddressCall {
                 positionId: position(position_id)?,
                 unifiedAddress: unified_address.clone(),
+            }
+            .abi_encode()
+        }
+        Operation::Transfer {
+            position_id,
+            recipient,
+        } => {
+            let recipient = address(recipient)?;
+            if recipient == Address::ZERO || recipient == owner || recipient == registry {
+                return Err("Invalid NFT transfer recipient".into());
+            }
+            abi::safeTransferFromCall {
+                from: owner,
+                to: recipient,
+                tokenId: position(position_id)?,
             }
             .abi_encode()
         }

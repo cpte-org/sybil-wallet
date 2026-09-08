@@ -70,7 +70,11 @@ class ZnsChainView {
 }
 
 abstract interface class ZnsEngineGateway {
-  Future<ZnsChainView> snapshot(String? commitment);
+  Future<ZnsChainView> snapshot(
+    String? commitment, {
+    BigInt? positionId,
+    String? registrationName,
+  });
   Future<ZnsRecord?> lookup(String name);
   Future<Map<String, dynamic>> exitPreview(BigInt positionId);
   Future<Map<String, dynamic>> swapQuote(BigInt neededToken, BigInt? maxWei);
@@ -151,7 +155,15 @@ class ZnsEngine {
   Future<void> _save() => journal.save(operation!, accountUuid);
 
   Future<void> refresh() async {
-    chain = await gateway.snapshot(operation?.commitment);
+    final op = operation;
+    chain = await gateway.snapshot(
+      op?.commitment,
+      positionId:
+          op != null && !['register', 'withdrawClaims'].contains(op.kind)
+          ? op.positionId
+          : null,
+      registrationName: op?.kind == 'register' ? op!.name : null,
+    );
     onChange();
   }
 
@@ -197,6 +209,7 @@ class ZnsEngine {
     required String ua,
     BigInt? maxZatoshi,
     String kind = 'register',
+    String recipient = '',
   }) async {
     if (busy) throw StateError('An operation is already being prepared.');
     if (operation != null && !operation!.isComplete) {
@@ -209,6 +222,7 @@ class ZnsEngine {
       'update',
       'release',
       'withdrawClaims',
+      'transfer',
     ].contains(kind)) {
       throw const FormatException('Unsupported Names operation.');
     }
@@ -216,15 +230,13 @@ class ZnsEngine {
     if (maxZatoshi?.isNegative == true) {
       throw const FormatException('Invalid funding budget.');
     }
+    if (operation?.isComplete == true) await archive();
     await refresh();
     final state = chain!;
     if (kind == 'register') {
       final record = await gateway.lookup(name);
       if (record?.participating == true) {
         throw StateError('This name is already registered.');
-      }
-      if (state.owned != null) {
-        throw StateError('This account already has an active name.');
       }
     } else if (kind == 'withdrawClaims') {
       if (state.claimablePrincipal == BigInt.zero &&
@@ -253,6 +265,15 @@ class ZnsEngine {
           'Rewards become available after the initial holding period.',
         );
       }
+    }
+    if (kind == 'transfer' &&
+        (!RegExp(r'^0x[0-9a-fA-F]{40}$').hasMatch(recipient) ||
+            BigInt.parse(recipient.substring(2), radix: 16) == BigInt.zero ||
+            recipient.toLowerCase() == scope.owner.toLowerCase() ||
+            recipient.toLowerCase() == scope.registry.toLowerCase())) {
+      throw const FormatException(
+        'Enter a different valid Base recipient address.',
+      );
     }
     final amount = kind == 'register' ? state.deposit : BigInt.zero;
     final reserve = await gateway.gasBudget(kind);
@@ -291,6 +312,7 @@ class ZnsEngine {
         ? await gateway.exitPreview(positionId)
         : null;
     return ZnsOperation(
+      recipient: recipient.toLowerCase(),
       scope: scope,
       name: name,
       unifiedAddress: ua,
@@ -335,6 +357,10 @@ class ZnsEngine {
     if (op.kind == 'withdrawClaims') {
       return state.claimablePrincipal == BigInt.zero &&
           state.claimableRewardsScaled < znsRewardScale;
+    }
+    if (op.kind == 'transfer') {
+      return state.position?.positionId == op.positionId &&
+          state.position?.owner.toLowerCase() == op.recipient.toLowerCase();
     }
     if (op.kind == 'release') {
       return state.position?.positionId != op.positionId ||
@@ -431,6 +457,7 @@ class ZnsEngine {
     } else if (kind != op.kind ||
         (kind != 'withdrawClaims' &&
             receipt['positionId'] != op.positionId.toString()) ||
+        (kind == 'transfer' && receipt['recipient'] != op.recipient) ||
         (kind == 'update' && receipt['unifiedAddress'] != op.unifiedAddress)) {
       throw StateError(
         'A recovered transaction targets a different name operation. Recovery was retained.',
@@ -458,7 +485,15 @@ class ZnsEngine {
           );
         }
         _checkReceiptIntent(op, current);
+        final correctedFailure =
+            tx['success'] == true && current['success'] == false;
         tx.addAll(current);
+        if (correctedFailure) {
+          await _save();
+          throw StateError(
+            'A saved successful transaction actually reverted. Review the corrected history before retrying.',
+          );
+        }
       }
       if (op.transactions.isNotEmpty) await _save();
       await refresh();
@@ -488,7 +523,7 @@ class ZnsEngine {
       }
       if (op.kind == 'register') {
         final occupied = await gateway.lookup(op.name);
-        if (occupied?.participating == true || state.owned != null) {
+        if (occupied?.participating == true) {
           throw StateError(
             'This name was registered before your reveal. Converted assets remain in your Base account.',
           );
@@ -498,6 +533,7 @@ class ZnsEngine {
         if (position == null ||
             position.positionId != op.positionId ||
             position.retired ||
+            position.owner.toLowerCase() != scope.owner.toLowerCase() ||
             (op.kind != 'release' && !position.participating)) {
           throw StateError(
             'This registration changed or expired. Review its current state before continuing.',
@@ -621,6 +657,7 @@ class ZnsEngine {
         command['unifiedAddress'] = op.unifiedAddress;
       }
       if (op.kind == 'register') command['secret'] = op.secret;
+      if (op.kind == 'transfer') command['recipient'] = op.recipient;
       await _send(op, command);
     } catch (e) {
       error = e.toString();

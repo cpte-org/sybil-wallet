@@ -55,6 +55,36 @@ ZnsOperation _decode(Map<String, dynamic> record) =>
     ZnsOperation.decode(jsonEncode(record), _scope);
 
 void main() {
+  test(
+    'NFT recovery binds the recipient and rejects the old economic policy',
+    () {
+      final record = _record()
+        ..['kind'] = 'transfer'
+        ..['requiredTokenUnits'] = '0'
+        ..['positionId'] = '42'
+        ..['recipient'] = '0x3333333333333333333333333333333333333333';
+      expect(_decode(record).recipient, record['recipient']);
+      for (final recipient in [
+        '',
+        _scope.owner,
+        _scope.registry,
+        '0x${'0' * 40}',
+      ]) {
+        expect(
+          () => _decode({...record, 'recipient': recipient}),
+          throwsFormatException,
+        );
+      }
+      expect(
+        () => _decode({
+          ...record,
+          'policy': 'deposit365-refresh365-grace90-forfeitAll-reserveCarry',
+        }),
+        throwsFormatException,
+      );
+    },
+  );
+
   test('valid pending funding recovery retains exact integer amounts', () {
     final record = _record()
       ..['pending'] = _transaction()

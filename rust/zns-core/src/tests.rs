@@ -62,7 +62,7 @@ fn atomic(swap: Option<Swap>) -> Operation {
 fn protocol_and_old_economics_are_rejected_before_signing() {
     assert_eq!(
         alloy_primitives::keccak256(
-            "ZNS:cbZEC:deposit365:refresh365:grace90:forfeitAll:reserveCarry"
+            "ZNS:cbZEC:deposit365:refresh365:grace90:forfeitAll:reserveCarry:erc721:multiName:clearUA"
         )
         .to_string(),
         PROTOCOL_ID
@@ -253,7 +253,7 @@ fn commitment_matches_viem_and_binds_every_field() {
     );
     assert_eq!(
         expected.to_string(),
-        "0xa42962214a1a54ebe9348a4047cf05ad13cb418372c04c4d1557b05a98b1df39"
+        "0x8d90ae2123bde5ae3e0214905c98cc263d09be57bfbb877ea490b9bf6b9dc476"
     );
     assert_ne!(
         expected,
@@ -637,4 +637,51 @@ fn atomic_swap_uses_existing_partial_balance_and_binds_deadline() {
         *deadline = "0".into();
     }
     assert!(prepare(&c, &key_address(&key()).to_string(), &operation).is_err());
+}
+
+#[test]
+fn nft_transfer_binds_owner_recipient_and_position_without_spending_cbzec() {
+    let c = config();
+    let owner = key_address(&key()).to_string();
+    let recipient = "0x4444444444444444444444444444444444444444";
+    let operation = Operation::Transfer {
+        position_id: "42".into(),
+        recipient: recipient.into(),
+    };
+    let prepared = prepare(&c, &owner, &operation).unwrap();
+    assert_eq!(prepared.to, c.registry);
+    assert_eq!(prepared.value, "0");
+    assert!(prepared.data.starts_with("0x42842e0e"));
+    let decoded =
+        abi::safeTransferFromCall::abi_decode(&bytes(&prepared.data).unwrap(), true).unwrap();
+    assert_eq!(decoded.from, address(&owner).unwrap());
+    assert_eq!(decoded.to, address(recipient).unwrap());
+    assert_eq!(decoded.tokenId, U256::from(42));
+    assert!(sign(&key(), &c, &operation, &tx()).is_ok());
+    for invalid in [
+        owner.as_str(),
+        c.registry.as_str(),
+        "0x0000000000000000000000000000000000000000",
+        "invalid",
+    ] {
+        assert!(prepare(
+            &c,
+            &owner,
+            &Operation::Transfer {
+                position_id: "42".into(),
+                recipient: invalid.into()
+            }
+        )
+        .is_err());
+    }
+    assert!(prepare(
+        &c,
+        &owner,
+        &Operation::Transfer {
+            position_id: "0".into(),
+            recipient: recipient.into()
+        }
+    )
+    .is_err());
+    assert!(serde_json::from_value::<Operation>(serde_json::json!({"kind":"transfer","positionId":"42","recipient":recipient,"from":recipient})).is_err());
 }

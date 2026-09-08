@@ -15,6 +15,8 @@ void runZnsLayoutTests({
     'active': ZnsPreviewFixtures.active,
     'review': ZnsPreviewFixtures.registration,
     'early-release': ZnsPreviewFixtures.earlyRelease,
+    'transfer': ZnsPreviewFixtures.transfer,
+    'received': ZnsPreviewFixtures.received,
     'paused': ZnsPreviewFixtures.paused,
   }.entries) {
     testWidgets('${formFactor.name} ${scenario.key} has no layout overflow', (

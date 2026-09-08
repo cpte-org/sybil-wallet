@@ -24,6 +24,9 @@ class ZnsViewData {
     this.review,
     this.operation,
     this.ownedName,
+    this.names = const [],
+    this.inventoryOffset = 0,
+    this.hasMoreNames = false,
     this.error,
     this.notice,
   });
@@ -47,11 +50,21 @@ class ZnsViewData {
   final ZnsReviewView? review;
   final ZnsOperationView? operation;
   final ZnsOwnedNameView? ownedName;
+  final List<ZnsNameChoice> names;
+  final int inventoryOffset;
+  final bool hasMoreNames;
   final String? error;
   final String? notice;
 
   bool get canWrite =>
       isConfigured && isSoftwareAccount && !isLocked && !isBusy;
+}
+
+@immutable
+class ZnsNameChoice {
+  const ZnsNameChoice(this.positionId, this.name, {this.expired = false});
+  final String positionId, name;
+  final bool expired;
 }
 
 enum ZnsLookupStatus { available, registered, unavailable, loading, failed }
@@ -102,6 +115,7 @@ class ZnsReviewView {
     this.exitPreview,
     this.rewardsToClaim,
     this.positionId,
+    this.recipient,
   });
   final String name;
   final String unifiedAddress;
@@ -123,6 +137,7 @@ class ZnsReviewView {
   final ZnsExitPreview? exitPreview;
   final String? rewardsToClaim;
   final String? positionId;
+  final String? recipient;
 }
 
 enum ZnsReviewKind {
@@ -130,6 +145,7 @@ enum ZnsReviewKind {
   refresh,
   claimRewards,
   addressUpdate,
+  transfer,
   release,
   withdrawClaims,
 }
@@ -258,6 +274,9 @@ class ZnsCallbacks {
     this.onRefreshName,
     this.onClaimRewards,
     this.onRelease,
+    this.onTransfer,
+    this.onSelectName,
+    this.onNamesPage,
     this.onWithdrawClaims,
     this.onUpdateAddress,
     this.onSaveConfiguration,
@@ -276,6 +295,9 @@ class ZnsCallbacks {
   final VoidCallback? onRefreshName;
   final VoidCallback? onClaimRewards;
   final VoidCallback? onRelease;
+  final ValueChanged<String>? onTransfer;
+  final ValueChanged<String>? onSelectName;
+  final ValueChanged<int>? onNamesPage;
   final VoidCallback? onWithdrawClaims;
 
   /// Opens the adapter's address / gas review; this is not an authorization.

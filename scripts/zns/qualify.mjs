@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {spawn, spawnSync} from 'node:child_process';
@@ -23,7 +24,7 @@ function transferFrom(address f,address t,uint256 v)external returns(bool){allow
 contract TestSwap { TestToken immutable token; constructor(TestToken t){token=t;} function buy(uint256 amount)external payable{token.mint(msg.sender,amount);} }
 `};
 const settings={optimizer:{enabled:true,runs:200},viaIR:true,evmVersion:'prague',outputSelection:{'*':{'*':['abi','evm.bytecode.object','evm.deployedBytecode.object']}}};
-const output=JSON.parse(solc.compile(JSON.stringify({language:'Solidity',sources,settings})));
+const output=JSON.parse(solc.compile(JSON.stringify({language:'Solidity',sources,settings}), {import: file => ({contents: readFileSync(path.join(contractRoot,'node_modules',file),'utf8')})}));
 const errors=(output.errors??[]).filter(x=>x.severity==='error');
 assert.equal(errors.length,0,errors.map(x=>x.formattedMessage).join('\n'));
 const artifact=(file,name)=>output.contracts[file][name];
@@ -72,7 +73,7 @@ try {
   const rollbackToken=fork?await deploy(tokenArtifact):token;
   const swap=await deploy(artifact('TestToken.sol','TestSwap'),[rollbackToken]);
   const config={chainId:31337,allowTestChain:true,registry,token,delegate,
-    protocolId:'0xa55518219db4e9d81a6b8137b3ad6baec1e9e027f20a7b2c2b4854f00341aa04',
+    protocolId:'0x32820c0b6a02f887a3de9a376a6e3c69a6b64b309f1bb809161039668d593760',
     maxValueWei:parseEther('1').toString(),maxGasLimit:'3000000',maxFeePerGasWei:'100000000000',maxTotalFeeWei:'100000000000000000',maxTokenAmount:'100000000'};
   const secret='0x'+'11'.repeat(32),ua='local-contract-fixture-address';
   const op={kind:'commit',name:'alice',unifiedAddress:ua,secret};
@@ -121,6 +122,23 @@ try {
   const longReceipt=await send({...reveal,name:longName,unifiedAddress:longUA,secret:longSecret,deadline:String((await pub.getBlock()).timestamp+600n)});
   assert.equal(longReceipt.status,'success');assert(longReceipt.gasUsed<3000000n);
   checks.push(`Maximum-length Rust-signed atomic registration succeeds (${longReceipt.gasUsed} gas)`);
+  const extraSecret='0x'+'44'.repeat(32);
+  await fundToken(6000n);
+  assert.equal((await send({kind:'commit',name:'second',unifiedAddress:ua,secret:extraSecret})).status,'success');
+  await pub.request({method:'evm_increaseTime',params:[61]});await pub.request({method:'evm_mine',params:[]});
+  assert.equal((await send({...reveal,name:'second',secret:extraSecret,deadline:String((await pub.getBlock()).timestamp+600n)})).status,'success');
+  assert.equal(await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'balanceOf',args:[owner]}),2n);
+  checks.push('One software account registers multiple independent NFTs');
+  const giftId=await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'positionIdOf',args:['second']});
+  const giftBefore=await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'positionInfo',args:[giftId]});
+  assert.equal((await send({kind:'transfer',positionId:String(giftId),recipient:account.address})).status,'success');
+  let gift=await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'positionInfo',args:[giftId]});
+  assert.equal(gift[0].toLowerCase(),account.address.toLowerCase());assert.equal(gift[2],'');assert.deepEqual(gift.slice(3),giftBefore.slice(3));
+  const returnGift=await wallet.writeContract({address:registry,abi:registryArtifact.abi,functionName:'safeTransferFrom',args:[account.address,owner,giftId]});
+  assert.equal((await pub.waitForTransactionReceipt({hash:returnGift})).status,'success');
+  gift=await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'positionInfo',args:[giftId]});
+  assert.equal(gift[0].toLowerCase(),owner.toLowerCase());assert.equal(gift[2],'');assert.deepEqual(gift.slice(3),giftBefore.slice(3));
+  checks.push('Rust-signed NFT gift and safe return to a delegated account preserve financial rights and dates');
   const buy=encodeFunctionData({abi:parseAbi(['function buy(uint256 amount) payable']),functionName:'buy',args:[7000n]});
   const failing=encodeFunctionData({abi:registryArtifact.abi,functionName:'register',args:['alice',ua,'0x'+'22'.repeat(32)]});
   const before=await pub.readContract({address:rollbackToken,abi:tokenArtifact.abi,functionName:'balanceOf',args:[owner]});

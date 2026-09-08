@@ -32,8 +32,45 @@ abstract final class ZnsPreviewFixtures {
     claimableRewards: '0.002',
     canWithdrawClaims: true,
     ownedName: owned,
+    names: [ZnsNameChoice('7', 'river'), ZnsNameChoice('9', 'zooko')],
     baseRecoveryDescription:
         'Development fixture only. No real wallet or funds are connected.',
+  );
+  static const transfer = ZnsViewData(
+    accountId: 'preview',
+    isConfigured: true,
+    review: ZnsReviewView(
+      name: 'river',
+      unifiedAddress: '',
+      deposit: '0.1',
+      maxZec: '0',
+      gasReserve: '0.00001',
+      estimatedDuration: 'A few seconds',
+      kind: ZnsReviewKind.transfer,
+      positionId: '7',
+      recipient: '0x3333333333333333333333333333333333333333',
+      rewardsToClaim: '0.00340000000000000000000000000001',
+      maturityAt: '8 September 2027',
+      refreshDueAt: '8 September 2027',
+      canConfirm: true,
+    ),
+  );
+  static const received = ZnsViewData(
+    accountId: 'preview',
+    isConfigured: true,
+    walletUnifiedAddress: address,
+    names: [ZnsNameChoice('9', 'zooko')],
+    ownedName: ZnsOwnedNameView(
+      positionId: '9',
+      name: 'zooko',
+      unifiedAddress: '',
+      maturityAt: '8 September 2027',
+      refreshDueAt: '8 September 2027',
+      graceEndsAt: '7 December 2027',
+      deposit: '0.1',
+      accruedRewards: '0',
+      claimableRewards: '0',
+    ),
   );
   static const registration = ZnsViewData(
     accountId: 'preview',

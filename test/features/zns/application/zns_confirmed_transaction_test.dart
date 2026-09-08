@@ -92,6 +92,26 @@ Map<String, dynamic> _decode(Map<String, dynamic> tx) =>
 
 void main() {
   test(
+    'NFT receipt binds owner, recipient and stable ID with canonical calldata',
+    () {
+      const recipient = '0x4444444444444444444444444444444444444444';
+      final input =
+          '0x42842e0e${_owner.substring(2).padLeft(64, '0')}${recipient.substring(2).padLeft(64, '0')}${'2a'.padLeft(64, '0')}';
+      final tx = _transaction('refresh')..['input'] = input;
+      expect(_decode(tx)['kind'], 'transfer');
+      expect(_decode(tx)['recipient'], recipient);
+      expect(_decode(tx)['positionId'], '42');
+      for (final bad in [
+        '${input}00',
+        input.replaceRange(10, 74, recipient.substring(2).padLeft(64, '0')),
+        input.replaceRange(74, 138, _owner.substring(2).padLeft(64, '0')),
+      ]) {
+        expect(() => _decode({...tx, 'input': bad}), throwsFormatException);
+      }
+    },
+  );
+
+  test(
     'existing dry Kyber provider payload remains compatible with strict decoding',
     () {
       final fixture =

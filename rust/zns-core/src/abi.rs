@@ -13,6 +13,7 @@ sol! {
     function release(uint256 positionId);
     function setUnifiedAddress(uint256 positionId, string unifiedAddress);
     function withdrawClaims();
+    function safeTransferFrom(address from, address to, uint256 tokenId);
     function approve(address spender, uint256 amount);
     function cbZEC() external view returns (address);
     function protocolId() external view returns (bytes32);
@@ -24,7 +25,8 @@ sol! {
     function allowance(address owner, address spender) external view returns (uint256);
     function commitments(address owner, bytes32 commitment) external view returns (uint64);
     function claimableOf(address owner) external view returns (uint256 principal, uint256 rewardsScaled);
-    function latestPositionOf(address owner) external view returns (uint256);
+    function tokenOfOwnerByIndex(address owner, uint256 index) external view returns (uint256);
+    function ownerOf(uint256 tokenId) external view returns (address);
     function positionIdOf(string name) external view returns (uint256);
     function positionInfo(uint256 positionId) external view returns (address owner, string name, string unifiedAddress, uint64 registeredAt, uint64 maturityAt, uint64 refreshDueAt, uint64 graceEndsAt, bool participating, bool retired, uint256 rewardCreditScaled);
     function exitPreview(uint256 positionId) external view returns (bool early, uint256 principalReturned, uint256 rewardsReturned, uint256 principalForfeited, uint256 rewardsForfeitedScaled);
@@ -120,8 +122,13 @@ pub fn read_call(method: &str, args: &Value) -> Result<String> {
             owner: address(field("owner")?)?,
         }
         .abi_encode(),
-        "latestPositionOf" => latestPositionOfCall {
+        "tokenOfOwnerByIndex" => tokenOfOwnerByIndexCall {
             owner: address(field("owner")?)?,
+            index: number(field("index")?)?,
+        }
+        .abi_encode(),
+        "ownerOf" => ownerOfCall {
+            tokenId: number(field("positionId")?)?,
         }
         .abi_encode(),
         "positionIdOf" => positionIdOfCall { name: name()? }.abi_encode(),
@@ -145,12 +152,17 @@ pub fn decode_result(method: &str, data: &str) -> Result<Value> {
     let data = bytes(data)?;
     let err = |_| "Invalid ABI response".to_string();
     Ok(match method {
-        "cbZEC" => json!(Address::abi_decode(&data, true)
+        "cbZEC" | "ownerOf" => json!(Address::abi_decode(&data, true)
             .map_err(err)?
             .to_checksum(None)),
         "protocolId" => json!(B256::abi_decode(&data, true).map_err(err)?.to_string()),
-        "fixedDeposit" | "MIN_COMMITMENT_AGE" | "MAX_COMMITMENT_AGE" | "balanceOf"
-        | "allowance" | "latestPositionOf" | "positionIdOf" => {
+        "fixedDeposit"
+        | "MIN_COMMITMENT_AGE"
+        | "MAX_COMMITMENT_AGE"
+        | "balanceOf"
+        | "allowance"
+        | "tokenOfOwnerByIndex"
+        | "positionIdOf" => {
             json!(U256::abi_decode(&data, true).map_err(err)?.to_string())
         }
         "decimals" => json!(

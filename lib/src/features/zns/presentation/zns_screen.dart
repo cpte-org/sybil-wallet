@@ -23,6 +23,7 @@ class ZnsScreen extends StatefulWidget {
 class _ZnsScreenState extends State<ZnsScreen> {
   final _name = TextEditingController();
   final _budget = TextEditingController();
+  final _recipient = TextEditingController();
   bool _acceptedReview = false;
   bool _showBalances = false;
   bool _showSettings = false;
@@ -53,6 +54,11 @@ class _ZnsScreenState extends State<ZnsScreen> {
       _acceptedReview = false;
       _showBalances = false;
     }
+    if (oldWidget.data.accountId != data.accountId ||
+        oldWidget.data.baseOwnerAddress != data.baseOwnerAddress ||
+        oldWidget.data.ownedName?.positionId != data.ownedName?.positionId) {
+      _recipient.clear();
+    }
     if (_approvalKey(oldWidget.data.review) != _approvalKey(data.review)) {
       _acceptedReview = false;
     }
@@ -64,6 +70,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
           review.kind,
           review.name,
           review.positionId,
+          review.recipient,
           review.unifiedAddress,
           review.maxZec,
           review.deposit,
@@ -85,6 +92,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
   void dispose() {
     _name.dispose();
     _budget.dispose();
+    _recipient.dispose();
     super.dispose();
   }
 
@@ -227,6 +235,10 @@ class _ZnsScreenState extends State<ZnsScreen> {
                     _reviewCard(review),
                     const SizedBox(height: AppSpacing.md),
                   ],
+                  if (data.names.isNotEmpty) ...[
+                    _inventoryCard(),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
                   if (data.ownedName case final owned?) ...[
                     _ownedCard(owned),
                     const SizedBox(height: AppSpacing.md),
@@ -294,8 +306,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
             const SizedBox(height: AppSpacing.md),
             _lookupResult(lookup),
           ],
-          if (available &&
-              (data.ownedName == null || data.ownedName!.isExpired)) ...[
+          if (available) ...[
             const SizedBox(height: AppSpacing.md),
             _divider(),
             const SizedBox(height: AppSpacing.md),
@@ -391,7 +402,8 @@ class _ZnsScreenState extends State<ZnsScreen> {
         if (registered && lookup.unifiedAddress.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.sm),
           _Address(label: 'Registered address', address: lookup.unifiedAddress),
-          if (actions.onSendToName != null) ...[
+          if (actions.onSendToName != null &&
+              lookup.unifiedAddress.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.sm),
             AppButton(
               key: const Key('zns-send-to-name'),
@@ -417,10 +429,12 @@ class _ZnsScreenState extends State<ZnsScreen> {
       ZnsReviewKind.claimRewards => 'reward claim',
       ZnsReviewKind.addressUpdate => 'address update',
       ZnsReviewKind.release => 'name release',
+      ZnsReviewKind.transfer => 'NFT transfer',
       ZnsReviewKind.withdrawClaims => 'old claims withdrawal',
     };
     final registering = review.kind == ZnsReviewKind.registration;
     final release = review.kind == ZnsReviewKind.release;
+    final transferring = review.kind == ZnsReviewKind.transfer;
     final withdrawing = review.kind == ZnsReviewKind.withdrawClaims;
     return _Card(
       child: Column(
@@ -435,9 +449,13 @@ class _ZnsScreenState extends State<ZnsScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          if (registering || withdrawing)
+          if (registering || withdrawing || transferring)
             _detail(
-              withdrawing ? 'Principal to withdraw' : 'Registration deposit',
+              withdrawing
+                  ? 'Principal to withdraw'
+                  : transferring
+                  ? 'Deposit transferred'
+                  : 'Registration deposit',
               '${review.deposit} cbZEC',
             ),
           if (review.maturityAt case final date?)
@@ -447,7 +465,12 @@ class _ZnsScreenState extends State<ZnsScreen> {
           if (review.refreshDueAt case final date?)
             _detail('Next refresh due', date),
           if (review.rewardsToClaim case final rewards?)
-            _detail('Rewards to receive', '$rewards cbZEC'),
+            _detail(
+              transferring
+                  ? 'Unclaimed rewards transferred'
+                  : 'Rewards to receive',
+              '$rewards cbZEC',
+            ),
           if (review.exitPreview case final exit?) ...[
             _detail(
               'Deposit returned',
@@ -482,7 +505,12 @@ class _ZnsScreenState extends State<ZnsScreen> {
           if (review.quoteExpiresIn case final expiry?)
             _detail('Quote expires', expiry),
           const SizedBox(height: AppSpacing.sm),
-          if (!release && !withdrawing)
+          if (transferring)
+            _Address(
+              label: 'Recipient Base address',
+              address: review.recipient ?? '',
+            ),
+          if (!release && !withdrawing && !transferring)
             _Address(
               label: 'Public receiving address',
               address: review.unifiedAddress,
@@ -498,6 +526,13 @@ class _ZnsScreenState extends State<ZnsScreen> {
               text: review.exitPreview?.early == true
                   ? 'You will receive no deposit or unvested rewards. Both are allocated to other eligible names, or held in the contract reserve if none remain. Another person can register your released name.'
                   : 'Your deposit and vested rewards will return to your Base account. Another person can register your released name. Network and conversion costs are not refunded.',
+            )
+          else if (transferring)
+            const _Notice(
+              icon: AppIcons.help,
+              title: 'Transfer the name and its funds',
+              text:
+                  'The recipient receives this NFT, its locked deposit and all unclaimed rewards. You receive no refund. Maturity and refresh deadlines stay unchanged. The payment address clears until the recipient sets theirs. There is no transfer penalty; network fees still apply.',
             )
           else if (withdrawing)
             const _Notice(
@@ -547,7 +582,9 @@ class _ZnsScreenState extends State<ZnsScreen> {
                 ? (value) => setState(() => _acceptedReview = value ?? false)
                 : null,
             title: Text(
-              release
+              transferring
+                  ? 'I approve transferring this name, its deposit and all unclaimed rewards to the displayed Base address.'
+                  : release
                   ? 'I approve releasing this name, the displayed returns and forfeitures, and this spending limit.'
                   : withdrawing
                   ? 'I approve withdrawing these old claims and this spending limit.'
@@ -731,6 +768,59 @@ class _ZnsScreenState extends State<ZnsScreen> {
     );
   }
 
+  Widget _inventoryCard() => _Card(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _title('Your names'),
+        const SizedBox(height: AppSpacing.s),
+        ...data.names.map(
+          (item) => ListTile(
+            key: Key('zns-select-${item.positionId}'),
+            title: Text(
+              '${item.name}.zec',
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.bodyMedium.copyWith(
+                color: context.colors.text.primary,
+              ),
+            ),
+            subtitle: Text(
+              item.expired
+                  ? 'Expired — funds withdrawable'
+                  : 'Active registration',
+              style: AppTypography.bodySmall.copyWith(
+                color: context.colors.text.secondary,
+              ),
+            ),
+            selected: item.positionId == data.ownedName?.positionId,
+            onTap: data.canWrite && _editing
+                ? () => actions.onSelectName?.call(item.positionId)
+                : null,
+          ),
+        ),
+        Wrap(
+          spacing: AppSpacing.s,
+          children: [
+            AppButton(
+              onPressed: data.canWrite && _editing && data.inventoryOffset > 0
+                  ? () => actions.onNamesPage?.call(data.inventoryOffset - 20)
+                  : null,
+              variant: AppButtonVariant.ghost,
+              child: const Text('Previous names'),
+            ),
+            AppButton(
+              onPressed: data.canWrite && _editing && data.hasMoreNames
+                  ? () => actions.onNamesPage?.call(data.inventoryOffset + 20)
+                  : null,
+              variant: AppButtonVariant.ghost,
+              child: const Text('Next names'),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+
   Widget _ownedCard(ZnsOwnedNameView owned) => _Card(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -770,7 +860,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
             icon: AppIcons.history,
             title: 'This registration has expired',
             text:
-                'Ownership, resolution and new rewards have ended. Your deposit and earned rewards remain available through old claims, even if someone else registers this name.',
+                'Name rights, resolution and new rewards have ended. Withdraw this registration to receive its deposit and earned rewards. If another person registers the label first, your funds move to old claims.',
           )
         else if (owned.isInGrace)
           const _Notice(
@@ -790,7 +880,21 @@ class _ZnsScreenState extends State<ZnsScreen> {
           'Refreshes, address updates and reward claims never restart your initial holding period. Rewards may be zero; there is no guaranteed yield.',
         ),
         const SizedBox(height: AppSpacing.md),
-        _Address(label: 'Registered address', address: owned.unifiedAddress),
+        if (owned.unifiedAddress.isEmpty)
+          const _Notice(
+            icon: AppIcons.help,
+            title: 'Set your payment address',
+            text:
+                'This transferred name cannot receive payments until you set your own Zcash address.',
+          )
+        else
+          _Address(label: 'Registered address', address: owned.unifiedAddress),
+        if (owned.isExpired)
+          AppButton(
+            key: const Key('zns-withdraw-expired'),
+            onPressed: data.canWrite && !_hasPending ? actions.onRelease : null,
+            child: const Text('Withdraw expired registration'),
+          ),
         if (!owned.isExpired) ...[
           const SizedBox(height: AppSpacing.md),
           Wrap(
@@ -825,6 +929,29 @@ class _ZnsScreenState extends State<ZnsScreen> {
                 child: const Text('Update address'),
               ),
             ],
+          ),
+          const SizedBox(height: AppSpacing.s),
+          AppTextField(
+            key: const Key('zns-transfer-recipient'),
+            controller: _recipient,
+            label: 'Recipient Base address',
+            hintText: '0x…',
+            enabled: data.canWrite && _editing,
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: AppSpacing.s),
+          AppButton(
+            key: const Key('zns-transfer-review'),
+            onPressed:
+                data.canWrite &&
+                    _editing &&
+                    RegExp(
+                      r'^0x[0-9a-fA-F]{40}$',
+                    ).hasMatch(_recipient.text.trim())
+                ? () => actions.onTransfer?.call(_recipient.text.trim())
+                : null,
+            variant: AppButtonVariant.secondary,
+            child: const Text('Review name transfer'),
           ),
           const SizedBox(height: AppSpacing.s),
           AppButton(
@@ -899,7 +1026,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
     ),
   );
   Widget _eyebrow(String text) => Text(
-    text.toLowerCase().replaceRange(0, 1, text[0]),
+    text.toLowerCase().replaceRange(0, 1, text[0]).replaceAll('nft', 'NFT'),
     style: AppTypography.labelSmall.copyWith(
       color: context.colors.text.secondary,
     ),

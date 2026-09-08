@@ -35,6 +35,8 @@ class Gateway implements ZnsEngineGateway {
   BigInt allowance = BigInt.from(500), claimable = BigInt.zero;
   BigInt swapValue = BigInt.from(1000), fundingZatoshi = BigInt.from(100);
   ZnsRecord? owned, occupied;
+  BigInt? requestedId;
+  String? requestedName;
   @override
   bool supportsAtomic = false;
   final signs = <Map<String, dynamic>>[];
@@ -50,19 +52,28 @@ class Gateway implements ZnsEngineGateway {
   void Function()? beforeFunding, beforeBroadcast;
 
   @override
-  Future<ZnsChainView> snapshot(String? commitment) async => ZnsChainView(
-    timestamp: now,
-    deposit: BigInt.from(500),
-    eth: eth,
-    token: token,
-    allowance: allowance,
-    claimablePrincipal: claimable,
-    claimableRewardsScaled: BigInt.zero,
-    minAge: minAge,
-    maxAge: maxAge,
-    commitAt: commitAt,
-    position: owned,
-  );
+  Future<ZnsChainView> snapshot(
+    String? commitment, {
+    BigInt? positionId,
+    String? registrationName,
+  }) async {
+    requestedId = positionId;
+    requestedName = registrationName;
+    return ZnsChainView(
+      timestamp: now,
+      deposit: BigInt.from(500),
+      eth: eth,
+      token: token,
+      allowance: allowance,
+      claimablePrincipal: claimable,
+      claimableRewardsScaled: BigInt.zero,
+      minAge: minAge,
+      maxAge: maxAge,
+      commitAt: commitAt,
+      position: owned,
+    );
+  }
+
   @override
   Future<ZnsRecord?> lookup(String name) async => occupied;
   @override
@@ -259,6 +270,98 @@ void main() {
     engines.clear();
   });
 
+  test('another owned NFT does not prevent a new registration', () async {
+    gateway.owned = record();
+    final op = await engine.prepare(name: 'bob', ua: 'u1synthetic');
+    expect(op.name, 'bob');
+    await engine.authorize(op);
+    expect(gateway.requestedName, 'bob');
+    expect(gateway.signs.single['kind'], 'register');
+  });
+
+  test(
+    'transfer persists recipient and binds management to its stable ID',
+    () async {
+      const recipient = '0x3333333333333333333333333333333333333333';
+      gateway.owned = record(id: 42);
+      final op = await engine.prepare(
+        name: 'alice',
+        ua: '',
+        kind: 'transfer',
+        recipient: recipient,
+      );
+      await engine.authorize(op);
+      expect(gateway.requestedId, BigInt.from(42));
+      expect(gateway.signs.single['kind'], 'transfer');
+      expect(gateway.signs.single['recipient'], recipient);
+      expect(gateway.signs.single['positionId'], '42');
+      expect((await ZnsJournal(storage).load(scope))!.recipient, recipient);
+      gateway.receipts[op.pending!['hash']] = {
+        ...mined(),
+        'verifiedIntent': true,
+        'kind': 'transfer',
+        'positionId': '42',
+        'recipient': recipient,
+        'value': '0',
+        'feeCeiling': '10',
+      };
+      gateway.owned = record(
+        id: 42,
+        owner: recipient,
+        ua: 'u1recipientsnewaddress',
+      );
+      await engine.advance();
+      expect(op.isComplete, isTrue);
+      expect(gateway.signs, hasLength(1));
+    },
+  );
+
+  test(
+    'transfer rejects invalid recipients and changed or expired ownership',
+    () async {
+      gateway.owned = record();
+      for (final recipient in [
+        '',
+        scope.owner,
+        scope.registry,
+        '0x${'0' * 40}',
+      ]) {
+        await expectLater(
+          engine.prepare(
+            name: 'alice',
+            ua: '',
+            kind: 'transfer',
+            recipient: recipient,
+          ),
+          throwsFormatException,
+        );
+      }
+      final op = await engine.prepare(
+        name: 'alice',
+        ua: '',
+        kind: 'transfer',
+        recipient: '0x3333333333333333333333333333333333333333',
+      );
+      gateway.owned = record(
+        owner: '0x4444444444444444444444444444444444444444',
+      );
+      await engine.authorize(op);
+      expect(gateway.signs, isEmpty);
+      expect(engine.authorized, isFalse);
+      await engine.archive();
+      gateway.owned = record(participating: false);
+      await expectLater(
+        engine.prepare(
+          name: 'alice',
+          ua: '',
+          kind: 'transfer',
+          recipient: '0x3333333333333333333333333333333333333333',
+        ),
+        throwsStateError,
+      );
+    },
+  );
+
   test('secret and signed bytes are durable before first broadcast', () async {
     gateway.commitAt = 0;
     gateway.beforeBroadcast = () {
@@ -416,7 +519,7 @@ void main() {
       expect(op.isComplete, isFalse);
       expect(engine.authorized, isFalse);
       expect(gateway.signs, isEmpty);
-      expect(engine.error, contains('before your reveal'));
+      expect(engine.error, contains('actually reverted'));
     },
   );
 

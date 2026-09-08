@@ -48,6 +48,8 @@ class RpcFixture implements ZnsHttpTransport {
       wrongId = false,
       receiptReorg = false;
   int receiptReads = 0;
+  int inventorySize = 1, lookupId = 42;
+  bool enumerate = false;
   Object? overridePosition;
   @override
   void close() {}
@@ -104,9 +106,19 @@ class RpcFixture implements ZnsHttpTransport {
           '0xf76e947b' => tuple([500]),
           '0x2e4f692a' => tuple([60]),
           '0x8ccb9ea6' => tuple([86400]),
-          '0x70a08231' => tuple([200]),
+          '0x70a08231' => tuple([
+            (params[0] as Map)['to'] == registry ? inventorySize : 200,
+          ]),
           '0xdd62ed3e' => tuple([500]),
-          '0xe915e8e8' => tuple([42]),
+          '0x2f745c59' => tuple([
+            enumerate
+                ? 1 +
+                      int.parse(
+                        (params[0] as Map)['data'].toString().substring(74),
+                        radix: 16,
+                      )
+                : 42,
+          ]),
           '0x8903ab9d' => tuple([
             25,
             ZnsNetworkConfig.rewardScale + BigInt.one,
@@ -133,7 +145,7 @@ class RpcFixture implements ZnsHttpTransport {
             ZnsNetworkConfig.rewardScale + BigInt.from(7),
           ]),
           '0x8ee9065d' => tuple([owner, 'u1publicfixture', 120, 1]),
-          '0xef6bc988' => tuple([42]),
+          '0xef6bc988' => tuple([lookupId]),
           _ => throw StateError('Unexpected selector $selector'),
         };
       default:
@@ -149,6 +161,103 @@ class RpcFixture implements ZnsHttpTransport {
 
 void main() {
   test(
+    'inventory pages are bounded and operation identity is independent of the page',
+    () async {
+      final transport = RpcFixture()
+        ..inventorySize = 23
+        ..enumerate = true;
+      final rpc = ZnsRpcClient(configuration(), transport: transport);
+      final first = await rpc.registrySnapshot(owner);
+      expect(first.positions, hasLength(20));
+      expect(first.totalPositions, BigInt.from(23));
+      expect(
+        transport.selectors.where((s) => s == '0x2f745c59'),
+        hasLength(20),
+      );
+      final second = await rpc.registrySnapshot(
+        owner,
+        offset: 20,
+        positionId: BigInt.one,
+      );
+      expect(second.positions.map((p) => p.positionId), [
+        BigInt.from(21),
+        BigInt.from(22),
+        BigInt.from(23),
+      ]);
+      expect(second.selectedPosition!.positionId, BigInt.one);
+      transport.lookupId = 77;
+      final registering = await rpc.registrySnapshot(
+        owner,
+        registrationName: 'bob',
+      );
+      expect(registering.selectedPosition!.positionId, BigInt.from(77));
+      transport.lookupId = 0;
+      expect(
+        (await rpc.registrySnapshot(
+          owner,
+          registrationName: 'bob',
+        )).selectedPosition,
+        isNull,
+      );
+      expect((await rpc.registrySnapshot(owner, offset: 40)).positionOffset, 0);
+      expect(transport.readTags.every((tag) => tag == '0xa'), isTrue);
+    },
+  );
+  test(
+    'duplicate inventory entries and foreign owners are rejected; empty address is valid',
+    () async {
+      final duplicate = RpcFixture()..inventorySize = 2;
+      await expectLater(
+        ZnsRpcClient(
+          configuration(),
+          transport: duplicate,
+        ).registrySnapshot(owner),
+        throwsA(isA<ZnsDataException>()),
+      );
+      final foreign = RpcFixture()
+        ..overridePosition = tuple([
+          registry,
+          'alice',
+          '',
+          100,
+          115,
+          110,
+          120,
+          1,
+          0,
+          BigInt.zero,
+        ]);
+      await expectLater(
+        ZnsRpcClient(
+          configuration(),
+          transport: foreign,
+        ).registrySnapshot(owner),
+        throwsA(isA<ZnsDataException>()),
+      );
+      final received = RpcFixture()
+        ..overridePosition = tuple([
+          owner,
+          'alice',
+          '',
+          100,
+          115,
+          110,
+          120,
+          1,
+          0,
+          BigInt.zero,
+        ]);
+      expect(
+        (await ZnsRpcClient(
+          configuration(),
+          transport: received,
+        ).registrySnapshot(owner)).selectedPosition!.unifiedAddress,
+        '',
+      );
+    },
+  );
+
+  test(
     'snapshot reads fixed deposit and scaled claims at one canonical block',
     () async {
       final transport = RpcFixture();
@@ -162,10 +271,10 @@ void main() {
         snapshot.claimableRewardsScaled,
         ZnsNetworkConfig.rewardScale + BigInt.one,
       );
-      expect(snapshot.latestPosition!.maturityAt, BigInt.from(115));
-      expect(snapshot.latestPosition!.refreshDueAt, BigInt.from(110));
-      expect(snapshot.latestPosition!.inGrace, isTrue);
-      expect(snapshot.latestPosition!.mature, isFalse);
+      expect(snapshot.selectedPosition!.maturityAt, BigInt.from(115));
+      expect(snapshot.selectedPosition!.refreshDueAt, BigInt.from(110));
+      expect(snapshot.selectedPosition!.inGrace, isTrue);
+      expect(snapshot.selectedPosition!.mature, isFalse);
       expect(snapshot.activeName, 'alice');
       expect(transport.readTags.every((tag) => tag == '0xa'), isTrue);
       expect(transport.selectors, isNot(contains('0x1dfda2e7')));
