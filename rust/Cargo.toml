@@ -8,6 +8,7 @@ crate-type = ["cdylib", "staticlib", "rlib"]
 
 [dependencies]
 flutter_rust_bridge = "=2.11.1"
+vizor-zns-core = { path = "zns-core" }
 
 zcash_script = "0.4.3"
 voting-crypto-deps = { version = "=0.2.2" }

@@ -16,6 +16,7 @@ import '../core/security/software_wallet_secret.dart';
 import '../core/storage/app_secure_store.dart';
 import '../core/storage/wallet_paths.dart';
 import '../features/swap/providers/swap_activity_store.dart';
+import '../features/zns/application/zns_lifecycle_guard.dart';
 import '../features/migration/services/ironwood_migration_background_credential_store.dart';
 import '../features/migration/services/ironwood_migration_operation_registry.dart';
 import '../features/voting/voting_flow_models.dart';
@@ -538,6 +539,7 @@ class AccountNotifier extends AsyncNotifier<AccountState> {
   /// before the wallet delete. Durable voting rows, hotkeys, and other
   /// account-scoped sidecars are cleared after the wallet account is deleted.
   Future<void> removeAccount(String uuid) async {
+    await ZnsLifecycleGuard.check(uuid);
     ref.read(votingSubmissionGuardProvider.notifier).throwIfActive();
     final prev = state.value ?? const AccountState();
     final targetIndex = prev.accounts.indexWhere((a) => a.uuid == uuid);
@@ -695,6 +697,9 @@ class AccountNotifier extends AsyncNotifier<AccountState> {
   /// Once the durable wallet data is gone, the Tor route is returned to Direct
   /// and its on-disk state is cleared too — see [clearTorPrivacyStateForReset].
   Future<void> resetWallet() async {
+    for (final account in state.value?.accounts ?? const <AccountInfo>[]) {
+      await ZnsLifecycleGuard.check(account.uuid, fullReset: true);
+    }
     ref.read(votingSubmissionGuardProvider.notifier).throwIfActive();
 
     final shareTracking = ref.read(votingShareTrackingRegistryProvider);

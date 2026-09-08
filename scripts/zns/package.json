@@ -1,0 +1,11 @@
+{
+  "name": "vizor-zns-local-qualification",
+  "private": true,
+  "type": "module",
+  "scripts": {"test": "node qualify.mjs"},
+  "devDependencies": {
+    "@foundry-rs/anvil": "1.7.1",
+    "solc": "0.8.34",
+    "viem": "2.47.1"
+  }
+}

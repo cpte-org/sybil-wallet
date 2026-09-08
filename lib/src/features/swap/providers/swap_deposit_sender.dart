@@ -29,9 +29,13 @@ abstract interface class SwapDepositSender {
 }
 
 class RustSwapDepositSender implements SwapDepositSender {
-  RustSwapDepositSender(this._ref);
+  RustSwapDepositSender(this._ref, {this.beforeSoftwareSign});
 
   final Ref _ref;
+
+  /// Optional authorization and actual proposal fee check for a composed workflow. Ordinary
+  /// swaps retain their existing review flow when this callback is absent.
+  final void Function(BigInt feeZatoshi)? beforeSoftwareSign;
 
   @override
   Future<BigInt> estimateZecDepositFee({
@@ -129,6 +133,7 @@ class RustSwapDepositSender implements SwapDepositSender {
       );
 
       if (Platform.isMacOS) {
+        beforeSoftwareSign?.call(proposal.feeZatoshi);
         final password = _ref
             .read(appSecurityProvider.notifier)
             .requireSessionPasswordForNativeSecretUse();
@@ -149,6 +154,7 @@ class RustSwapDepositSender implements SwapDepositSender {
 
         late final Future<rust_sync.ExecuteProposalResult> resultFuture;
         try {
+          beforeSoftwareSign?.call(proposal.feeZatoshi);
           resultFuture = rust_sync.executeProposal(
             dbPath: dbPath,
             lightwalletdUrl: endpoint.normalizedLightwalletdUrl,

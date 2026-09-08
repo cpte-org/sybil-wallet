@@ -5,6 +5,7 @@ pub mod simple;
 pub mod sync;
 pub mod voting;
 pub mod wallet;
+pub mod zns;
 
 mod voting_helpers;
 

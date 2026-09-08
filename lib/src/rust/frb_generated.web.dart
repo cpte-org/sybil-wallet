@@ -13,6 +13,7 @@ import 'api/simple.dart';
 import 'api/sync.dart';
 import 'api/voting.dart';
 import 'api/wallet.dart';
+import 'api/zns.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';

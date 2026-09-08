@@ -38,6 +38,9 @@ copy-review-viewer.html
 # Rust
 rust/target/
 rust/build/
+rust/zns-core/target/
+scripts/zns/node_modules/
+scripts/zns/output/
 
 # Flutter/Dart/Pub related
 **/doc/api/

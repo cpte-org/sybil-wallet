@@ -1,0 +1,217 @@
+//! ZNS account identity is derived inside Rust from the existing encrypted
+//! software account envelope. No Base private key is returned or persisted.
+use crate::wallet::{
+    db::{open_wallet_db_for_read_with_timeout, READ_DB_BUSY_TIMEOUT},
+    keys,
+    network::WalletNetwork,
+};
+use secrecy::ExposeSecret;
+use serde_json::{json, Value};
+use zcash_client_backend::data_api::{Account, WalletRead};
+use zcash_keys::{address::Address, keys::UnifiedSpendingKey};
+use zeroize::Zeroizing;
+use zip32::fingerprint::SeedFingerprint;
+
+fn with_account<T>(
+    db_path: &str,
+    network: WalletNetwork,
+    account_uuid: &str,
+    secret: Vec<u8>,
+    f: impl FnOnce(&[u8], u32) -> Result<T, String>,
+) -> Result<T, String> {
+    let secret = Zeroizing::new(secret);
+    let seed = keys::mnemonic_bytes_to_seed(&secret)?;
+    drop(secret);
+    let db = open_wallet_db_for_read_with_timeout(db_path, network, READ_DB_BUSY_TIMEOUT)?;
+    let id = keys::parse_account_uuid(account_uuid)?;
+    let account = db
+        .get_account(id)
+        .map_err(|e| format!("Cannot read ZNS account: {e}"))?
+        .ok_or("Account not found")?;
+    let derivation = account
+        .source()
+        .key_derivation()
+        .ok_or("ZNS requires a software account with seed derivation metadata")?;
+    let seed_fp = SeedFingerprint::from_seed(seed.expose_secret()).ok_or("Invalid seed length")?;
+    if derivation.seed_fingerprint() != &seed_fp {
+        return Err("The software secret does not belong to this account".into());
+    }
+    // A matching fingerprint alone is insufficient: compare the complete
+    // account UFVK, including the recorded account index and Zcash network.
+    let usk =
+        UnifiedSpendingKey::from_seed(&network, seed.expose_secret(), derivation.account_index())
+            .map_err(|_| "Cannot derive software account")?;
+    let derived = usk.to_unified_full_viewing_key();
+    let stored = account.ufvk().ok_or("Account has no viewing key")?;
+    if derived.encode(&network) != stored.encode(&network) {
+        return Err("Derived keys do not match the selected software account".into());
+    }
+    f(seed.expose_secret(), u32::from(derivation.account_index()))
+}
+
+pub fn account(
+    db_path: &str,
+    network: WalletNetwork,
+    account_uuid: &str,
+    secret: Vec<u8>,
+) -> Result<Value, String> {
+    with_account(db_path, network, account_uuid, secret, |seed, index| {
+        let key = vizor_zns_core::derive_key(seed, index)?;
+        Ok(
+            json!({"address": vizor_zns_core::key_address(&key).to_checksum(None), "derivationPath": vizor_zns_core::derivation_path(index)?, "accountIndex": index}),
+        )
+    })
+}
+
+pub fn validate_unified_address(network: WalletNetwork, address: &str) -> bool {
+    if address.is_empty() || address.len() > 512 {
+        return false;
+    }
+    matches!(
+        Address::decode(&network, address),
+        Some(Address::Unified(_))
+    )
+}
+
+pub fn validate_operation(
+    network: WalletNetwork,
+    operation: &vizor_zns_core::Operation,
+) -> Result<(), String> {
+    use vizor_zns_core::Operation;
+    let ua = match operation {
+        Operation::Commit {
+            unified_address, ..
+        }
+        | Operation::Register {
+            unified_address, ..
+        }
+        | Operation::Update {
+            unified_address, ..
+        }
+        | Operation::AtomicRegister {
+            unified_address, ..
+        } => Some(unified_address),
+        _ => None,
+    };
+    if ua.is_some_and(|ua| !validate_unified_address(network, ua)) {
+        return Err("Use a valid Unified Address for the selected Zcash network".into());
+    }
+    Ok(())
+}
+
+pub fn sign(
+    db_path: &str,
+    network: WalletNetwork,
+    account_uuid: &str,
+    secret: Vec<u8>,
+    config: &vizor_zns_core::Config,
+    operation: &vizor_zns_core::Operation,
+    transaction: &vizor_zns_core::Transaction,
+) -> Result<Value, String> {
+    let secret = Zeroizing::new(secret);
+    validate_operation(network, operation)?;
+    with_account(
+        db_path,
+        network,
+        account_uuid,
+        secret.to_vec(),
+        |seed, index| {
+            let key = vizor_zns_core::derive_key(seed, index)?;
+            let signed = vizor_zns_core::sign(&key, config, operation, transaction)?;
+            serde_json::to_value(signed)
+                .map_err(|_| "Cannot serialize signed ZNS transaction".into())
+        },
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    const PHRASE: &str = "test test test test test test test test test test test junk";
+
+    #[test]
+    fn zns_restores_base_identity_across_database_uuids_and_account_indices() {
+        let first = tempfile::tempdir().unwrap();
+        let second = tempfile::tempdir().unwrap();
+        let p1 = first.path().join("wallet.db");
+        let p2 = second.path().join("wallet.db");
+        let p1 = p1.to_str().unwrap();
+        let p2 = p2.to_str().unwrap();
+        let seed = keys::mnemonic_to_seed(PHRASE).unwrap();
+        let (id1, ua) =
+            keys::init_db_and_create_account(p1, WalletNetwork::Main, &seed, None, "first")
+                .unwrap();
+        let (id2, _) =
+            keys::init_db_and_create_account(p2, WalletNetwork::Main, &seed, None, "restored")
+                .unwrap();
+        assert_ne!(id1, id2);
+        let a1 = account(p1, WalletNetwork::Main, &id1, PHRASE.as_bytes().to_vec()).unwrap();
+        let a2 = account(p2, WalletNetwork::Main, &id2, PHRASE.as_bytes().to_vec()).unwrap();
+        assert_eq!(a1, a2);
+        assert_eq!(a1["address"], "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266");
+        let (id3, _) =
+            keys::add_account_at_index(p1, WalletNetwork::Main, "index2", &seed, None, 2).unwrap();
+        let a3 = account(p1, WalletNetwork::Main, &id3, PHRASE.as_bytes().to_vec()).unwrap();
+        assert_eq!(a3["address"], "0x98e503f35D0a019cB0a251aD243a4cCFCF371F46");
+        assert_eq!(a3["derivationPath"], "m/44'/60'/2'/0/0");
+        assert!(validate_unified_address(WalletNetwork::Main, &ua));
+        assert!(!validate_unified_address(WalletNetwork::Test, &ua));
+        assert!(!validate_unified_address(WalletNetwork::Main, "u1invalid"));
+        let transparent = keys::software_account_first_external_transparent_address(
+            WalletNetwork::Main,
+            &seed,
+            0,
+        )
+        .unwrap();
+        assert!(!validate_unified_address(WalletNetwork::Main, &transparent));
+    }
+
+    #[test]
+    fn zns_rejects_wrong_mnemonic_passphrase_and_mismatched_ufvk() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("wallet.db");
+        let path = path.to_str().unwrap();
+        let seed = keys::mnemonic_to_seed_with_passphrase(PHRASE, "correct passphrase").unwrap();
+        let (id, _) =
+            keys::init_db_and_create_account(path, WalletNetwork::Main, &seed, None, "passphrase")
+                .unwrap();
+        assert!(account(path, WalletNetwork::Main, &id, PHRASE.as_bytes().to_vec()).is_err());
+        let envelope =
+            json!({"version":1,"mnemonic":PHRASE,"bip39Passphrase":"correct passphrase"})
+                .to_string()
+                .into_bytes();
+        assert!(account(path, WalletNetwork::Main, &id, envelope).is_ok());
+        assert!(account(path,WalletNetwork::Main,&id,b"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about".to_vec()).is_err());
+
+        // A hardware-shaped import can carry an arbitrary claimed fingerprint;
+        // matching that metadata must not be enough to sign for the account.
+        let other_seed = keys::mnemonic_to_seed(PHRASE).unwrap();
+        let other = UnifiedSpendingKey::from_seed(
+            &WalletNetwork::Main,
+            other_seed.expose_secret(),
+            zip32::AccountId::ZERO,
+        )
+        .unwrap()
+        .to_unified_full_viewing_key();
+        let fingerprint = SeedFingerprint::from_seed(seed.expose_secret())
+            .unwrap()
+            .to_bytes();
+        let (mismatch, _) = keys::import_hardware_account(
+            path,
+            WalletNetwork::Main,
+            "mismatch",
+            &other.encode(&WalletNetwork::Main),
+            &fingerprint,
+            1,
+            None,
+        )
+        .unwrap();
+        let envelope =
+            json!({"version":1,"mnemonic":PHRASE,"bip39Passphrase":"correct passphrase"})
+                .to_string()
+                .into_bytes();
+        assert!(account(path, WalletNetwork::Main, &mismatch, envelope)
+            .unwrap_err()
+            .contains("Derived keys do not match"));
+    }
+}

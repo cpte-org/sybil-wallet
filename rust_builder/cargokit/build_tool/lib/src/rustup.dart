@@ -10,12 +10,12 @@ import 'util.dart';
 
 class _Toolchain {
   _Toolchain(
-    this.name,
+    this.name, [
     this.targets,
-  );
+  ]);
 
   final String name;
-  final List<String> targets;
+  List<String>? targets;
 }
 
 class Rustup {
@@ -50,10 +50,14 @@ class Rustup {
 
   Rustup() : _installedToolchains = _getInstalledToolchains();
 
-  List<String>? _installedTargets(String toolchain) => _installedToolchains
-      .firstWhereOrNull(
-          (e) => e.name == toolchain || e.name.startsWith('$toolchain-'))
-      ?.targets;
+  List<String>? _installedTargets(String toolchain) {
+    final installed = _installedToolchains.firstWhereOrNull(
+        (e) => e.name == toolchain || e.name.startsWith('$toolchain-'));
+    if (installed == null) return null;
+    // Only inspect the selected toolchain. An unrelated, incomplete install
+    // must not prevent a build using a healthy toolchain.
+    return installed.targets ??= _getInstalledTargets(installed.name);
+  }
 
   static List<_Toolchain> _getInstalledToolchains() {
     String extractToolchainName(String line) {
@@ -74,14 +78,7 @@ class Rustup {
         .map(extractToolchainName)
         .toList(growable: true);
 
-    return lines
-        .map(
-          (name) => _Toolchain(
-            name,
-            _getInstalledTargets(name),
-          ),
-        )
-        .toList(growable: true);
+    return lines.map((name) => _Toolchain(name)).toList(growable: true);
   }
 
   static List<String> _getInstalledTargets(String toolchain) {

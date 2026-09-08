@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart' show CupertinoPage;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/zns/presentation/zns_wallet_screen.dart';
 
 import '../../features/accounts/screens/mobile/mobile_accounts_screen.dart';
 import '../../features/activity/screens/mobile/mobile_activity_screen.dart';
@@ -60,6 +61,8 @@ import 'mobile_tab_history.dart';
 List<RouteBase> buildMobileRoutes({required List<RouteBase> entryRoutes}) {
   return [
     ...entryRoutes,
+    GoRoute(path: '/names', pageBuilder: (_, state) => CupertinoPage(
+      key: state.pageKey, child: const ZnsWalletScreen())),
     StatefulShellRoute.indexedStack(
       pageBuilder: (context, state, navigationShell) => CupertinoPage(
         key: state.pageKey,

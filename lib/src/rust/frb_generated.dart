@@ -10,6 +10,7 @@ import 'api/simple.dart';
 import 'api/sync.dart';
 import 'api/voting.dart';
 import 'api/wallet.dart';
+import 'api/zns.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
@@ -79,7 +80,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 533571650;
+  int get rustContentHash => -1567382503;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -1278,6 +1279,47 @@ abstract class RustLibApi extends BaseApi {
     required String requestId,
     required List<ZcashBatchMessageInput> messages,
     required int maxMessages,
+  });
+
+  Future<String> crateApiZnsZnsAccount({
+    required String dbPath,
+    required String network,
+    required String accountUuid,
+    required List<int> secretBytes,
+  });
+
+  Future<String> crateApiZnsZnsDecodeResult({
+    required String method,
+    required String data,
+  });
+
+  Future<String> crateApiZnsZnsPrepare({
+    required String network,
+    required String configJson,
+    required String owner,
+    required String operationJson,
+  });
+
+  Future<String> crateApiZnsZnsRandomSecret();
+
+  Future<String> crateApiZnsZnsReadCall({
+    required String method,
+    required String argsJson,
+  });
+
+  Future<String> crateApiZnsZnsSign({
+    required String dbPath,
+    required String network,
+    required String accountUuid,
+    required List<int> secretBytes,
+    required String configJson,
+    required String operationJson,
+    required String transactionJson,
+  });
+
+  Future<bool> crateApiZnsZnsValidateUnifiedAddress({
+    required String network,
+    required String address,
   });
 
   RustArcIncrementStrongCountFnType
@@ -9244,6 +9286,272 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(
         debugName: "zcash_sign_batch_round_message_counts",
         argNames: ["requestId", "messages", "maxMessages"],
+      );
+
+  @override
+  Future<String> crateApiZnsZnsAccount({
+    required String dbPath,
+    required String network,
+    required String accountUuid,
+    required List<int> secretBytes,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(dbPath, serializer);
+          sse_encode_String(network, serializer);
+          sse_encode_String(accountUuid, serializer);
+          sse_encode_list_prim_u_8_loose(secretBytes, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 189,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiZnsZnsAccountConstMeta,
+        argValues: [dbPath, network, accountUuid, secretBytes],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiZnsZnsAccountConstMeta => const TaskConstMeta(
+    debugName: "zns_account",
+    argNames: ["dbPath", "network", "accountUuid", "secretBytes"],
+  );
+
+  @override
+  Future<String> crateApiZnsZnsDecodeResult({
+    required String method,
+    required String data,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(method, serializer);
+          sse_encode_String(data, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 190,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiZnsZnsDecodeResultConstMeta,
+        argValues: [method, data],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiZnsZnsDecodeResultConstMeta => const TaskConstMeta(
+    debugName: "zns_decode_result",
+    argNames: ["method", "data"],
+  );
+
+  @override
+  Future<String> crateApiZnsZnsPrepare({
+    required String network,
+    required String configJson,
+    required String owner,
+    required String operationJson,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(network, serializer);
+          sse_encode_String(configJson, serializer);
+          sse_encode_String(owner, serializer);
+          sse_encode_String(operationJson, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 191,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiZnsZnsPrepareConstMeta,
+        argValues: [network, configJson, owner, operationJson],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiZnsZnsPrepareConstMeta => const TaskConstMeta(
+    debugName: "zns_prepare",
+    argNames: ["network", "configJson", "owner", "operationJson"],
+  );
+
+  @override
+  Future<String> crateApiZnsZnsRandomSecret() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 192,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiZnsZnsRandomSecretConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiZnsZnsRandomSecretConstMeta =>
+      const TaskConstMeta(debugName: "zns_random_secret", argNames: []);
+
+  @override
+  Future<String> crateApiZnsZnsReadCall({
+    required String method,
+    required String argsJson,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(method, serializer);
+          sse_encode_String(argsJson, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 193,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiZnsZnsReadCallConstMeta,
+        argValues: [method, argsJson],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiZnsZnsReadCallConstMeta => const TaskConstMeta(
+    debugName: "zns_read_call",
+    argNames: ["method", "argsJson"],
+  );
+
+  @override
+  Future<String> crateApiZnsZnsSign({
+    required String dbPath,
+    required String network,
+    required String accountUuid,
+    required List<int> secretBytes,
+    required String configJson,
+    required String operationJson,
+    required String transactionJson,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(dbPath, serializer);
+          sse_encode_String(network, serializer);
+          sse_encode_String(accountUuid, serializer);
+          sse_encode_list_prim_u_8_loose(secretBytes, serializer);
+          sse_encode_String(configJson, serializer);
+          sse_encode_String(operationJson, serializer);
+          sse_encode_String(transactionJson, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 194,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiZnsZnsSignConstMeta,
+        argValues: [
+          dbPath,
+          network,
+          accountUuid,
+          secretBytes,
+          configJson,
+          operationJson,
+          transactionJson,
+        ],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiZnsZnsSignConstMeta => const TaskConstMeta(
+    debugName: "zns_sign",
+    argNames: [
+      "dbPath",
+      "network",
+      "accountUuid",
+      "secretBytes",
+      "configJson",
+      "operationJson",
+      "transactionJson",
+    ],
+  );
+
+  @override
+  Future<bool> crateApiZnsZnsValidateUnifiedAddress({
+    required String network,
+    required String address,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(network, serializer);
+          sse_encode_String(address, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 195,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiZnsZnsValidateUnifiedAddressConstMeta,
+        argValues: [network, address],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiZnsZnsValidateUnifiedAddressConstMeta =>
+      const TaskConstMeta(
+        debugName: "zns_validate_unified_address",
+        argNames: ["network", "address"],
       );
 
   RustArcIncrementStrongCountFnType

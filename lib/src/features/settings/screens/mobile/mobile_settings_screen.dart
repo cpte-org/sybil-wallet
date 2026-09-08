@@ -186,6 +186,13 @@ class MobileSettingsScreen extends ConsumerWidget {
                           : () => _editAccount(context, ref, account),
                     ),
                     MobileListRow(
+                      key: const ValueKey('mobile_settings_names_row'),
+                      leading: _RowIcon(AppIcons.users), label: 'Zcash names',
+                      minRowHeight: _settingsRowHeight, textStyle: settingsRowStyle,
+                      chevronColor: settingsChevronColor, showChevron: true,
+                      onTap: () => context.push('/names'),
+                    ),
+                    MobileListRow(
                       key: const ValueKey('mobile_settings_address_book_row'),
                       leading: _RowIcon(AppIcons.users),
                       label: 'Contacts',

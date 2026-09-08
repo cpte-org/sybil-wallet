@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:go_router/go_router.dart';
+import 'src/features/zns/presentation/zns_wallet_screen.dart';
 import 'package:desktop_window_bootstrap/desktop_window_bootstrap.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -876,6 +877,7 @@ List<RouteBase> _desktopRoutes(Ref ref) => [
     path: '/migration/private/keystone/batch/sign',
     builder: (_, _) => const IronwoodMigrationKeystoneBatchSignScreen(),
   ),
+  GoRoute(path: '/names', builder: (_, _) => const ZnsWalletScreen()),
   GoRoute(path: '/about', builder: (_, _) => const AboutScreen()),
   GoRoute(path: '/address-book', builder: (_, _) => const AddressBookScreen()),
   GoRoute(path: '/activity', builder: (_, _) => const ActivityScreen()),

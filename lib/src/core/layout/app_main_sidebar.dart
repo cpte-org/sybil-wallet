@@ -561,6 +561,14 @@ class _AppMainSidebarState extends ConsumerState<AppMainSidebar> {
                     ],
                     const SizedBox(height: AppSpacing.xs),
                     AppSidebarItem(
+                      key: const ValueKey('sidebar_names_button'),
+                      label: 'Names', iconName: AppIcons.users,
+                      active: _routeShouldBeActive('/names'),
+                      onTap: isImporting || widget.disabledRoutePaths.contains('/names')
+                        ? null : () => _navigateTo('/names'),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    AppSidebarItem(
                       key: const ValueKey('sidebar_voting_button'),
                       label: 'Vote',
                       iconName: AppIcons.vote,
