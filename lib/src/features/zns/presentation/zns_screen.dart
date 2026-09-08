@@ -22,11 +22,11 @@ class ZnsScreen extends StatefulWidget {
 
 class _ZnsScreenState extends State<ZnsScreen> {
   final _name = TextEditingController();
-  final _budget = TextEditingController();
   final _recipient = TextEditingController();
+  final _receivingAddress = TextEditingController();
+  bool _showAddressEditor = false;
   bool _acceptedReview = false;
   bool _showBalances = false;
-  bool _showSettings = false;
 
   ZnsViewData get data => widget.data;
   ZnsCallbacks get actions => widget.callbacks;
@@ -40,8 +40,6 @@ class _ZnsScreenState extends State<ZnsScreen> {
   bool get _validName => RegExp(
     r'^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$',
   ).hasMatch(_normalizedName);
-  bool get _validBudget =>
-      RegExp(r'^\d+(?:\.\d{1,8})?$').hasMatch(_budget.text.trim());
   bool get _hasPending => data.operation != null && !data.operation!.isComplete;
   bool get _editing => !_hasPending && data.review == null;
 
@@ -50,7 +48,6 @@ class _ZnsScreenState extends State<ZnsScreen> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.data.accountId != data.accountId) {
       _name.clear();
-      _budget.clear();
       _acceptedReview = false;
       _showBalances = false;
     }
@@ -58,6 +55,8 @@ class _ZnsScreenState extends State<ZnsScreen> {
         oldWidget.data.baseOwnerAddress != data.baseOwnerAddress ||
         oldWidget.data.ownedName?.positionId != data.ownedName?.positionId) {
       _recipient.clear();
+      _receivingAddress.clear();
+      _showAddressEditor = false;
     }
     if (_approvalKey(oldWidget.data.review) != _approvalKey(data.review)) {
       _acceptedReview = false;
@@ -91,9 +90,22 @@ class _ZnsScreenState extends State<ZnsScreen> {
   @override
   void dispose() {
     _name.dispose();
-    _budget.dispose();
     _recipient.dispose();
+    _receivingAddress.dispose();
     super.dispose();
+  }
+
+  String _ethDisplay(String exact) {
+    final parts = exact.split('.');
+    if (parts.length != 2 || parts[1].length <= 8) return '$exact ETH';
+    final wei = BigInt.tryParse('${parts[0]}${parts[1].padRight(18, '0')}');
+    if (wei == null) return '$exact ETH';
+    final unit = BigInt.from(10000000000);
+    final rounded = ((wei + unit - BigInt.one) ~/ unit).toString().padLeft(
+      9,
+      '0',
+    );
+    return '≈ ${rounded.substring(0, rounded.length - 8)}.${rounded.substring(rounded.length - 8)} ETH';
   }
 
   void _lookup() {
@@ -134,16 +146,13 @@ class _ZnsScreenState extends State<ZnsScreen> {
                         ),
                       ),
                       AppButton(
-                        key: const Key('zns-settings'),
-                        onPressed: data.isBusy || _hasPending
+                        key: const Key('zns-refresh-balances'),
+                        onPressed: data.isBusy || !_editing
                             ? null
-                            : () => setState(
-                                () => _showSettings = !_showSettings,
-                              ),
+                            : actions.onRefresh,
                         variant: AppButtonVariant.ghost,
                         size: AppButtonSize.small,
-                        leading: const AppIcon(AppIcons.cog),
-                        child: const Text('Settings'),
+                        child: const Text('Refresh'),
                       ),
                     ],
                   ),
@@ -171,24 +180,12 @@ class _ZnsScreenState extends State<ZnsScreen> {
                     ),
                   ],
                   const SizedBox(height: AppSpacing.md),
-                  if (_showSettings) ...[
-                    _ConfigurationForm(
-                      key: ValueKey(
-                        '${data.configuration.registryAddress}:${data.configuration.chainId}',
-                      ),
-                      initial: data.configuration,
-                      enabled: !data.isBusy && !_hasPending,
-                      onSave: actions.onSaveConfiguration,
-                      onClose: () => setState(() => _showSettings = false),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
                   if (!data.isConfigured) ...[
                     const _Notice(
                       icon: AppIcons.endpoint,
                       title: 'Name service is not configured',
                       text:
-                          'Add a verified registry in Settings to look up or register names. Registration stays unavailable until the connection is verified.',
+                          'Add a verified registry in wallet Settings → Names to look up or register names. Registration stays unavailable until the connection is verified.',
                     ),
                     const SizedBox(height: AppSpacing.md),
                   ],
@@ -314,7 +311,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
               icon: AppIcons.lock,
               title: 'One deposit. A name that stays yours.',
               text:
-                  'Deposit cbZEC once and keep your name active with an annual refresh. Exit after 365 days to receive your deposit back. Earlier exit forfeits the entire deposit and unvested rewards.',
+                  'Deposit cbZEC once and keep your name active with an annual refresh. Exit after 365 days to receive your deposit back. Earlier exit returns your deposit minus a 10% fee and forfeits unvested rewards.',
             ),
             const SizedBox(height: AppSpacing.md),
             _Address(
@@ -323,32 +320,18 @@ class _ZnsScreenState extends State<ZnsScreen> {
               emptyText: 'Your wallet address is loading.',
             ),
             const SizedBox(height: AppSpacing.md),
-            AppTextField(
-              key: const Key('zns-budget'),
-              label: 'Maximum ZEC to spend',
-              controller: _budget,
-              hintText: '0.00',
-              inlineSuffixText: 'ZEC',
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              onChanged: (_) => setState(() {}),
-              messageText:
-                  'Includes funding and network fees. Enter 0 to use existing Base funds only. Your review will show the deposit and all spending limits.',
+            _small(
+              'Existing Base funds are used first. If more funds are needed, your review shows the ZEC estimate and maximum spend before you approve.',
             ),
             const SizedBox(height: AppSpacing.md),
             AppButton(
               key: const Key('zns-prepare'),
               onPressed:
                   data.canWrite &&
-                      _validBudget &&
                       data.walletUnifiedAddress.isNotEmpty &&
                       actions.onPrepareRegistration != null
                   ? () => actions.onPrepareRegistration!(
-                      ZnsRegistrationInput(
-                        name: _normalizedName,
-                        maxZec: _budget.text.trim(),
-                      ),
+                      ZnsRegistrationInput(name: _normalizedName),
                     )
                   : null,
               expand: true,
@@ -462,14 +445,17 @@ class _ZnsScreenState extends State<ZnsScreen> {
             _detail('Original deposit maturity', date),
           if (registering && review.maturityAt == null)
             _detail('Deposit maturity', '365 days after registration confirms'),
-          if (review.refreshDueAt case final date?)
-            _detail('Next refresh due', date),
-          if (review.rewardsToClaim case final rewards?)
+          if (!release && !withdrawing && review.refreshDueAt != null)
+            _detail('Next refresh due', review.refreshDueAt!),
+          if ((transferring ||
+                  withdrawing ||
+                  review.kind == ZnsReviewKind.claimRewards) &&
+              review.rewardsToClaim != null)
             _detail(
               transferring
                   ? 'Unclaimed rewards transferred'
                   : 'Rewards to receive',
-              '$rewards cbZEC',
+              '${review.rewardsToClaim} cbZEC',
             ),
           if (review.exitPreview case final exit?) ...[
             _detail(
@@ -479,7 +465,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
             ),
             _detail('Rewards returned', '${exit.rewardsReturned} cbZEC'),
             _detail(
-              'Deposit forfeited',
+              'Early-release fee',
               '${exit.principalForfeited} cbZEC',
               strong: exit.early,
             ),
@@ -489,18 +475,37 @@ class _ZnsScreenState extends State<ZnsScreen> {
               strong: exit.early,
             ),
           ],
-          _detail('Gas reserve', '${review.gasReserve} ETH'),
-          _detail(
-            'Maximum new ZEC funding',
-            '${review.maxZec} ZEC',
-            strong: true,
-          ),
+          _detail('Maximum network fee', _ethDisplay(review.gasReserve)),
+          if (review.maxZec != '0') ...[
+            if (review.estimatedZec != null)
+              _detail(
+                'Estimated ZEC including fees',
+                '${review.estimatedZec} ZEC',
+              ),
+            if (review.conversionRate != null)
+              _detail('Estimated conversion rate', review.conversionRate!),
+            if (review.zcashFee != null)
+              _detail('Zcash network fee (included)', '${review.zcashFee} ZEC'),
+            _detail(
+              'Maximum total ZEC spend',
+              '${review.maxZec} ZEC',
+              strong: true,
+            ),
+            _small(
+              'The maximum includes a price-movement allowance. Only the quoted funding amount is sent. Unused ETH stays in your Base account for later fees. A quote above this limit requires another review.',
+            ),
+          ] else
+            _detail('ZEC funding needed', 'None — using existing Base funds'),
           if (review.maxBaseEth case final maximum?)
-            _detail('Maximum Base ETH spend', '$maximum ETH', strong: true),
+            _detail(
+              'Maximum Base ETH spend',
+              _ethDisplay(maximum),
+              strong: true,
+            ),
           if (review.existingCbZecSpend case final existing?)
             _detail('From existing cbZEC', '$existing cbZEC'),
           if (review.existingEthSpend case final existing?)
-            _detail('From existing ETH', '$existing ETH'),
+            _detail('From existing ETH', _ethDisplay(existing)),
           _detail('Estimated duration', review.estimatedDuration),
           if (review.quoteExpiresIn case final expiry?)
             _detail('Quote expires', expiry),
@@ -521,10 +526,10 @@ class _ZnsScreenState extends State<ZnsScreen> {
               icon: AppIcons.help,
               isError: review.exitPreview?.early ?? false,
               title: review.exitPreview?.early == true
-                  ? 'Early exit forfeits your entire deposit'
+                  ? 'Early release fee: 10%'
                   : 'Your name will be released',
               text: review.exitPreview?.early == true
-                  ? 'You will receive no deposit or unvested rewards. Both are allocated to other eligible names, or held in the contract reserve if none remain. Another person can register your released name.'
+                  ? 'Your deposit returns minus a 10% early-release fee, rounded up to the smallest cbZEC unit. The fee and all unvested rewards go to other eligible names, or the contract reserve if none remain. Another person can register your released name.'
                   : 'Your deposit and vested rewards will return to your Base account. Another person can register your released name. Network and conversion costs are not refunded.',
             )
           else if (transferring)
@@ -545,7 +550,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
             _Notice(
               icon: AppIcons.eye,
               title: 'Your name and address will be public',
-              text: registering
+              text: registering && review.maxZec != '0'
                   ? 'The record also links to your Base account. The funding service uses a transparent Zcash deposit. Your name is secured only when registration confirms.'
                   : 'The record links this receiving address to your name and Base account.',
             ),
@@ -555,11 +560,13 @@ class _ZnsScreenState extends State<ZnsScreen> {
               icon: AppIcons.lock,
               title: 'Your initial holding period is 365 days',
               text:
-                  'Earlier exit forfeits the entire deposit and all unvested rewards. Refreshes, address updates and reward claims never restart this period. Rewards accrue immediately, may be zero, and can be claimed after your original maturity.',
+                  'Earlier exit returns your deposit minus a 10% fee and forfeits all unvested rewards. Refreshes, address updates and reward claims never restart this period. Rewards accrue immediately, may be zero, and can be claimed after your original maturity.',
             ),
             const SizedBox(height: AppSpacing.s),
             _small(
-              'Vizor will convert ZEC, keep ETH for network fees, and deposit cbZEC. If the name becomes unavailable, converted funds remain in your Base account; the conversion cannot be undone automatically.',
+              review.maxZec == '0'
+                  ? 'Registration uses your existing Base funds. Your name is secured when registration confirms.'
+                  : 'If funding is needed, Vizor converts ZEC within your approved limit and keeps ETH for network fees. If the name becomes unavailable, converted funds remain in your Base account; conversion cannot be undone automatically.',
             ),
           ],
           if (review.kind == ZnsReviewKind.refresh ||
@@ -873,7 +880,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
           _small(
             owned.isMature
                 ? 'Your initial holding period is complete. Releasing now returns your full deposit and vested rewards.'
-                : 'Rewards accrue now and become claimable at your original maturity. Releasing early forfeits your entire deposit and all unvested rewards.',
+                : 'Rewards accrue now and become claimable at your original maturity. Releasing early returns your deposit minus a 10% fee and forfeits all unvested rewards.',
           ),
         const SizedBox(height: AppSpacing.sm),
         _small(
@@ -922,15 +929,73 @@ class _ZnsScreenState extends State<ZnsScreen> {
                 child: const Text('Claim rewards'),
               ),
               AppButton(
-                onPressed: data.canWrite && !_hasPending
-                    ? actions.onUpdateAddress
+                key: const Key('zns-edit-address'),
+                onPressed: data.canWrite && _editing
+                    ? () => setState(() {
+                        _showAddressEditor = !_showAddressEditor;
+                        if (_showAddressEditor) {
+                          _receivingAddress.text = owned.unifiedAddress.isEmpty
+                              ? data.walletUnifiedAddress
+                              : owned.unifiedAddress;
+                        }
+                      })
                     : null,
                 variant: AppButtonVariant.secondary,
-                child: const Text('Update address'),
+                child: Text(
+                  owned.unifiedAddress.isEmpty
+                      ? 'Set payment address'
+                      : 'Update address',
+                ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.s),
+          if (_showAddressEditor) ...[
+            AppTextField(
+              key: const Key('zns-receiving-address'),
+              controller: _receivingAddress,
+              label: 'Zcash receiving address',
+              hintText: 'Paste a Unified Address',
+              enabled: data.canWrite && _editing,
+              onChanged: (_) => setState(() {}),
+            ),
+            _small(
+              'Use a Unified Address for this wallet’s Zcash network. This address will be public; payments will go to its owner.',
+            ),
+            Wrap(
+              spacing: AppSpacing.xs,
+              children: [
+                AppButton(
+                  key: const Key('zns-use-wallet-address'),
+                  onPressed:
+                      data.canWrite &&
+                          _editing &&
+                          data.walletUnifiedAddress.isNotEmpty
+                      ? () => setState(
+                          () => _receivingAddress.text =
+                              data.walletUnifiedAddress,
+                        )
+                      : null,
+                  variant: AppButtonVariant.ghost,
+                  child: const Text('Use this wallet’s address'),
+                ),
+                AppButton(
+                  key: const Key('zns-review-address'),
+                  onPressed:
+                      data.canWrite &&
+                          _editing &&
+                          _receivingAddress.text.trim().isNotEmpty &&
+                          actions.onUpdateAddress != null
+                      ? () => actions.onUpdateAddress!(
+                          _receivingAddress.text.trim(),
+                        )
+                      : null,
+                  child: const Text('Review address update'),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.s),
+          ],
           AppTextField(
             key: const Key('zns-transfer-recipient'),
             controller: _recipient,
@@ -1222,23 +1287,23 @@ class _Address extends StatelessWidget {
   );
 }
 
-class _ConfigurationForm extends StatefulWidget {
-  const _ConfigurationForm({
+class ZnsConfigurationForm extends StatefulWidget {
+  const ZnsConfigurationForm({
     super.key,
     required this.initial,
     required this.enabled,
     required this.onSave,
-    required this.onClose,
+    this.onClose,
   });
   final ZnsConfigurationInput initial;
   final bool enabled;
   final ValueChanged<ZnsConfigurationInput>? onSave;
-  final VoidCallback onClose;
+  final VoidCallback? onClose;
   @override
-  State<_ConfigurationForm> createState() => _ConfigurationFormState();
+  State<ZnsConfigurationForm> createState() => ZnsConfigurationFormState();
 }
 
-class _ConfigurationFormState extends State<_ConfigurationForm> {
+class ZnsConfigurationFormState extends State<ZnsConfigurationForm> {
   late final _rpc = TextEditingController(text: widget.initial.rpcUrl);
   late final _registry = TextEditingController(
     text: widget.initial.registryAddress,
@@ -1315,11 +1380,12 @@ class _ConfigurationFormState extends State<_ConfigurationForm> {
           child: const Text('Verify & save settings'),
         ),
         const SizedBox(height: AppSpacing.xs),
-        AppButton(
-          onPressed: widget.onClose,
-          variant: AppButtonVariant.ghost,
-          child: const Text('Close settings'),
-        ),
+        if (widget.onClose != null)
+          AppButton(
+            onPressed: widget.onClose,
+            variant: AppButtonVariant.ghost,
+            child: const Text('Close settings'),
+          ),
       ],
     ),
   );

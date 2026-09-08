@@ -15,7 +15,7 @@ pub type Result<T> = std::result::Result<T, String>;
 
 pub const CBZEC: &str = "0xB2000000000000000000008501b13360000cb2EC";
 pub const KYBER: &str = "0x6131B5fae19EA4f9D964eAc0408E4408b66337b5";
-pub const PROTOCOL_ID: &str = "0x32820c0b6a02f887a3de9a376a6e3c69a6b64b309f1bb809161039668d593760";
+pub const PROTOCOL_ID: &str = "0xd1a382e424de62cfc7a26d4829be41e2b15b5d49ae43bd839f997afde7a0538f";
 
 pub fn address(value: &str) -> Result<Address> {
     value.parse().map_err(|_| "Invalid EVM address".into())

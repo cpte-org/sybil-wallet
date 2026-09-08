@@ -81,9 +81,9 @@ class Gateway implements ZnsEngineGateway {
       currentExitPreview == null
       ? {
           'early': now < (owned?.maturityAt ?? 0),
-          'principalReturned': now < (owned?.maturityAt ?? 0) ? '0' : '500',
+          'principalReturned': now < (owned?.maturityAt ?? 0) ? '450' : '500',
           'rewardsReturned': '0',
-          'principalForfeited': now < (owned?.maturityAt ?? 0) ? '500' : '0',
+          'principalForfeited': now < (owned?.maturityAt ?? 0) ? '50' : '0',
           'rewardsForfeitedScaled': '0',
         }
       : {...currentExitPreview!};
@@ -111,6 +111,11 @@ class Gateway implements ZnsEngineGateway {
     if (!dry) liveQuotes++;
     return {
       'maxZatoshi': fundingZatoshi.toString(),
+      'zecFee': '10',
+      if (dry)
+        'plan': {
+          'depositZatoshi': (fundingZatoshi - BigInt.from(10)).toString(),
+        },
       'deposit': 't1synthetic',
       'requiredWei': requiredWei.toString(),
     };
@@ -833,6 +838,38 @@ void main() {
     },
   );
 
+  test(
+    'automatic registration uses existing funds without a ZEC budget',
+    () async {
+      final review = await engine.prepare(name: 'alice', ua: 'u1synthetic');
+      expect(review.maxZatoshi, BigInt.zero);
+      expect(review.estimatedZatoshi, isNull);
+      expect(gateway.liveQuotes, 0);
+      expect(gateway.fundingSends, 0);
+      expect(gateway.signs, isEmpty);
+    },
+  );
+
+  test(
+    'automatic registration quotes shortfall and caps funding with a margin',
+    () async {
+      gateway.token = BigInt.zero;
+      gateway.eth = BigInt.zero;
+      final review = await engine.prepare(name: 'alice', ua: 'u1synthetic');
+      expect(review.estimatedZatoshi, BigInt.from(100));
+      expect(review.zcashFeeZatoshi, BigInt.from(10));
+      expect(review.rateZatoshi, BigInt.from(15652173));
+      expect(review.maxZatoshi, BigInt.from(105));
+      expect(review.maxEthWei, BigInt.from(1150));
+      expect(gateway.fundingSends, 0);
+      expect(gateway.signs, isEmpty);
+      gateway.fundingZatoshi = BigInt.from(106);
+      await engine.authorize(review);
+      expect(gateway.fundingSends, 0);
+      expect(engine.authorized, isFalse);
+    },
+  );
+
   test('a second swap uses only unspent approved ETH budget', () async {
     gateway.token = BigInt.zero;
     await engine.authorize(intent());
@@ -948,7 +985,7 @@ void main() {
   );
 
   test(
-    'release review binds the registration and discloses the full early forfeiture',
+    'release review binds the registration and discloses the early fee and principal returned',
     () async {
       gateway.owned = record();
       final reviewed = await engine.prepare(
@@ -959,7 +996,8 @@ void main() {
       expect(reviewed.positionId, BigInt.one);
       expect(reviewed.requiredTokenUnits, BigInt.zero);
       expect(reviewed.maturityAt, 1500);
-      expect(reviewed.exitPreview!['principalForfeited'], '500');
+      expect(reviewed.exitPreview!['principalForfeited'], '50');
+      expect(reviewed.exitPreview!['principalReturned'], '450');
       expect(reviewed.exitPreview!['early'], isTrue);
       await engine.authorize(reviewed);
       expect(gateway.signs.single, {'kind': 'release', 'positionId': '1'});

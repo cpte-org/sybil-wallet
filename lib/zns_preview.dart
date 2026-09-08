@@ -105,9 +105,9 @@ abstract final class ZnsPreviewFixtures {
       maturityAt: '8 September 2027',
       exitPreview: ZnsExitPreview(
         early: true,
-        principalReturned: '0',
+        principalReturned: '0.09',
         rewardsReturned: '0',
-        principalForfeited: '0.1',
+        principalForfeited: '0.01',
         rewardsForfeited: '0.0034',
       ),
     ),

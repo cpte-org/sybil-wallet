@@ -78,3 +78,19 @@ Future<String> znsDecodeResult({
 
 Future<String> znsRandomSecret() =>
     RustLib.instance.api.crateApiZnsZnsRandomSecret();
+
+/// Explicit software-account export; caller must freshly authenticate the user.
+/// Plaintext key bytes must be cleared by the frontend after display.
+Future<Uint8List> znsExportKey({
+  required String dbPath,
+  required String network,
+  required String accountUuid,
+  required List<int> secretBytes,
+  required String expectedOwner,
+}) => RustLib.instance.api.crateApiZnsZnsExportKey(
+  dbPath: dbPath,
+  network: network,
+  accountUuid: accountUuid,
+  secretBytes: secretBytes,
+  expectedOwner: expectedOwner,
+);

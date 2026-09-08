@@ -1,3 +1,4 @@
+import '../base_key_export.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart'
@@ -188,10 +189,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     : _updateLabel(updateState),
                 onSeedPhrase: () => context.push('/settings/secret-passphrase'),
                 onViewingKey: () => context.push('/settings/viewing-key'),
+                onBaseKey: hasActiveAccount && !activeAccountIsHardware
+                    ? () => showBaseKeyExport(context)
+                    : null,
                 onChangePassword: () =>
                     context.push('/settings/change-password'),
                 onEndpoint: () => context.push('/settings/endpoint'),
                 onExplorer: () => context.push('/settings/explorer'),
+                onNames: () => context.push('/settings/names'),
                 onAccountName: hasActiveAccount
                     ? () => _showModal(_SettingsModalType.accountName)
                     : null,
@@ -307,9 +312,11 @@ class _SettingsPane extends StatelessWidget {
     required this.updateLabel,
     required this.onSeedPhrase,
     required this.onViewingKey,
+    required this.onBaseKey,
     required this.onChangePassword,
     required this.onEndpoint,
     required this.onExplorer,
+    required this.onNames,
     required this.onAccountName,
     required this.onProfilePicture,
     required this.onAddressBook,
@@ -331,9 +338,11 @@ class _SettingsPane extends StatelessWidget {
   final String? updateLabel;
   final VoidCallback onSeedPhrase;
   final VoidCallback onViewingKey;
+  final VoidCallback? onBaseKey;
   final VoidCallback onChangePassword;
   final VoidCallback onEndpoint;
   final VoidCallback onExplorer;
+  final VoidCallback onNames;
   final VoidCallback? onAccountName;
   final VoidCallback? onProfilePicture;
   final VoidCallback onAddressBook;
@@ -378,9 +387,11 @@ class _SettingsPane extends StatelessWidget {
                 updateLabel: updateLabel,
                 onSeedPhrase: onSeedPhrase,
                 onViewingKey: onViewingKey,
+                onBaseKey: onBaseKey,
                 onChangePassword: onChangePassword,
                 onEndpoint: onEndpoint,
                 onExplorer: onExplorer,
+                onNames: onNames,
                 onAccountName: onAccountName,
                 onProfilePicture: onProfilePicture,
                 onAddressBook: onAddressBook,
@@ -412,9 +423,11 @@ class _SettingsList extends StatelessWidget {
     required this.updateLabel,
     required this.onSeedPhrase,
     required this.onViewingKey,
+    required this.onBaseKey,
     required this.onChangePassword,
     required this.onEndpoint,
     required this.onExplorer,
+    required this.onNames,
     required this.onAccountName,
     required this.onProfilePicture,
     required this.onAddressBook,
@@ -436,9 +449,11 @@ class _SettingsList extends StatelessWidget {
   final String? updateLabel;
   final VoidCallback onSeedPhrase;
   final VoidCallback onViewingKey;
+  final VoidCallback? onBaseKey;
   final VoidCallback onChangePassword;
   final VoidCallback onEndpoint;
   final VoidCallback onExplorer;
+  final VoidCallback onNames;
   final VoidCallback? onAccountName;
   final VoidCallback? onProfilePicture;
   final VoidCallback onAddressBook;
@@ -466,6 +481,11 @@ class _SettingsList extends StatelessWidget {
               iconName: AppIcons.eye,
               label: 'Viewing key',
               onTap: onViewingKey,
+            ),
+            _SettingsRow(
+              iconName: AppIcons.key,
+              label: 'Base account private key',
+              onTap: onBaseKey,
             ),
             _SettingsRow(
               iconName: AppIcons.lock,
@@ -525,6 +545,11 @@ class _SettingsList extends StatelessWidget {
               label: 'Explorer',
               value: explorerLabel,
               onTap: onExplorer,
+            ),
+            _SettingsRow(
+              iconName: AppIcons.users,
+              label: 'Names',
+              onTap: onNames,
             ),
             _SettingsRow(
               iconName: AppIcons.theme,

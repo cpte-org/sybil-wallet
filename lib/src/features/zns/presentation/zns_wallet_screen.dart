@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/clipboard/sensitive_clipboard.dart';
 import '../../../core/layout/app_form_factor.dart';
+import '../../../core/layout/app_desktop_shell.dart';
+import '../../../core/layout/app_main_sidebar.dart';
 import '../../send/models/send_prefill_args.dart';
 import '../application/zns_controller.dart';
 import 'zns_screen.dart';
@@ -12,7 +14,7 @@ class ZnsWalletScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(znsControllerProvider.notifier);
-    return ZnsScreen(
+    final content = ZnsScreen(
       data: ref.watch(znsControllerProvider),
       callbacks: controller.callbacks(
         onShowRecovery: () => _recovery(context, controller),
@@ -71,6 +73,11 @@ class ZnsWalletScreen extends ConsumerWidget {
           }
         },
       ),
+    );
+    if (kAppFormFactor == AppFormFactor.mobile) return content;
+    return AppDesktopShell(
+      sidebar: const AppMainSidebar(),
+      pane: AppDesktopPane(padding: EdgeInsets.zero, child: content),
     );
   }
 

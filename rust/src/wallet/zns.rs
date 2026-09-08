@@ -1,5 +1,5 @@
 //! ZNS account identity is derived inside Rust from the existing encrypted
-//! software account envelope. No Base private key is returned or persisted.
+//! software account envelope. Key export is explicit and never persisted.
 use crate::wallet::{
     db::{open_wallet_db_for_read_with_timeout, READ_DB_BUSY_TIMEOUT},
     keys,
@@ -60,6 +60,28 @@ pub fn account(
         Ok(
             json!({"address": vizor_zns_core::key_address(&key).to_checksum(None), "derivationPath": vizor_zns_core::derivation_path(index)?, "accountIndex": index}),
         )
+    })
+}
+
+/// Called only by the explicit password-gated export UI. Verify the full
+/// software account identity and expected public address before exporting.
+pub fn export_key(
+    db_path: &str,
+    network: WalletNetwork,
+    account_uuid: &str,
+    secret: Vec<u8>,
+    expected_owner: &str,
+) -> Result<Vec<u8>, String> {
+    with_account(db_path, network, account_uuid, secret, |seed, index| {
+        let key = vizor_zns_core::derive_key(seed, index)?;
+        if !vizor_zns_core::key_address(&key)
+            .to_checksum(None)
+            .eq_ignore_ascii_case(expected_owner)
+        {
+            return Err("Base account changed. Authenticate again.".into());
+        }
+        let bytes = Zeroizing::new(key.to_bytes());
+        Ok(bytes.to_vec())
     })
 }
 
@@ -164,6 +186,47 @@ mod tests {
         )
         .unwrap();
         assert!(!validate_unified_address(WalletNetwork::Main, &transparent));
+    }
+
+    #[test]
+    fn exported_key_matches_selected_account_and_rejects_wrong_owner() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("wallet.db");
+        let path = path.to_str().unwrap();
+        let seed = keys::mnemonic_to_seed(PHRASE).unwrap();
+        let (id, _) =
+            keys::init_db_and_create_account(path, WalletNetwork::Main, &seed, None, "test")
+                .unwrap();
+        let identity = account(path, WalletNetwork::Main, &id, PHRASE.as_bytes().to_vec()).unwrap();
+        let owner = identity["address"].as_str().unwrap();
+        let bytes = Zeroizing::new(
+            export_key(
+                path,
+                WalletNetwork::Main,
+                &id,
+                PHRASE.as_bytes().to_vec(),
+                owner,
+            )
+            .unwrap(),
+        );
+        let expected = vizor_zns_core::derive_key(seed.expose_secret(), 0).unwrap();
+        assert!(bytes.as_slice() == expected.to_bytes().as_slice());
+        assert!(export_key(
+            path,
+            WalletNetwork::Main,
+            &id,
+            PHRASE.as_bytes().to_vec(),
+            "0x0000000000000000000000000000000000000000"
+        )
+        .is_err());
+        assert!(export_key(
+            path,
+            WalletNetwork::Main,
+            &id,
+            b"wrong mnemonic".to_vec(),
+            owner
+        )
+        .is_err());
     }
 
     #[test]

@@ -62,7 +62,7 @@ fn atomic(swap: Option<Swap>) -> Operation {
 fn protocol_and_old_economics_are_rejected_before_signing() {
     assert_eq!(
         alloy_primitives::keccak256(
-            "ZNS:cbZEC:deposit365:refresh365:grace90:forfeitAll:reserveCarry:erc721:multiName:clearUA"
+            "ZNS:cbZEC:deposit365:refresh365:grace90:earlyFee10:forfeitRewards:reserveCarry:erc721:multiName:clearUA"
         )
         .to_string(),
         PROTOCOL_ID
@@ -253,7 +253,7 @@ fn commitment_matches_viem_and_binds_every_field() {
     );
     assert_eq!(
         expected.to_string(),
-        "0x8d90ae2123bde5ae3e0214905c98cc263d09be57bfbb877ea490b9bf6b9dc476"
+        "0x30114b1f56152b940676cf53a9b9d4d08a23d7f91a22cc5ce0a21a285c05248f"
     );
     assert_ne!(
         expected,

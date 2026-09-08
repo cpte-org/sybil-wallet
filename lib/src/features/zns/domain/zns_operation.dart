@@ -79,6 +79,9 @@ class ZnsOperation {
     required this.requiredTokenUnits,
     required this.maxGasFeeWei,
     required this.createdAt,
+    this.estimatedZatoshi,
+    this.rateZatoshi,
+    this.zcashFeeZatoshi,
     this.recipient = '',
     this.phase = 'ready',
     this.pending,
@@ -90,6 +93,9 @@ class ZnsOperation {
     this.exitPreview,
     this.completedAt,
   });
+  // Informational dry-quote values, discarded on recovery. Spending authority
+  // remains bound to the persisted integer limits, never these estimates.
+  final BigInt? estimatedZatoshi, rateZatoshi, zcashFeeZatoshi;
   final String recipient;
   final ZnsScope scope;
   final String name;
@@ -117,7 +123,7 @@ class ZnsOperation {
   Map<String, dynamic> toJson() => {
     'version': 1,
     'policy':
-        'deposit365-refresh365-grace90-forfeitAll-reserveCarry-erc721-multiName-clearUA',
+        'deposit365-refresh365-grace90-earlyFee10-forfeitRewards-reserveCarry-erc721-multiName-clearUA',
     'scope': scope.toJson(),
     'name': name,
     'unifiedAddress': unifiedAddress,
@@ -147,7 +153,7 @@ class ZnsOperation {
     if (value is! Map<String, dynamic> ||
         value['version'] != 1 ||
         value['policy'] !=
-            'deposit365-refresh365-grace90-forfeitAll-reserveCarry-erc721-multiName-clearUA' ||
+            'deposit365-refresh365-grace90-earlyFee10-forfeitRewards-reserveCarry-erc721-multiName-clearUA' ||
         value.containsKey('years') ||
         value['scope'] is! Map) {
       throw const FormatException('Unsupported ZNS recovery record.');

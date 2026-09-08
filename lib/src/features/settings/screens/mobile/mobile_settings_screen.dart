@@ -1,3 +1,4 @@
+import '../../base_key_export.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -117,6 +118,19 @@ class MobileSettingsScreen extends ConsumerWidget {
                           : null,
                     ),
                     MobileListRow(
+                      key: const ValueKey('mobile_settings_base_key_row'),
+                      leading: _RowIcon(AppIcons.key),
+                      label: 'Base account private key',
+                      minRowHeight: _settingsRowHeight,
+                      textStyle: settingsRowStyle,
+                      chevronColor: settingsChevronColor,
+                      showChevron: true,
+                      enabled: seedPhraseEnabled,
+                      onTap: seedPhraseEnabled
+                          ? () => showBaseKeyExport(context)
+                          : null,
+                    ),
+                    MobileListRow(
                       leading: _RowIcon(AppIcons.lock),
                       label: 'Password',
                       minRowHeight: _settingsRowHeight,
@@ -187,9 +201,12 @@ class MobileSettingsScreen extends ConsumerWidget {
                     ),
                     MobileListRow(
                       key: const ValueKey('mobile_settings_names_row'),
-                      leading: _RowIcon(AppIcons.users), label: 'Zcash names',
-                      minRowHeight: _settingsRowHeight, textStyle: settingsRowStyle,
-                      chevronColor: settingsChevronColor, showChevron: true,
+                      leading: _RowIcon(AppIcons.users),
+                      label: 'Zcash names',
+                      minRowHeight: _settingsRowHeight,
+                      textStyle: settingsRowStyle,
+                      chevronColor: settingsChevronColor,
+                      showChevron: true,
                       onTap: () => context.push('/names'),
                     ),
                     MobileListRow(
@@ -221,6 +238,16 @@ class MobileSettingsScreen extends ConsumerWidget {
                 _SettingsGroup(
                   title: 'System',
                   rows: [
+                    MobileListRow(
+                      key: const ValueKey('mobile_settings_names_row'),
+                      leading: _RowIcon(AppIcons.users),
+                      label: 'Names',
+                      minRowHeight: _settingsRowHeight,
+                      textStyle: settingsRowStyle,
+                      chevronColor: settingsChevronColor,
+                      showChevron: true,
+                      onTap: () => context.push('/settings/names'),
+                    ),
                     MobileListRow(
                       key: const ValueKey('mobile_settings_endpoint_row'),
                       leading: _RowIcon(AppIcons.endpoint),

@@ -9,6 +9,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zcash_wallet/src/app_bootstrap.dart';
+import 'package:zcash_wallet/src/features/zns/application/zns_controller.dart';
+import 'package:zcash_wallet/src/features/zns/presentation/zns_wallet_screen.dart';
+import 'package:zcash_wallet/src/features/zns/presentation/zns_view_data.dart';
 import 'package:zcash_wallet/src/core/config/rpc_endpoint_config.dart';
 import 'package:zcash_wallet/src/core/config/swap_feature_config.dart';
 import 'package:zcash_wallet/src/core/formatting/sync_status_label.dart';
@@ -44,6 +47,31 @@ void main() {
     SyncFailureKind.parseFatal: 'Syncing failed. Data error...',
     SyncFailureKind.unknown: 'Syncing failed. Unknown error...',
   };
+
+  testWidgets('Names keeps desktop navigation visible and returns to Home', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_sidebarHarness(_syncedSyncState));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('sidebar_names_button')));
+    await tester.pumpAndSettle();
+    expect(find.byType(ZnsWalletScreen), findsOneWidget);
+    expect(find.byType(AppMainSidebar), findsOneWidget);
+    expect(find.text('Name service is not configured'), findsOneWidget);
+    expect(
+      tester
+          .widget<AppSidebarItem>(
+            find.byKey(const ValueKey('sidebar_names_button')),
+          )
+          .active,
+      isTrue,
+    );
+    await tester.tap(find.byKey(const ValueKey('sidebar_home_button')));
+    await tester.pumpAndSettle();
+    expect(find.text('home route'), findsOneWidget);
+    expect(find.byType(ZnsWalletScreen), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('sidebar shows in-progress sync percentage', (tester) async {
     await tester.pumpWidget(
@@ -85,6 +113,7 @@ void main() {
     expect(find.byKey(const ValueKey('sidebar_home_button')), findsOneWidget);
     expect(find.byKey(const ValueKey('sidebar_swap_button')), findsOneWidget);
     expect(find.byKey(const ValueKey('sidebar_pay_button')), findsOneWidget);
+    expect(find.byKey(const ValueKey('sidebar_names_button')), findsOneWidget);
     expect(find.byKey(const ValueKey('sidebar_voting_button')), findsOneWidget);
     expect(
       find.byKey(const ValueKey('sidebar_activity_button')),
@@ -703,6 +732,7 @@ void main() {
       tester.getTopLeft(find.text('Home')).dy,
       tester.getTopLeft(find.text('Swap')).dy,
       tester.getTopLeft(find.text('Pay')).dy,
+      tester.getTopLeft(find.text('Names')).dy,
       tester.getTopLeft(find.text('Vote')).dy,
       tester.getTopLeft(find.text('Activity')).dy,
     ];
@@ -1228,6 +1258,7 @@ Widget _sidebarHarness(
           pane: const AppDesktopPane(child: Text('home route')),
         ),
       ),
+      GoRoute(path: '/names', builder: (_, _) => const ZnsWalletScreen()),
       GoRoute(path: '/accounts', builder: (_, _) => const Text('accounts')),
       GoRoute(
         path: '/send',
@@ -1308,6 +1339,7 @@ Widget _sidebarHarness(
 
   return ProviderScope(
     overrides: [
+      znsControllerProvider.overrideWith(_SidebarZnsController.new),
       appBootstrapProvider.overrideWithValue(bootstrap),
       syncProvider.overrideWith(() => _FakeSyncNotifier(syncState)),
       networkPrivacyProvider.overrideWith(
@@ -1621,4 +1653,9 @@ class _FakeNetworkPrivacyNotifier extends NetworkPrivacyNotifier {
 
   @override
   NetworkPrivacyState build() => _state;
+}
+
+class _SidebarZnsController extends ZnsController {
+  @override
+  ZnsViewData build() => const ZnsViewData();
 }

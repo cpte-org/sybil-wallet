@@ -289,9 +289,25 @@ class ZnsEngine {
     final maxEth = swapWei * BigInt.from(105) ~/ BigInt.from(100) + reserve;
     final neededEth = maxEth > state.eth ? maxEth - state.eth : BigInt.zero;
     var approvedZatoshi = maxZatoshi ?? BigInt.zero;
+    BigInt? estimatedZatoshi, rateZatoshi, zcashFeeZatoshi;
     if (neededEth > BigInt.zero) {
       final funding = await gateway.fundingQuote(neededEth, dry: true);
       final zec = BigInt.parse(funding['maxZatoshi'] as String);
+      estimatedZatoshi = zec;
+      zcashFeeZatoshi = BigInt.tryParse('${funding['zecFee']}');
+      // Indicative combined route rate; excludes Zcash miner fees and the
+      // separately budgeted Base gas, but includes quoted conversion costs.
+      final plan = funding['plan'];
+      if (shortfall > BigInt.zero &&
+          plan is Map &&
+          plan['depositZatoshi'] is String) {
+        final deposit = BigInt.parse(plan['depositZatoshi'] as String);
+        rateZatoshi =
+            deposit *
+            swapWei *
+            BigInt.from(100000000) ~/
+            (neededEth * shortfall);
+      }
       if (maxZatoshi == null) {
         approvedZatoshi =
             (zec * BigInt.from(105) + BigInt.from(99)) ~/ BigInt.from(100);
@@ -321,6 +337,9 @@ class ZnsEngine {
       commitment: commitment,
       kind: kind,
       maxZatoshi: approvedZatoshi,
+      estimatedZatoshi: estimatedZatoshi,
+      rateZatoshi: rateZatoshi,
+      zcashFeeZatoshi: zcashFeeZatoshi,
       maxEthWei: maxEth,
       requiredTokenUnits: amount,
       maxGasFeeWei: reserve,

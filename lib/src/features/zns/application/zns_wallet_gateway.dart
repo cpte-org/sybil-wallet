@@ -92,6 +92,26 @@ class ZnsWalletGateway implements ZnsEngineGateway {
     }
   }
 
+  static Future<Uint8List> exportKey(
+    Ref ref,
+    String uuid,
+    String network,
+    String owner,
+  ) async {
+    final bytes = await _secretBytes(ref, uuid);
+    try {
+      return await rust.znsExportKey(
+        dbPath: await getWalletDbPath(),
+        network: network,
+        accountUuid: uuid,
+        secretBytes: bytes,
+        expectedOwner: owner,
+      );
+    } finally {
+      bytes.fillRange(0, bytes.length, 0);
+    }
+  }
+
   static Future<Uint8List> _secretBytes(Ref ref, String uuid) async {
     if (ref.read(appSecurityProvider).requiresUnlock ||
         ref.read(accountProvider).value?.activeAccountUuid != uuid) {

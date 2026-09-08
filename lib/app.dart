@@ -75,6 +75,7 @@ import 'src/features/send/services/send_flow.dart'
 import 'src/features/settings/screens/settings_screen.dart';
 import 'src/features/settings/screens/settings_change_password_screen.dart';
 import 'src/features/settings/screens/settings_endpoint_screen.dart';
+import 'src/features/settings/names_settings.dart';
 import 'src/features/settings/screens/settings_explorer_screen.dart';
 import 'src/features/settings/screens/settings_seed_phrase_screen.dart';
 import 'src/features/settings/screens/settings_uninstall_screen.dart';
@@ -1012,6 +1013,10 @@ List<RouteBase> _desktopRoutes(Ref ref) => [
   GoRoute(
     path: '/settings/change-password',
     builder: (_, _) => const SettingsChangePasswordScreen(),
+  ),
+  GoRoute(
+    path: '/settings/names',
+    builder: (_, _) => const NamesSettingsScreen(),
   ),
   GoRoute(
     path: '/settings/endpoint',

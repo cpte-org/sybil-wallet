@@ -253,9 +253,9 @@ void main() {
       ..['requiredTokenUnits'] = '0'
       ..['exitPreview'] = {
         'early': true,
-        'principalReturned': '0',
+        'principalReturned': '450',
         'rewardsReturned': '0',
-        'principalForfeited': '500',
+        'principalForfeited': '50',
         'rewardsForfeitedScaled': '01',
       };
     expect(() => _decode(record), throwsFormatException);

@@ -1,5 +1,5 @@
 {
-  "testedAt": "2026-09-08T18:17:20.800Z",
+  "testedAt": "2026-09-08T22:44:58.684Z",
   "baseMainnetFork": false,
   "chainId": 31337,
   "delegateCodeHash": "0x68bd78f424f6a279ffa07124f6626f06f7d9206f630f16694d32fe2b45749760",
@@ -13,7 +13,7 @@
     "Rust-signed self-funded EIP-7702 registration preserves owner and full deposit",
     "Local reorg removes registration while preserving recoverable commitment",
     "Rust-signed refresh/update/claim preserve maturity; mature release returns full deposit",
-    "Maximum-length Rust-signed atomic registration succeeds (1821253 gas)",
+    "Maximum-length Rust-signed atomic registration succeeds (1843882 gas)",
     "One software account registers multiple independent NFTs",
     "Rust-signed NFT gift and safe return to a delegated account preserve financial rights and dates",
     "Destination failure rolls back an earlier swap-like asset purchase",

@@ -224,11 +224,7 @@ class ZnsController extends Notifier<ZnsViewData> {
         );
       }
       if (epoch != _epoch || !_unlocked) return;
-      final review = await engine.prepare(
-        name: input.name,
-        ua: ua,
-        maxZatoshi: znsParseAmount(input.maxZec, 8),
-      );
+      final review = await engine.prepare(name: input.name, ua: ua);
       if (epoch == _epoch && _unlocked) _review = review;
     }),
   );
@@ -280,7 +276,11 @@ class ZnsController extends Notifier<ZnsViewData> {
     }),
   );
 
-  void manage(String kind, {String recipient = ''}) => unawaited(
+  void manage(
+    String kind, {
+    String recipient = '',
+    String? receivingAddress,
+  }) => unawaited(
     _run(() async {
       final epoch = _epoch, network = _network, currentUa = _ua;
       final engine = _engine;
@@ -293,7 +293,9 @@ class ZnsController extends Notifier<ZnsViewData> {
       if (kind != 'withdrawClaims' && position == null) {
         throw StateError('There is no registration to manage.');
       }
-      final ua = kind == 'update' ? currentUa : position?.unifiedAddress ?? '';
+      final ua = kind == 'update'
+          ? (receivingAddress ?? currentUa).trim()
+          : position?.unifiedAddress ?? '';
       if (kind == 'update' &&
           !await rust.znsValidateUnifiedAddress(
             network: network,
@@ -542,7 +544,7 @@ class ZnsController extends Notifier<ZnsViewData> {
     onRefreshName: () => manage('refresh'),
     onClaimRewards: () => manage('claimRewards'),
     onWithdrawClaims: () => manage('withdrawClaims'),
-    onUpdateAddress: () => manage('update'),
+    onUpdateAddress: (address) => manage('update', receivingAddress: address),
     onRelease: () => manage('release'),
     onTransfer: (recipient) => manage('transfer', recipient: recipient),
     onSelectName: selectName,
@@ -679,6 +681,15 @@ class ZnsController extends Notifier<ZnsViewData> {
                   : review.name,
               unifiedAddress: review.unifiedAddress,
               maxZec: _amount(review.maxZatoshi, 8),
+              estimatedZec: review.estimatedZatoshi == null
+                  ? null
+                  : _amount(review.estimatedZatoshi!, 8),
+              conversionRate: review.rateZatoshi == null
+                  ? null
+                  : '1 cbZEC ≈ ${_amount(review.rateZatoshi!, 8)} ZEC',
+              zcashFee: review.zcashFeeZatoshi == null
+                  ? null
+                  : _amount(review.zcashFeeZatoshi!, 8),
               deposit: _amount(
                 review.kind == 'transfer'
                     ? chain?.deposit ?? BigInt.zero
@@ -723,8 +734,7 @@ class ZnsController extends Notifier<ZnsViewData> {
                           znsRewardScale,
                       8,
                     ),
-              gasReserve:
-                  '${_amount(review.maxGasFeeWei, 18)} ETH estimated reserve',
+              gasReserve: _amount(review.maxGasFeeWei, 18),
               estimatedDuration: (chain?.eth ?? BigInt.zero) >= review.maxEthWei
                   ? (review.kind == 'register'
                         ? 'Commitment wait and Base confirmations'
@@ -792,9 +802,10 @@ class ZnsController extends Notifier<ZnsViewData> {
               transactionId:
                   op.pending?['hash'] as String? ??
                   op.funding?['txHash'] as String?,
-              recoveryMessage:
-                  op.message ??
-                  'Unlock and review to resume after restarting. Existing signed transactions can still confirm.',
+              recoveryMessage: op.isComplete
+                  ? null
+                  : op.message ??
+                        'Unlock and review to resume after restarting. Existing signed transactions can still confirm.',
             ),
     );
   }

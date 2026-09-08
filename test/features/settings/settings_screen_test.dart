@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'dart:ui' show PointerDeviceKind;
 
 import 'package:flutter/foundation.dart'
@@ -13,6 +14,10 @@ import 'package:zcash_wallet/src/core/theme/app_theme.dart';
 import 'package:zcash_wallet/src/core/widgets/app_button.dart';
 import 'package:zcash_wallet/src/core/widgets/app_icon.dart';
 import 'package:zcash_wallet/src/features/settings/screens/settings_screen.dart';
+import 'package:zcash_wallet/src/features/settings/base_key_export.dart';
+import 'package:zcash_wallet/src/features/settings/names_settings.dart';
+import 'package:zcash_wallet/src/features/zns/application/zns_controller.dart';
+import 'package:zcash_wallet/src/features/zns/presentation/zns_view_data.dart';
 import 'package:zcash_wallet/src/features/settings/settings_platform.dart';
 import 'package:zcash_wallet/src/features/settings/widgets/network_privacy_control.dart';
 import 'package:zcash_wallet/src/providers/account_models.dart';
@@ -37,6 +42,42 @@ void main() {
     );
   });
 
+  testWidgets(
+    'Account key export and Names configuration open from main Settings',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1512, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        _settingsHarness(
+          extraOverrides: [
+            baseKeyExportAccessProvider.overrideWith(
+              (ref) async => BaseKeyExportAccess(
+                '0xPublicTestAccount',
+                (_) async => Uint8List(32),
+              ),
+            ),
+            znsControllerProvider.overrideWith(_SettingsNamesController.new),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.tap(find.text('Base account private key'));
+      await tester.pumpAndSettle();
+      expect(find.text('Export Base account private key'), findsOneWidget);
+      expect(find.byKey(const Key('zns-export-password')), findsOneWidget);
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Names').last);
+      await tester.tap(find.text('Names').last);
+      await tester.pumpAndSettle();
+      expect(find.text('Name service settings'), findsOneWidget);
+      expect(find.text('Registry address'), findsOneWidget);
+      expect(find.byType(Dialog), findsNothing);
+      Navigator.of(tester.element(find.text('Name service settings'))).pop();
+      await tester.pumpAndSettle();
+    },
+  );
+
   testWidgets('settings rows show hover and focus states', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1512, 982));
     addTearDown(() async {
@@ -47,6 +88,7 @@ void main() {
     await tester.pump();
 
     expect(_rowBackgroundColor(tester, 'Password'), isNull);
+    expect(find.text('Base account private key'), findsOneWidget);
     expect(find.text('Explorer'), findsOneWidget);
     expect(find.text('CipherScan'), findsOneWidget);
 
@@ -531,6 +573,7 @@ Widget _settingsHarness({
     initialLocation: '/settings',
     routes: [
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
+      GoRoute(path: '/settings/names', builder: (_, _) => const NamesSettingsScreen()),
       GoRoute(path: '/home', builder: (_, _) => const Text('home route')),
       GoRoute(path: '/send', builder: (_, _) => const Text('send route')),
       GoRoute(path: '/receive', builder: (_, _) => const Text('receive route')),
@@ -674,4 +717,9 @@ bool _hasFocusRing(WidgetTester tester) {
         border.top.width == 2;
   });
   return focusRing.evaluate().isNotEmpty;
+}
+
+class _SettingsNamesController extends ZnsController {
+  @override
+  ZnsViewData build() => const ZnsViewData();
 }

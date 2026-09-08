@@ -87,11 +87,8 @@ class ZnsLookupView {
 
 @immutable
 class ZnsRegistrationInput {
-  const ZnsRegistrationInput({required this.name, required this.maxZec});
+  const ZnsRegistrationInput({required this.name});
   final String name;
-
-  /// Decimal ZEC input; the adapter must parse integer zatoshis, never double.
-  final String maxZec;
 }
 
 @immutable
@@ -108,6 +105,9 @@ class ZnsReviewView {
     this.existingCbZecSpend,
     this.existingEthSpend,
     this.quoteExpiresIn,
+    this.estimatedZec,
+    this.conversionRate,
+    this.zcashFee,
     this.canConfirm = false,
     this.blockedReason,
     this.maturityAt,
@@ -130,6 +130,7 @@ class ZnsReviewView {
   final String? existingCbZecSpend;
   final String? existingEthSpend;
   final String? quoteExpiresIn;
+  final String? estimatedZec, conversionRate, zcashFee;
   final bool canConfirm;
   final String? blockedReason;
   final String? maturityAt;
@@ -301,7 +302,7 @@ class ZnsCallbacks {
   final VoidCallback? onWithdrawClaims;
 
   /// Opens the adapter's address / gas review; this is not an authorization.
-  final VoidCallback? onUpdateAddress;
+  final ValueChanged<String>? onUpdateAddress;
   final ValueChanged<ZnsConfigurationInput>? onSaveConfiguration;
   final VoidCallback? onShowRecovery;
 

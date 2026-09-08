@@ -73,7 +73,7 @@ try {
   const rollbackToken=fork?await deploy(tokenArtifact):token;
   const swap=await deploy(artifact('TestToken.sol','TestSwap'),[rollbackToken]);
   const config={chainId:31337,allowTestChain:true,registry,token,delegate,
-    protocolId:'0x32820c0b6a02f887a3de9a376a6e3c69a6b64b309f1bb809161039668d593760',
+    protocolId:'0xd1a382e424de62cfc7a26d4829be41e2b15b5d49ae43bd839f997afde7a0538f',
     maxValueWei:parseEther('1').toString(),maxGasLimit:'3000000',maxFeePerGasWei:'100000000000',maxTotalFeeWei:'100000000000000000',maxTokenAmount:'100000000'};
   const secret='0x'+'11'.repeat(32),ua='local-contract-fixture-address';
   const op={kind:'commit',name:'alice',unifiedAddress:ua,secret};

@@ -31,6 +31,31 @@ void main() {
       tester.widget<AppButton>(find.byKey(Key(key))).onPressed != null;
 
   testWidgets(
+    'custom receiving address is passed to review and cleared on name change',
+    (tester) async {
+      String? reviewed;
+      final callbacks = ZnsCallbacks(
+        onUpdateAddress: (address) => reviewed = address,
+      );
+      await show(tester, ZnsPreviewFixtures.active, callbacks: callbacks);
+      await tester.ensureVisible(find.byKey(const Key('zns-edit-address')));
+      await tester.tap(find.byKey(const Key('zns-edit-address')));
+      await tester.pump();
+      await tester.enterText(
+        find.byKey(const Key('zns-receiving-address')),
+        '  u1custom-recipient  ',
+      );
+      await tester.pump();
+      await tester.ensureVisible(find.byKey(const Key('zns-review-address')));
+      await tester.tap(find.byKey(const Key('zns-review-address')));
+      expect(reviewed, 'u1custom-recipient');
+      await show(tester, ZnsPreviewFixtures.received, callbacks: callbacks);
+      expect(find.byKey(const Key('zns-receiving-address')), findsNothing);
+      expect(find.text('Set payment address'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
     'multiple names select stable IDs and keep registration available',
     (tester) async {
       String? selected;
@@ -107,6 +132,7 @@ void main() {
     await tester.pump();
     expect(enabled(tester, 'zns-lookup'), isFalse);
     expect(find.text('Name service is not configured'), findsOneWidget);
+    expect(find.byKey(const Key('zns-settings')), findsNothing);
     expect(calls, 0);
   });
 
@@ -129,7 +155,6 @@ void main() {
     await tester.enterText(find.byKey(const Key('zns-name')), 'River.zec');
     await tester.pump();
     expect(find.text('Registration period'), findsNothing);
-    await tester.enterText(find.byKey(const Key('zns-budget')), '0');
     await tester.pump();
     expect(
       enabled(tester, 'zns-prepare'),
@@ -137,13 +162,12 @@ void main() {
       reason:
           'A funded Base account can request a review without new ZEC funding.',
     );
-    await tester.enterText(find.byKey(const Key('zns-budget')), '0.12');
     await tester.pump();
     await tester.ensureVisible(find.byKey(const Key('zns-prepare')));
     await tester.tap(find.byKey(const Key('zns-prepare')));
     expect(request?.name, 'river');
-    expect(request?.maxZec, '0.12');
-    expect(find.textContaining('Earlier exit forfeits'), findsOneWidget);
+    expect(find.byKey(const Key('zns-budget')), findsNothing);
+    expect(find.textContaining('Earlier exit returns'), findsOneWidget);
   });
 
   testWidgets('hardware accounts can look up but cannot prepare registration', (
@@ -161,7 +185,6 @@ void main() {
     );
     await tester.enterText(find.byKey(const Key('zns-name')), 'river');
     await tester.pump();
-    await tester.enterText(find.byKey(const Key('zns-budget')), '0.12');
     await tester.pump();
     expect(enabled(tester, 'zns-lookup'), isTrue);
     expect(enabled(tester, 'zns-prepare'), isFalse);
@@ -237,19 +260,17 @@ void main() {
     );
   });
 
-  testWidgets('early exit shows full forfeiture without refundable language', (
-    tester,
-  ) async {
-    await show(tester, ZnsPreviewFixtures.earlyRelease);
-    expect(
-      find.text('Early exit forfeits your entire deposit'),
-      findsOneWidget,
-    );
-    expect(find.text('Deposit forfeited'), findsOneWidget);
-    expect(find.text('Unvested rewards forfeited'), findsOneWidget);
-    expect(find.textContaining('Refundable bond'), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'early exit shows the fee, returned principal and forfeited rewards',
+    (tester) async {
+      await show(tester, ZnsPreviewFixtures.earlyRelease);
+      expect(find.text('Early release fee: 10%'), findsOneWidget);
+      expect(find.text('Early-release fee'), findsOneWidget);
+      expect(find.text('Unvested rewards forfeited'), findsOneWidget);
+      expect(find.textContaining('Refundable bond'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets(
     'paused work is distinct from failure and survives without retry',

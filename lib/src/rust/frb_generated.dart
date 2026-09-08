@@ -80,7 +80,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => -1567382503;
+  int get rustContentHash => -1138757563;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -1291,6 +1291,14 @@ abstract class RustLibApi extends BaseApi {
   Future<String> crateApiZnsZnsDecodeResult({
     required String method,
     required String data,
+  });
+
+  Future<Uint8List> crateApiZnsZnsExportKey({
+    required String dbPath,
+    required String network,
+    required String accountUuid,
+    required List<int> secretBytes,
+    required String expectedOwner,
   });
 
   Future<String> crateApiZnsZnsPrepare({
@@ -9361,6 +9369,52 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
+  Future<Uint8List> crateApiZnsZnsExportKey({
+    required String dbPath,
+    required String network,
+    required String accountUuid,
+    required List<int> secretBytes,
+    required String expectedOwner,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(dbPath, serializer);
+          sse_encode_String(network, serializer);
+          sse_encode_String(accountUuid, serializer);
+          sse_encode_list_prim_u_8_loose(secretBytes, serializer);
+          sse_encode_String(expectedOwner, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 191,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiZnsZnsExportKeyConstMeta,
+        argValues: [dbPath, network, accountUuid, secretBytes, expectedOwner],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiZnsZnsExportKeyConstMeta => const TaskConstMeta(
+    debugName: "zns_export_key",
+    argNames: [
+      "dbPath",
+      "network",
+      "accountUuid",
+      "secretBytes",
+      "expectedOwner",
+    ],
+  );
+
+  @override
   Future<String> crateApiZnsZnsPrepare({
     required String network,
     required String configJson,
@@ -9378,7 +9432,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 191,
+            funcId: 192,
             port: port_,
           );
         },
@@ -9407,7 +9461,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 192,
+            funcId: 193,
             port: port_,
           );
         },
@@ -9439,7 +9493,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 193,
+            funcId: 194,
             port: port_,
           );
         },
@@ -9483,7 +9537,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 194,
+            funcId: 195,
             port: port_,
           );
         },
@@ -9533,7 +9587,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 195,
+            funcId: 196,
             port: port_,
           );
         },

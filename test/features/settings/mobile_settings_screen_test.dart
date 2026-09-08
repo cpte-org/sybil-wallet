@@ -938,6 +938,7 @@ void main() {
       'Contacts',
       'Secret Passphrase',
       'Viewing Key',
+      'Base account private key',
       'Keep screen awake',
     ]) {
       final row = tester.widget<Text>(find.text(label));

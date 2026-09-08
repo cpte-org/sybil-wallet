@@ -82,3 +82,22 @@ pub fn zns_decode_result(method: String, data: String) -> Result<String, String>
 pub fn zns_random_secret() -> String {
     vizor_zns_core::random_secret()
 }
+
+/// Explicit software-account export; caller must freshly authenticate the user.
+/// Plaintext key bytes must be cleared by the frontend after display.
+pub fn zns_export_key(
+    db_path: String,
+    network: String,
+    account_uuid: String,
+    secret_bytes: Vec<u8>,
+    expected_owner: String,
+) -> Result<Vec<u8>, String> {
+    let secret = zeroize::Zeroizing::new(secret_bytes);
+    zns::export_key(
+        &db_path,
+        parse_network(&network)?,
+        &account_uuid,
+        secret.to_vec(),
+        &expected_owner,
+    )
+}
