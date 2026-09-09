@@ -14,6 +14,7 @@ import 'package:zcash_wallet/src/core/theme/app_theme.dart';
 import 'package:zcash_wallet/src/core/widgets/app_button.dart';
 import 'package:zcash_wallet/src/core/widgets/app_icon.dart';
 import 'package:zcash_wallet/src/features/settings/screens/settings_screen.dart';
+import 'package:zcash_wallet/src/features/settings/screens/settings_base_key_screen.dart';
 import 'package:zcash_wallet/src/features/settings/base_key_export.dart';
 import 'package:zcash_wallet/src/features/settings/names_settings.dart';
 import 'package:zcash_wallet/src/features/zns/application/zns_controller.dart';
@@ -63,9 +64,21 @@ void main() {
       await tester.pump();
       await tester.tap(find.text('Base account private key'));
       await tester.pumpAndSettle();
-      expect(find.text('Export Base account private key'), findsOneWidget);
-      expect(find.byKey(const Key('zns-export-password')), findsOneWidget);
-      await tester.tap(find.text('Close'));
+      expect(find.text('Confirm access'), findsOneWidget);
+      expect(find.text('To view the Base account private key.'), findsOneWidget);
+      await tester.enterText(find.byType(TextField), 'testpassword');
+      await tester.pump();
+      await tester.tap(find.bySemanticsLabel('Confirm password'));
+      await tester.pumpAndSettle();
+      expect(find.text('Base Account Private Key'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('settings_base_key_value')),
+        findsOneWidget,
+      );
+      final screenContext = tester.element(
+        find.text('Base Account Private Key'),
+      );
+      GoRouter.of(screenContext).pop();
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Names').last);
       await tester.tap(find.text('Names').last);
@@ -574,6 +587,10 @@ Widget _settingsHarness({
     routes: [
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
       GoRoute(path: '/settings/names', builder: (_, _) => const NamesSettingsScreen()),
+      GoRoute(
+        path: '/settings/base-key',
+        builder: (_, _) => const SettingsBaseKeyScreen(),
+      ),
       GoRoute(path: '/home', builder: (_, _) => const Text('home route')),
       GoRoute(path: '/send', builder: (_, _) => const Text('send route')),
       GoRoute(path: '/receive', builder: (_, _) => const Text('receive route')),

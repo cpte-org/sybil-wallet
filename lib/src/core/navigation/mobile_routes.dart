@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/zns/presentation/zns_wallet_screen.dart';
 import '../../features/settings/names_settings.dart';
+import '../../features/settings/screens/settings_base_key_screen.dart';
 
 import '../../features/accounts/screens/mobile/mobile_accounts_screen.dart';
 import '../../features/activity/screens/mobile/mobile_activity_screen.dart';
@@ -134,6 +135,13 @@ List<RouteBase> buildMobileRoutes({required List<RouteBase> entryRoutes}) {
       path: '/settings/names',
       pageBuilder: (context, state) =>
           CupertinoPage(key: state.pageKey, child: const NamesSettingsScreen()),
+    ),
+    GoRoute(
+      path: '/settings/base-key',
+      pageBuilder: (context, state) => CupertinoPage(
+        key: state.pageKey,
+        child: const SettingsBaseKeyScreen(),
+      ),
     ),
     GoRoute(
       path: '/settings/endpoint',

@@ -29,6 +29,8 @@ class ZnsViewData {
     this.hasMoreNames = false,
     this.error,
     this.notice,
+    this.onDismissError,
+    this.onDismissNotice,
   });
 
   final String accountId;
@@ -55,6 +57,10 @@ class ZnsViewData {
   final bool hasMoreNames;
   final String? error;
   final String? notice;
+
+  /// Clears the banner in [error] / [notice] until the next occurrence.
+  final VoidCallback? onDismissError;
+  final VoidCallback? onDismissNotice;
 
   bool get canWrite =>
       isConfigured && isSoftwareAccount && !isLocked && !isBusy;
@@ -283,6 +289,8 @@ class ZnsCallbacks {
     this.onSaveConfiguration,
     this.onShowRecovery,
     this.onSendToName,
+    this.onDismissError,
+    this.onDismissNotice,
   });
   final ValueChanged<String>? onLookup;
   final ValueChanged<ZnsRegistrationInput>? onPrepareRegistration;
@@ -290,7 +298,10 @@ class ZnsCallbacks {
   final VoidCallback? onCancelReview;
   final VoidCallback? onPause;
   final VoidCallback? onResume;
-  final VoidCallback? onRefresh;
+
+  /// Completes when the refresh settles, so callers can await it
+  /// (pull-to-refresh) or fire it (buttons).
+  final Future<void> Function()? onRefresh;
 
   /// Management callbacks open a bounded review, never authorize signing.
   final VoidCallback? onRefreshName;
@@ -308,4 +319,6 @@ class ZnsCallbacks {
 
   /// Requests the host's normal send flow after it validates the lookup.
   final ValueChanged<ZnsLookupView>? onSendToName;
+  final VoidCallback? onDismissError;
+  final VoidCallback? onDismissNotice;
 }

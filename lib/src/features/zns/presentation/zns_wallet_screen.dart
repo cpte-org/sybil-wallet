@@ -5,6 +5,8 @@ import '../../../core/clipboard/sensitive_clipboard.dart';
 import '../../../core/layout/app_form_factor.dart';
 import '../../../core/layout/app_desktop_shell.dart';
 import '../../../core/layout/app_main_sidebar.dart';
+import '../../../core/layout/mobile/mobile_top_nav.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../send/models/send_prefill_args.dart';
 import '../application/zns_controller.dart';
 import 'zns_screen.dart';
@@ -68,13 +70,25 @@ class ZnsWalletScreen extends ConsumerWidget {
             if (context.mounted) {
               ScaffoldMessenger.maybeOf(
                 context,
-              )?.showSnackBar(SnackBar(content: Text(e.toString())));
+              )?.showSnackBar(SnackBar(content: Text(znsFriendlyError(e))));
             }
           }
         },
       ),
     );
-    if (kAppFormFactor == AppFormFactor.mobile) return content;
+    if (kAppFormFactor == AppFormFactor.mobile) {
+      return Scaffold(
+        backgroundColor: context.colors.background.window,
+        body: SafeArea(
+          child: Column(
+            children: [
+              MobileTopNav.back(title: 'Names', onBack: () => context.pop()),
+              Expanded(child: content),
+            ],
+          ),
+        ),
+      );
+    }
     return AppDesktopShell(
       sidebar: const AppMainSidebar(),
       pane: AppDesktopPane(padding: EdgeInsets.zero, child: content),
@@ -84,7 +98,7 @@ class ZnsWalletScreen extends ConsumerWidget {
   Future<void> _recovery(BuildContext context, ZnsController controller) async {
     final input = TextEditingController();
     String? message;
-    var busy = false, acknowledged = false;
+    var messageIsError = false, busy = false, acknowledged = false;
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -94,7 +108,8 @@ class ZnsWalletScreen extends ConsumerWidget {
             try {
               await action();
             } catch (e) {
-              message = e.toString();
+              message = znsFriendlyError(e);
+              messageIsError = true;
             } finally {
               if (context.mounted) update(() => busy = false);
             }
@@ -122,22 +137,25 @@ class ZnsWalletScreen extends ConsumerWidget {
                               );
                               message =
                                   'Recovery copied. Save it privately before the clipboard clears.';
+                              messageIsError = false;
                             }),
                       child: const Text('Copy recovery'),
                     ),
                     TextField(
                       controller: input,
                       maxLines: 4,
+                      onChanged: (_) => update(() {}),
                       decoration: const InputDecoration(
                         labelText: 'Paste a recovery JSON file',
                       ),
                     ),
                     OutlinedButton(
-                      onPressed: busy
+                      onPressed: busy || input.text.trim().isEmpty
                           ? null
                           : () => run(() async {
                               await controller.importRecovery(input.text);
                               message = 'Recovery restored.';
+                              messageIsError = false;
                             }),
                       child: const Text('Restore recovery'),
                     ),
@@ -158,10 +176,21 @@ class ZnsWalletScreen extends ConsumerWidget {
                               await controller.archiveOperation();
                               message =
                                   'Operation archived; pending chain activity was checked.';
+                              messageIsError = false;
                             }),
                       child: const Text('Archive resolved operation'),
                     ),
-                    if (message != null) Text(message!),
+                    if (message != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        message!,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: messageIsError
+                              ? context.colors.text.destructive
+                              : context.colors.text.positiveStrong,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

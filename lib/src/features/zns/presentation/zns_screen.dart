@@ -24,9 +24,17 @@ class _ZnsScreenState extends State<ZnsScreen> {
   final _name = TextEditingController();
   final _recipient = TextEditingController();
   final _receivingAddress = TextEditingController();
+  final _operationKey = GlobalKey();
+  final _reviewKey = GlobalKey();
   bool _showAddressEditor = false;
   bool _acceptedReview = false;
   bool _showBalances = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (data.operation != null) _scrollTo(_operationKey);
+  }
 
   ZnsViewData get data => widget.data;
   ZnsCallbacks get actions => widget.callbacks;
@@ -61,6 +69,48 @@ class _ZnsScreenState extends State<ZnsScreen> {
     if (_approvalKey(oldWidget.data.review) != _approvalKey(data.review)) {
       _acceptedReview = false;
     }
+    if (oldWidget.data.operation == null && data.operation != null) {
+      _name.clear();
+      _scrollTo(_operationKey);
+    } else if (oldWidget.data.operation?.isComplete != true &&
+        data.operation?.isComplete == true) {
+      _name.clear();
+      _scrollTo(_operationKey);
+    } else if (oldWidget.data.operation?.isComplete == true &&
+        data.operation?.isComplete == false) {
+      // A new operation replaced a completed one without the card ever
+      // leaving the tree (confirm ran while the old card was still shown).
+      _scrollTo(_operationKey);
+    }
+    if (oldWidget.data.review != null &&
+        data.review == null &&
+        data.operation != null) {
+      // Confirming a review over an existing operation swaps the review card
+      // for the new progress card.
+      _scrollTo(_operationKey);
+    }
+    if (oldWidget.data.review == null && data.review != null) {
+      _scrollTo(_reviewKey);
+    }
+  }
+
+  void _scrollTo(GlobalKey key) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = key.currentContext;
+      if (!mounted || context == null) return;
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        alignment: 0.05,
+      );
+    });
+  }
+
+  Future<void> _pullRefresh() async {
+    final refresh = actions.onRefresh;
+    if (refresh == null || data.isBusy || !_editing) return;
+    await refresh();
   }
 
   String _approvalKey(ZnsReviewView? review) => review == null
@@ -117,139 +167,161 @@ class _ZnsScreenState extends State<ZnsScreen> {
   @override
   Widget build(BuildContext context) {
     const mobile = kAppFormFactor == AppFormFactor.mobile;
+    Widget content = SingleChildScrollView(
+      key: const Key('zns-scroll'),
+      padding: const EdgeInsets.all(
+        mobile ? AppSpacing.sm : AppSpacing.base,
+      ),
+      physics: mobile ? const AlwaysScrollableScrollPhysics() : null,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 880),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (!mobile) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Names',
+                        style: AppTypography.headlineLarge.copyWith(
+                          color: context.colors.text.accent,
+                        ),
+                      ),
+                    ),
+                    AppButton(
+                      key: const Key('zns-refresh-balances'),
+                      onPressed: data.isBusy || !_editing
+                          ? null
+                          : actions.onRefresh,
+                      variant: AppButtonVariant.ghost,
+                      size: AppButtonSize.small,
+                      child: const Text('Refresh'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.s),
+              ],
+              Text(
+                'A familiar name for your Zcash address.',
+                style: AppTypography.bodyLarge.copyWith(
+                  color: context.colors.text.secondary,
+                ),
+              ),
+              if (actions.onShowRecovery != null && data.isConfigured) ...[
+                const SizedBox(height: AppSpacing.s),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: AppButton(
+                    key: const Key('zns-recovery'),
+                    onPressed: data.isLocked || data.isBusy
+                        ? null
+                        : actions.onShowRecovery,
+                    variant: AppButtonVariant.ghost,
+                    size: AppButtonSize.small,
+                    leading: const AppIcon(AppIcons.history),
+                    child: const Text('Recovery'),
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.md),
+              if (!data.isConfigured) ...[
+                const _Notice(
+                  icon: AppIcons.endpoint,
+                  title: 'Name service is not configured',
+                  text:
+                      'Add a verified registry in wallet Settings → Names to look up or register names. Registration stays unavailable until the connection is verified.',
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
+              if (!data.isSoftwareAccount) ...[
+                const _Notice(
+                  icon: AppIcons.keystone,
+                  title: 'Choose a software account to register',
+                  text:
+                      'Keystone registration will be supported separately. You can still look up names.',
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
+              if (data.isLocked) ...[
+                const _Notice(
+                  icon: AppIcons.lock,
+                  title: 'Registration is paused while locked',
+                  text:
+                      'Unlock your wallet to review or resume. Transactions already sent can still confirm.',
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
+              if (data.error case final error?) ...[
+                _Notice(
+                  icon: AppIcons.warningCircle,
+                  title: 'Action needed',
+                  text: error,
+                  isError: true,
+                  onDismiss: actions.onDismissError,
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
+              if (data.notice case final notice?) ...[
+                _Notice(
+                  icon: AppIcons.help,
+                  title: 'Before you continue',
+                  text: notice,
+                  onDismiss: actions.onDismissNotice,
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
+              if (data.operation case final operation?) ...[
+                KeyedSubtree(key: _operationKey, child: _operationCard(operation)),
+                const SizedBox(height: AppSpacing.md),
+              ],
+              if (data.review case final review?) ...[
+                KeyedSubtree(key: _reviewKey, child: _reviewCard(review)),
+                const SizedBox(height: AppSpacing.md),
+              ],
+              if (data.names.isNotEmpty) ...[
+                _inventoryCard(),
+                const SizedBox(height: AppSpacing.md),
+              ],
+              if (data.ownedName case final owned?) ...[
+                _ownedCard(owned),
+                const SizedBox(height: AppSpacing.md),
+              ],
+              if (_editing) _searchCard(),
+              const SizedBox(height: AppSpacing.md),
+              if (data.baseOwnerAddress.isNotEmpty ||
+                  data.canWithdrawClaims)
+                _balancesCard(),
+              const SizedBox(height: AppSpacing.md),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (!mobile) {
+      return Material(
+        color: Colors.transparent,
+        child: DefaultTextStyle(
+          style: AppTypography.bodyMedium.copyWith(
+            color: context.colors.text.primary,
+          ),
+          child: content,
+        ),
+      );
+    }
     return Material(
       color: Colors.transparent,
       child: DefaultTextStyle(
         style: AppTypography.bodyMedium.copyWith(
           color: context.colors.text.primary,
         ),
-        child: SingleChildScrollView(
-          key: const Key('zns-scroll'),
-          padding: const EdgeInsets.all(
-            mobile ? AppSpacing.sm : AppSpacing.base,
-          ),
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 880),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Names',
-                          style: AppTypography.headlineLarge.copyWith(
-                            color: context.colors.text.accent,
-                          ),
-                        ),
-                      ),
-                      AppButton(
-                        key: const Key('zns-refresh-balances'),
-                        onPressed: data.isBusy || !_editing
-                            ? null
-                            : actions.onRefresh,
-                        variant: AppButtonVariant.ghost,
-                        size: AppButtonSize.small,
-                        child: const Text('Refresh'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.s),
-                  Text(
-                    'A familiar name for your Zcash address.',
-                    style: AppTypography.bodyLarge.copyWith(
-                      color: context.colors.text.secondary,
-                    ),
-                  ),
-                  if (actions.onShowRecovery != null && data.isConfigured) ...[
-                    const SizedBox(height: AppSpacing.s),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: AppButton(
-                        key: const Key('zns-recovery'),
-                        onPressed: data.isLocked || data.isBusy
-                            ? null
-                            : actions.onShowRecovery,
-                        variant: AppButtonVariant.ghost,
-                        size: AppButtonSize.small,
-                        leading: const AppIcon(AppIcons.history),
-                        child: const Text('Recovery'),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.md),
-                  if (!data.isConfigured) ...[
-                    const _Notice(
-                      icon: AppIcons.endpoint,
-                      title: 'Name service is not configured',
-                      text:
-                          'Add a verified registry in wallet Settings → Names to look up or register names. Registration stays unavailable until the connection is verified.',
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
-                  if (!data.isSoftwareAccount) ...[
-                    const _Notice(
-                      icon: AppIcons.keystone,
-                      title: 'Choose a software account to register',
-                      text:
-                          'Keystone registration will be supported separately. You can still look up names.',
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
-                  if (data.isLocked) ...[
-                    const _Notice(
-                      icon: AppIcons.lock,
-                      title: 'Registration is paused while locked',
-                      text:
-                          'Unlock your wallet to review or resume. Transactions already sent can still confirm.',
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
-                  if (data.error case final error?) ...[
-                    _Notice(
-                      icon: AppIcons.help,
-                      title: 'Action needed',
-                      text: error,
-                      isError: true,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
-                  if (data.notice case final notice?) ...[
-                    _Notice(
-                      icon: AppIcons.help,
-                      title: 'Before you continue',
-                      text: notice,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
-                  if (data.operation case final operation?) ...[
-                    _operationCard(operation),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
-                  if (data.review case final review?) ...[
-                    _reviewCard(review),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
-                  if (data.names.isNotEmpty) ...[
-                    _inventoryCard(),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
-                  if (data.ownedName case final owned?) ...[
-                    _ownedCard(owned),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
-                  if (_editing) _searchCard(),
-                  const SizedBox(height: AppSpacing.md),
-                  if (data.baseOwnerAddress.isNotEmpty ||
-                      data.canWithdrawClaims)
-                    _balancesCard(),
-                  const SizedBox(height: AppSpacing.md),
-                ],
-              ),
-            ),
-          ),
+        child: RefreshIndicator(
+          color: context.colors.text.accent,
+          onRefresh: _pullRefresh,
+          child: content,
         ),
       ),
     );
@@ -275,6 +347,9 @@ class _ZnsScreenState extends State<ZnsScreen> {
             autocorrect: false,
             enableSuggestions: false,
             textInputAction: TextInputAction.search,
+            tone: _name.text.isNotEmpty && !_validName
+                ? AppTextFieldTone.destructive
+                : AppTextFieldTone.neutral,
             onChanged: (_) => setState(() {}),
             onSubmitted: (_) => _lookup(),
             messageText: _name.text.isNotEmpty && !_validName
@@ -292,7 +367,9 @@ class _ZnsScreenState extends State<ZnsScreen> {
                 ? _lookup
                 : null,
             variant: AppButtonVariant.secondary,
-            leading: const AppIcon(AppIcons.search),
+            leading: lookup?.status == ZnsLookupStatus.loading
+                ? const AppIcon(AppIcons.loader)
+                : const AppIcon(AppIcons.search),
             child: Text(
               lookup?.status == ZnsLookupStatus.loading
                   ? 'Checking name…'
@@ -315,7 +392,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
             ),
             const SizedBox(height: AppSpacing.md),
             _Address(
-              label: 'Receives Zcash at',
+              label: 'Zcash receiving address',
               address: data.walletUnifiedAddress,
               emptyText: 'Your wallet address is loading.',
             ),
@@ -360,14 +437,17 @@ class _ZnsScreenState extends State<ZnsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AppIcon(
-              available
-                  ? AppIcons.checkCircle
-                  : registered
-                  ? AppIcons.book
-                  : AppIcons.help,
-              color: available
-                  ? context.colors.text.positiveStrong
-                  : context.colors.text.secondary,
+              switch (lookup.status) {
+                ZnsLookupStatus.available => AppIcons.checkCircle,
+                ZnsLookupStatus.registered => AppIcons.book,
+                ZnsLookupStatus.failed => AppIcons.warningCircle,
+                _ => AppIcons.help,
+              },
+              color: switch (lookup.status) {
+                ZnsLookupStatus.available => context.colors.text.positiveStrong,
+                ZnsLookupStatus.failed => context.colors.text.destructive,
+                _ => context.colors.text.secondary,
+              },
             ),
             const SizedBox(width: AppSpacing.xs),
             Expanded(child: Text(title, style: AppTypography.bodyMediumStrong)),
@@ -517,7 +597,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
             ),
           if (!release && !withdrawing && !transferring)
             _Address(
-              label: 'Public receiving address',
+              label: 'Zcash receiving address',
               address: review.unifiedAddress,
             ),
           const SizedBox(height: AppSpacing.md),
@@ -650,15 +730,18 @@ class _ZnsScreenState extends State<ZnsScreen> {
                 color: context.colors.text.accent,
               ),
             ),
-            _Badge(
-              label: operation.isComplete
-                  ? 'Complete'
-                  : operation.isFailed
-                  ? 'Needs attention'
-                  : operation.isPaused
-                  ? 'Paused'
-                  : 'In progress',
-              positive: operation.isComplete,
+            Semantics(
+              liveRegion: operation.isComplete || operation.isFailed,
+              child: _Badge(
+                label: operation.isComplete
+                    ? 'Complete'
+                    : operation.isFailed
+                    ? 'Needs attention'
+                    : operation.isPaused
+                    ? 'Paused'
+                    : 'In progress',
+                positive: operation.isComplete,
+              ),
             ),
           ],
         ),
@@ -746,7 +829,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
             child: step.status == ZnsStepStatus.complete
                 ? AppIcon(AppIcons.check, size: 16, color: color)
                 : step.status == ZnsStepStatus.failed
-                ? AppIcon(AppIcons.help, size: 16, color: color)
+                ? AppIcon(AppIcons.warning, size: 16, color: color)
                 : Text(
                     '${index + 1}',
                     style: AppTypography.labelSmall.copyWith(color: color),
@@ -895,7 +978,10 @@ class _ZnsScreenState extends State<ZnsScreen> {
                 'This transferred name cannot receive payments until you set your own Zcash address.',
           )
         else
-          _Address(label: 'Registered address', address: owned.unifiedAddress),
+          _Address(
+            label: 'Zcash receiving address',
+            address: owned.unifiedAddress,
+          ),
         if (owned.isExpired)
           AppButton(
             key: const Key('zns-withdraw-expired'),
@@ -914,7 +1000,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
                     ? actions.onRefreshName
                     : null,
                 variant: AppButtonVariant.secondary,
-                child: const Text('Keep name'),
+                child: const Text('Refresh name'),
               ),
               AppButton(
                 key: const Key('zns-claim-rewards'),
@@ -1091,7 +1177,12 @@ class _ZnsScreenState extends State<ZnsScreen> {
     ),
   );
   Widget _eyebrow(String text) => Text(
-    text.toLowerCase().replaceRange(0, 1, text[0]).replaceAll('nft', 'NFT'),
+    text.isEmpty
+        ? text
+        : text.toLowerCase().replaceRange(0, 1, text[0]).replaceAll(
+            'nft',
+            'NFT',
+          ),
     style: AppTypography.labelSmall.copyWith(
       color: context.colors.text.secondary,
     ),
@@ -1159,11 +1250,13 @@ class _Notice extends StatelessWidget {
     required this.title,
     required this.text,
     this.isError = false,
+    this.onDismiss,
   });
   final String icon;
   final String title;
   final String text;
   final bool isError;
+  final VoidCallback? onDismiss;
   @override
   Widget build(BuildContext context) => Semantics(
     liveRegion: isError,
@@ -1206,6 +1299,21 @@ class _Notice extends StatelessWidget {
               ],
             ),
           ),
+          if (onDismiss != null)
+            IconButton(
+              onPressed: onDismiss,
+              tooltip: 'Dismiss',
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              icon: AppIcon(
+                AppIcons.cross,
+                size: 16,
+                color: isError
+                    ? context.colors.text.destructive
+                    : context.colors.text.secondary,
+              ),
+            ),
         ],
       ),
     ),

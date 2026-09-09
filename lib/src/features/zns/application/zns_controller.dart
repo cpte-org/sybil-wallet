@@ -18,6 +18,20 @@ final znsControllerProvider = NotifierProvider<ZnsController, ZnsViewData>(
   ZnsController.new,
 );
 
+/// Strips Dart exception-type prefixes so only the human message is shown.
+String znsFriendlyError(Object? error) {
+  if (error == null) return '';
+  final text = error.toString();
+  for (final prefix in const [
+    'Bad state: ',
+    'Exception: ',
+    'FormatException: ',
+  ]) {
+    if (text.startsWith(prefix)) return text.substring(prefix.length);
+  }
+  return text;
+}
+
 class ZnsRecipientChanged implements Exception {
   const ZnsRecipientChanged(this.name, this.address, this.fingerprint);
   final String name, address, fingerprint;
@@ -147,7 +161,7 @@ class ZnsController extends Notifier<ZnsViewData> {
       ZnsLifecycleGuard.active[uuid] = () => engine.busy || engine.authorized;
       await _engine!.load();
     } catch (e) {
-      if (epoch == _epoch) _error = e.toString();
+      if (epoch == _epoch) _error = znsFriendlyError(e);
     } finally {
       if (epoch == _epoch) {
         _busy = false;
@@ -177,7 +191,7 @@ class ZnsController extends Notifier<ZnsViewData> {
     try {
       await action();
     } catch (e) {
-      if (epoch == _epoch) _error = e.toString();
+      if (epoch == _epoch) _error = znsFriendlyError(e);
     } finally {
       if (!_disposed && epoch == _epoch) {
         _busy = false;
@@ -190,19 +204,34 @@ class ZnsController extends Notifier<ZnsViewData> {
     _run(() async {
       final epoch = _epoch;
       znsValidateLabel(label);
-      if (_gateway == null) throw StateError('Configure a registry first.');
-      final record = await _gateway!.lookup(label);
-      final now = (await _gateway!.rpc.block()).timestamp.toInt();
-      if (epoch != _epoch || !_unlocked) return;
-      _lookedUpRecord = record;
-      _lookup = record == null || record.expiresAt <= now
-          ? ZnsLookupView(name: label, status: ZnsLookupStatus.available)
-          : ZnsLookupView(
-              name: label,
-              status: ZnsLookupStatus.registered,
-              unifiedAddress: record.unifiedAddress,
-              expiresAt: _date(record.expiresAt),
-            );
+      final gateway = _gateway;
+      if (gateway == null) throw StateError('Configure a registry first.');
+      _lookup = ZnsLookupView(name: label, status: ZnsLookupStatus.loading);
+      _publish();
+      try {
+        final record = await gateway.lookup(label);
+        final now = (await gateway.rpc.block()).timestamp.toInt();
+        if (epoch != _epoch || !_unlocked) return;
+        _lookedUpRecord = record;
+        _lookup = record == null || record.expiresAt <= now
+            ? ZnsLookupView(name: label, status: ZnsLookupStatus.available)
+            : ZnsLookupView(
+                name: label,
+                status: ZnsLookupStatus.registered,
+                unifiedAddress: record.unifiedAddress,
+                expiresAt: _date(record.expiresAt),
+              );
+      } catch (e) {
+        if (epoch == _epoch && _unlocked) {
+          // Surfaced inline in the search card; a failed lookup does not need
+          // the global error banner as well.
+          _lookup = ZnsLookupView(
+            name: label,
+            status: ZnsLookupStatus.failed,
+            message: znsFriendlyError(e),
+          );
+        }
+      }
     }),
   );
 
@@ -236,11 +265,24 @@ class ZnsController extends Notifier<ZnsViewData> {
         throw StateError('Review the operation first.');
       }
       _review = null;
+      _lookup = null;
+      _lookedUpRecord = null;
       await _engine!.authorize(reviewed);
     }),
   );
   void cancelReview() {
     _review = null;
+    _publish();
+  }
+
+  void dismissError() {
+    _error = null;
+    _engine?.error = null;
+    _publish();
+  }
+
+  void dismissNotice() {
+    _notice = null;
     _publish();
   }
 
@@ -266,15 +308,13 @@ class ZnsController extends Notifier<ZnsViewData> {
     }),
   );
 
-  void refresh() => unawaited(
-    _run(() async {
-      if (_engine != null) {
-        await _engine!.refresh();
-      } else {
-        await _initialize();
-      }
-    }),
-  );
+  Future<void> refresh() => _run(() async {
+    if (_engine != null) {
+      await _engine!.refresh();
+    } else {
+      await _initialize();
+    }
+  });
 
   void manage(
     String kind, {
@@ -552,11 +592,27 @@ class ZnsController extends Notifier<ZnsViewData> {
     onSaveConfiguration: saveConfiguration,
     onShowRecovery: onShowRecovery,
     onSendToName: onSendToName,
+    onDismissError: dismissError,
+    onDismissNotice: dismissNotice,
   );
 
   String _date(int seconds) => DateTime.fromMillisecondsSinceEpoch(
     seconds * 1000,
   ).toLocal().toString().split('.').first;
+  String _waitLabel(int seconds) {
+    if (seconds >= 5400) {
+      return 'about ${(seconds / 3600).ceil()} hours at the latest block';
+    }
+    if (seconds >= 120) {
+      return 'about ${(seconds / 60).round()} minutes at the latest block';
+    }
+    return '$seconds seconds at the latest block';
+  }
+
+  String? _viewError() {
+    final raw = _error ?? _engine?.error;
+    return raw == null ? null : znsFriendlyError(raw);
+  }
   String _amount(BigInt value, int decimals) =>
       znsFormatAmount(value, decimals);
   String _reward(BigInt scaled) => _amount(scaled, 32);
@@ -630,7 +686,7 @@ class ZnsController extends Notifier<ZnsViewData> {
               chain.claimableRewardsScaled >= znsRewardScale),
       configuration: _config,
       lookup: locked ? null : _lookup,
-      error: locked ? null : _error ?? _engine?.error,
+      error: locked ? null : _viewError(),
       notice: _notice,
       names:
           inventory?.positions
@@ -797,7 +853,12 @@ class ZnsController extends Notifier<ZnsViewData> {
               canResume:
                   _engine?.authorized != true && !op.isComplete && !locked,
               remainingWait: chain != null && phase == 'waiting'
-                  ? '${(chain.commitAt + chain.minAge - chain.timestamp).clamp(0, chain.minAge)} seconds at the latest block'
+                  ? _waitLabel(
+                      (chain.commitAt + chain.minAge - chain.timestamp).clamp(
+                        0,
+                        chain.minAge,
+                      ),
+                    )
                   : null,
               transactionId:
                   op.pending?['hash'] as String? ??

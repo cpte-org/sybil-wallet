@@ -52,6 +52,7 @@ abstract final class AppBackResolver {
     '/accounts': 'Accounts',
     '/settings': 'Settings',
     '/settings/secret-passphrase': 'Secret passphrase',
+    '/settings/base-key': 'Private key',
     '/settings/viewing-key': 'Viewing key',
     '/settings/change-password': 'Change password',
     '/settings/endpoint': 'Endpoint',

@@ -276,7 +276,10 @@ class ZnsRpcClient {
     final id = await _call(config.registryAddress, '0xda1f12ab', tag);
     if (id != ZnsNetworkConfig.protocolId) {
       throw const ZnsDataException(
-        'The registry does not implement the expected ZNS deposit and reward policy',
+        'The registry does not implement the expected ZNS deposit and reward '
+        'policy. Saved commitments and Base assets are safe. Check for a '
+        'wallet update, or verify the registry address in wallet Settings → '
+        'Names.',
       );
     }
     if (at == null) await _canonical(snapshot);

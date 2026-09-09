@@ -1,4 +1,3 @@
-import '../../base_key_export.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -127,7 +126,7 @@ class MobileSettingsScreen extends ConsumerWidget {
                       showChevron: true,
                       enabled: seedPhraseEnabled,
                       onTap: seedPhraseEnabled
-                          ? () => showBaseKeyExport(context)
+                          ? () => context.push('/settings/base-key')
                           : null,
                     ),
                     MobileListRow(

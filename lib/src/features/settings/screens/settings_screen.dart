@@ -1,4 +1,3 @@
-import '../base_key_export.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart'
@@ -190,7 +189,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onSeedPhrase: () => context.push('/settings/secret-passphrase'),
                 onViewingKey: () => context.push('/settings/viewing-key'),
                 onBaseKey: hasActiveAccount && !activeAccountIsHardware
-                    ? () => showBaseKeyExport(context)
+                    ? () => context.push('/settings/base-key')
                     : null,
                 onChangePassword: () =>
                     context.push('/settings/change-password'),

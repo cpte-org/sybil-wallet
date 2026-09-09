@@ -72,6 +72,7 @@ import 'src/features/send/services/send_flow.dart'
         resolveSendStatusRoutePayload,
         SendStatusRoutePayloadObserver,
         sendStatusRoutePayloadProvider;
+import 'src/features/settings/screens/settings_base_key_screen.dart';
 import 'src/features/settings/screens/settings_screen.dart';
 import 'src/features/settings/screens/settings_change_password_screen.dart';
 import 'src/features/settings/screens/settings_endpoint_screen.dart';
@@ -1005,6 +1006,10 @@ List<RouteBase> _desktopRoutes(Ref ref) => [
     ),
   ),
   GoRoute(
+    path: '/settings/base-key',
+    builder: (_, _) => const SettingsBaseKeyScreen(),
+  ),
+  GoRoute(
     path: '/settings/viewing-key',
     builder: (_, state) => SettingsViewingKeyScreen(
       accountUuid: state.extra is String ? state.extra as String : null,
@@ -1338,6 +1343,7 @@ class _WindowsUpdatePromptHostState
         path.startsWith('/import-keystone') ||
         path.startsWith('/send') ||
         path.startsWith('/settings/secret-passphrase') ||
+        path.startsWith('/settings/base-key') ||
         path.startsWith('/settings/viewing-key') ||
         path.startsWith('/settings/change-password')) {
       return false;
