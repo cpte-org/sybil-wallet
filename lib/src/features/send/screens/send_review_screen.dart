@@ -14,6 +14,8 @@ import '../../../core/storage/wallet_paths.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_back_link.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_toast.dart';
+import '../../contacts/domain/contact_models.dart';
 import '../../../core/widgets/app_pane_modal_overlay.dart';
 import '../../../providers/account_provider.dart';
 import '../../../providers/zec_price_change_provider.dart';
@@ -110,6 +112,18 @@ class _SendReviewScreenState extends ConsumerState<SendReviewScreen> {
   }
 
   Future<void> _handleSend() async {
+    try {
+      validateSendContact(
+        ref,
+        widget.args.contactRecipient,
+        address: widget.args.address,
+        accountUuid: widget.args.proposalAccountUuid,
+      );
+    } on ContactFailure catch (error) {
+      _scheduleDiscard();
+      showAppToast(context, error.message, tone: AppToastTone.destructive);
+      return;
+    }
     final isHardware = ref
         .read(accountProvider.notifier)
         .isHardwareAccount(widget.args.proposalAccountUuid);
@@ -397,6 +411,7 @@ class _SendReviewScreenState extends ConsumerState<SendReviewScreen> {
         ref.watch(ownAccountAddressesProvider).value ??
         const <String, AccountInfo>{};
     final recipient = sendReviewRecipientFor(
+      contactRecipient: widget.args.contactRecipient,
       contacts: addressBookContacts,
       address: widget.args.address,
       ownAccounts: ownAccounts,

@@ -5160,6 +5160,7 @@ dependencies = [
  "ur-registry",
  "url",
  "uuid",
+ "vizor-contact-core",
  "vizor-zns-core",
  "vote-commitment-tree",
  "voting-crypto-deps",
@@ -7702,6 +7703,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "vizor-contact-core"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "curve25519-dalek",
+ "ed25519-dalek",
+ "rand_core 0.6.4",
+ "serde_json",
+ "sha2 0.10.9",
+ "zeroize",
 ]
 
 [[package]]

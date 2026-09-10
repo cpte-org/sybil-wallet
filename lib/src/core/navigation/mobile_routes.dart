@@ -3,6 +3,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/zns/presentation/zns_wallet_screen.dart';
+import '../../features/contacts/presentation/contact_exchange_screen.dart';
+import '../../features/contacts/presentation/contact_introduction_screen.dart';
 import '../../features/settings/names_settings.dart';
 import '../../features/settings/screens/settings_base_key_screen.dart';
 
@@ -31,6 +33,7 @@ import '../../features/send/screens/mobile/mobile_keystone_sign_screen.dart';
 import '../../features/swap/models/swap_activity_navigation.dart';
 import '../../features/swap/screens/mobile/mobile_swap_keystone_sign_screen.dart';
 import '../../features/swap/screens/mobile/mobile_swap_review_screen.dart';
+import '../../features/send/models/send_prefill_args.dart';
 import '../../features/send/services/send_flow.dart'
     show KeystoneBroadcastArgs, SendReviewArgs;
 import '../../features/send/screens/mobile/mobile_send_screen.dart';
@@ -132,6 +135,20 @@ List<RouteBase> buildMobileRoutes({required List<RouteBase> entryRoutes}) {
       ),
     ),
     GoRoute(
+      path: '/contacts/introductions',
+      pageBuilder: (_, state) => CupertinoPage(
+        key: state.pageKey,
+        child: const ContactIntroductionScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/contacts/exchange',
+      pageBuilder: (_, state) => CupertinoPage(
+        key: state.pageKey,
+        child: const ContactExchangeScreen(),
+      ),
+    ),
+    GoRoute(
       path: '/settings/names',
       pageBuilder: (context, state) =>
           CupertinoPage(key: state.pageKey, child: const NamesSettingsScreen()),
@@ -174,7 +191,15 @@ List<RouteBase> buildMobileRoutes({required List<RouteBase> entryRoutes}) {
           key: state.pageKey,
           child: MobileSendScreen(
             useRouteSteps: true,
-            initialRecipient: extra is String ? extra : null,
+            initialRecipient: extra is SendPrefillArgs
+                ? extra.address
+                : extra is String
+                ? extra
+                : null,
+            initialContactLabel: extra is SendPrefillArgs ? extra.label : null,
+            initialContactRecipient: extra is SendPrefillArgs
+                ? extra.contactRecipient
+                : null,
           ),
         );
       },

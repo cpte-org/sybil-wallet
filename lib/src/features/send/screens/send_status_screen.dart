@@ -243,6 +243,7 @@ class _SendStatusScreenState extends ConsumerState<SendStatusScreen> {
         ref.watch(ownAccountAddressesProvider).value ??
         const <String, AccountInfo>{};
     final recipient = sendReviewRecipientFor(
+      contactRecipient: widget.args.contactRecipient,
       contacts: addressBookContacts,
       address: widget.args.address,
       ownAccounts: ownAccounts,

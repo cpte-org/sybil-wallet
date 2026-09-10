@@ -38,6 +38,7 @@ const _ironwoodMigrationPendingTxSaltKeyPrefix =
 const _accountMnemonicMigrationCompleteKey =
     'zcash_mnemonic_storage_migrated_v1';
 const _votingHotkeyKeyPrefix = 'zcash_account_voting_hotkey_';
+const _contactSecretKeyPrefix = 'zcash_contact_';
 const _e2eUseFirstUnlockMnemonicKeychain = bool.fromEnvironment(
   'ZCASH_E2E_FIRST_UNLOCK_MNEMONIC_KEYCHAIN',
 );
@@ -195,6 +196,7 @@ class AppSecureStore {
   Future<String?> readSecretStringWithOptions(
     String key, {
     bool requireUnlockedSession = false,
+    bool rejectInvalidEnvelope = false,
   }) {
     return _secretMutationLock.run(() async {
       if (_shouldSkipLockedSecretRead(requireUnlockedSession)) return null;
@@ -202,6 +204,9 @@ class AppSecureStore {
         'read secret "$key"',
         () => _storage.read(key: key),
       );
+      if (rejectInvalidEnvelope && raw != null && !_isEncryptedPayload(raw)) {
+        throw StateError('Saved encrypted data is malformed.');
+      }
       return _decryptStoredSecretString(
         raw,
         key: key,
@@ -378,7 +383,8 @@ class AppSecureStore {
       });
       return;
     }
-    if (key.startsWith(_votingHotkeyKeyPrefix)) {
+    if (key.startsWith(_votingHotkeyKeyPrefix) ||
+        key.startsWith(_contactSecretKeyPrefix)) {
       await _secretMutationLock.run(() async {
         await _runStorageOperation(
           'delete "$key"',
@@ -401,6 +407,26 @@ class AppSecureStore {
         () => _mnemonicStorage.delete(key: key),
       );
       await _deleteLegacyAccountMnemonicBestEffort(key);
+    });
+  }
+
+  /// Contact metadata and per-relationship signing keys are never wallet-link
+  /// exports. Remove both namespaces when their owning account is deleted.
+  Future<void> deleteContactDataForAccount(String accountUuid) {
+    return _secretMutationLock.run(() async {
+      final prefix = '$_contactSecretKeyPrefix${accountUuid}_';
+      final values = await _runStorageOperation(
+        'read account contact keys',
+        _storage.readAll,
+      );
+      for (final key in values.keys.toList(growable: false)) {
+        if (key.startsWith(prefix)) {
+          await _runStorageOperation(
+            'delete account contact key',
+            () => _storage.delete(key: key),
+          );
+        }
+      }
     });
   }
 
@@ -551,12 +577,15 @@ class AppSecureStore {
           ),
         );
       }
-      final votingHotkeyValues = await _runStorageOperation(
-        'read all voting hotkeys',
+      final auxiliarySecrets = await _runStorageOperation(
+        'read encrypted account metadata and hotkeys',
         _storage.readAll,
       );
-      for (final entry in votingHotkeyValues.entries) {
-        if (!entry.key.startsWith(_votingHotkeyKeyPrefix)) continue;
+      for (final entry in auxiliarySecrets.entries) {
+        if (!entry.key.startsWith(_votingHotkeyKeyPrefix) &&
+            !entry.key.startsWith(_contactSecretKeyPrefix)) {
+          continue;
+        }
 
         if (!_isEncryptedPayload(entry.value)) {
           throw StateError(

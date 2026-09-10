@@ -105,6 +105,92 @@ void main() {
     expect(await store.readAccountMnemonic(_accountUuid), _mnemonic);
   });
 
+  test(
+    'password rotation preserves encrypted contact books and signing records',
+    () async {
+      await store.configurePassword(_oldPassword);
+      const bookKey = 'zcash_contact_test-account_test_book';
+      const signerKey = 'zcash_contact_test-account_test_signer_example';
+      await store.writeSecretString(bookKey, '{"contacts":[]}');
+      await store.writeSecretString(signerKey, 'contact signing record');
+      final oldCiphertext = await store.readString(signerKey);
+      expect(
+        await store.changePassword(
+          currentPassword: _oldPassword,
+          newPassword: _newPassword,
+        ),
+        isTrue,
+      );
+      expect(await store.readString(signerKey), isNot(oldCiphertext));
+      store.clearSessionPassword();
+      expect(await store.verifyPassword(_oldPassword), isFalse);
+      expect(await store.verifyPassword(_newPassword), isTrue);
+      expect(
+        await store.readSecretStringWithOptions(
+          bookKey,
+          requireUnlockedSession: true,
+          rejectInvalidEnvelope: true,
+        ),
+        '{"contacts":[]}',
+      );
+      expect(
+        await store.readSecretStringWithOptions(
+          signerKey,
+          requireUnlockedSession: true,
+          rejectInvalidEnvelope: true,
+        ),
+        'contact signing record',
+      );
+    },
+  );
+
+  test(
+    'account contact deletion clears both networks without touching another account',
+    () async {
+      await store.configurePassword(_oldPassword);
+      const keys = [
+        'zcash_contact_account-1_test_book',
+        'zcash_contact_account-1_regtest_signer_example',
+        'zcash_contact_account-10_test_book',
+      ];
+      for (final key in keys) {
+        await store.writeSecretString(key, 'record');
+      }
+      await store.deleteContactDataForAccount('account-1');
+      expect(await store.readString(keys[0]), isNull);
+      expect(await store.readString(keys[1]), isNull);
+      expect(
+        await store.readSecretStringWithOptions(
+          keys[2],
+          rejectInvalidEnvelope: true,
+        ),
+        'record',
+      );
+    },
+  );
+
+  test(
+    'strict secret reads distinguish absent records from damaged envelopes',
+    () async {
+      await store.configurePassword(_oldPassword);
+      const key = 'zcash_contact_test-account_test_book';
+      expect(
+        await store.readSecretStringWithOptions(
+          key,
+          rejectInvalidEnvelope: true,
+        ),
+        isNull,
+      );
+      for (final damaged in ['', 'not encrypted', '{"contacts":[]}']) {
+        await store.writePlain(key, damaged);
+        await expectLater(
+          store.readSecretStringWithOptions(key, rejectInvalidEnvelope: true),
+          throwsStateError,
+        );
+      }
+    },
+  );
+
   test('readAccountMnemonicBytes returns mutable mnemonic bytes', () async {
     await store.configurePassword(_oldPassword);
     await store.writeAccountMnemonic(_accountUuid, _mnemonic);

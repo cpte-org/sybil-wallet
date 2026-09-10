@@ -1,4 +1,7 @@
 tags:
+  # Offline qualification using an explicitly supplied built wallet library.
+  contact-native:
+    skip: "native contact check only: pass CONTACT_NATIVE_LIBRARY and --tags contact-native --run-skipped"
   # Screenshot generation is an explicit tooling lane. The wrapper supplies
   # --update-goldens, the deterministic defines, and --run-skipped.
   figma-capture:

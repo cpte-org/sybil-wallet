@@ -17,6 +17,7 @@ import 'package:zcash_wallet/src/core/widgets/app_button.dart';
 import 'package:zcash_wallet/src/core/widgets/app_icon.dart';
 import 'package:zcash_wallet/src/features/address_book/models/address_book_contact.dart';
 import 'package:zcash_wallet/src/features/address_book/providers/address_book_provider.dart';
+import 'package:zcash_wallet/src/features/contacts/domain/contact_models.dart';
 import 'package:zcash_wallet/src/features/migration/providers/ironwood_migration_announcement_provider.dart';
 import 'package:zcash_wallet/src/features/send/screens/mobile/mobile_send_screen.dart';
 import 'package:zcash_wallet/src/features/send/services/send_proving_key_warmup.dart';
@@ -28,6 +29,7 @@ import 'package:zcash_wallet/src/rust/api/sync.dart';
 import 'package:zcash_wallet/src/rust/frb_generated.dart';
 
 import '../../fakes/fake_zec_market_data_cache.dart';
+import '../contacts/contact_test_fakes.dart';
 
 const _shieldedAddress =
     'u1testshieldedaddress00000000000000000000000000000000000000000000000';
@@ -404,7 +406,12 @@ Widget _reviewApp({
   );
 }
 
-Widget _sendFlowRouterApp({MobileSendFeeEstimator? estimateFee}) {
+Widget _sendFlowRouterApp({
+  MobileSendFeeEstimator? estimateFee,
+  ContactRecipientSnapshot? initialContactRecipient,
+  void Function(MobileSendAmountArgs)? onAmountRoute,
+  void Function(MobileSendReviewDraftArgs)? onReviewRoute,
+}) {
   final router = GoRouter(
     initialLocation: '/home',
     routes: [
@@ -423,12 +430,16 @@ Widget _sendFlowRouterApp({MobileSendFeeEstimator? estimateFee}) {
           loadWalletDbPath: () async => '/tmp/zcash-test',
           openScanner: (_) async => null,
           estimateFee: estimateFee,
+          initialRecipient: initialContactRecipient?.address,
+          initialContactLabel: initialContactRecipient?.label,
+          initialContactRecipient: initialContactRecipient,
         ),
       ),
       GoRoute(
         path: '/send/amount',
         builder: (_, state) {
           final args = state.extra! as MobileSendAmountArgs;
+          onAmountRoute?.call(args);
           return MobileSendScreen(
             useRouteSteps: true,
             initialAmountStep: true,
@@ -437,6 +448,7 @@ Widget _sendFlowRouterApp({MobileSendFeeEstimator? estimateFee}) {
             initialAddressType: args.addressType,
             initialContactLabel: args.contactLabel,
             initialContactPictureId: args.contactPictureId,
+            initialContactRecipient: args.contactRecipient,
             loadWalletDbPath: () async => '/tmp/zcash-test',
             openScanner: (_) async => null,
             estimateFee: estimateFee,
@@ -447,6 +459,7 @@ Widget _sendFlowRouterApp({MobileSendFeeEstimator? estimateFee}) {
         path: '/send/review',
         builder: (_, state) {
           final args = state.extra! as MobileSendReviewDraftArgs;
+          onReviewRoute?.call(args);
           return MobileSendScreen(
             useRouteSteps: true,
             initialReview: true,
@@ -461,6 +474,7 @@ Widget _sendFlowRouterApp({MobileSendFeeEstimator? estimateFee}) {
             initialMemo: args.memo,
             initialContactLabel: args.contactLabel,
             initialContactPictureId: args.contactPictureId,
+            initialContactRecipient: args.contactRecipient,
             loadWalletDbPath: () async => '/tmp/zcash-test',
             openScanner: (_) async => null,
             estimateFee: estimateFee,
@@ -594,6 +608,46 @@ void main() {
       ..physicalSize = const Size(520, 1100)
       ..devicePixelRatio = 1.0;
   });
+
+  testWidgets(
+    'route steps retain the selected contact snapshot through review',
+    (tester) async {
+      final selected = ContactRecipientSnapshot(
+        scope: const ContactScope(accountUuid: 'account-1', network: 'main'),
+        bookInstance: 'mobile-contact-test',
+        generation: 7,
+        contact: testContact(label: 'Alice café', address: _shieldedAddress),
+      );
+      MobileSendAmountArgs? amountArgs;
+      MobileSendReviewDraftArgs? reviewArgs;
+      await tester.pumpWidget(
+        _sendFlowRouterApp(
+          initialContactRecipient: selected,
+          onAmountRoute: (args) => amountArgs = args,
+          onReviewRoute: (args) => reviewArgs = args,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('mobile_send_open_from_home')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('mobile_send_continue')));
+      await tester.pumpAndSettle();
+
+      expect(amountArgs!.contactRecipient, same(selected));
+      expect(amountArgs!.recipient, selected.address);
+      await _enterAmount(tester, '1.5');
+      await tester.tap(find.byKey(const ValueKey('mobile_send_review_button')));
+      await tester.pumpAndSettle();
+
+      expect(reviewArgs!.contactRecipient, same(selected));
+      expect(reviewArgs!.recipient, selected.address);
+      expect(reviewArgs!.sendFlowId, amountArgs!.sendFlowId);
+      expect(find.text('Review Send'), findsOneWidget);
+      expect(find.text(selected.label), findsOneWidget);
+    },
+  );
 
   testWidgets('starts Orchard proving-key warmup when mobile send loads', (
     tester,

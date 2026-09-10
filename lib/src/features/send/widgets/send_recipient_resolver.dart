@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../main.dart' show log;
 import '../../../core/storage/wallet_paths.dart';
+import '../../../core/profile_pictures.dart';
+import '../../contacts/domain/contact_models.dart';
 import '../../../providers/account_provider.dart';
 import '../../../providers/rpc_endpoint_provider.dart';
 import '../../../rust/api/wallet.dart' as rust_wallet;
@@ -126,7 +128,15 @@ SendReviewRecipient sendReviewRecipientFor({
   required Iterable<AddressBookContact> contacts,
   required String address,
   Map<String, AccountInfo> ownAccounts = const {},
+  ContactRecipientSnapshot? contactRecipient,
 }) {
+  if (contactRecipient != null && contactRecipient.address == address.trim()) {
+    return SendReviewContactRecipient(
+      address: address,
+      name: contactRecipient.label,
+      profilePictureId: kDefaultProfilePictureId,
+    );
+  }
   final contact = sendRecipientContactFor(contacts: contacts, address: address);
   if (contact != null) {
     return SendReviewContactRecipient(

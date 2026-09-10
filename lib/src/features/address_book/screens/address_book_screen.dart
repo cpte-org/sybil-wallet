@@ -22,6 +22,7 @@ import '../../../core/widgets/app_profile_picture_picker_modal.dart';
 import '../../../core/widgets/app_tappable.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../send/models/send_prefill_args.dart';
+import '../../contacts/application/contact_exchange_controller.dart';
 import '../../address_scan/widgets/address_qr_scan_modal.dart';
 import '../models/address_book_contact.dart';
 import '../models/address_format_validator.dart';
@@ -236,6 +237,9 @@ class _AddressBookScreenState extends ConsumerState<AddressBookScreen> {
   @override
   Widget build(BuildContext context) {
     final contactsAsync = ref.watch(addressBookProvider);
+    final contactExchangeAvailable = ref.watch(
+      contactExchangeAvailableProvider,
+    );
     // Loading keeps the previous pane (or the empty state) so the toolbar and
     // content stay stable; an error replaces the pane content only.
     final AddressBookState? paneState = contactsAsync.when(
@@ -256,7 +260,18 @@ class _AddressBookScreenState extends ConsumerState<AddressBookScreen> {
               // Flat per the updated design — no shadow wrapper.
               bar: _AddressBookAddButton(onPressed: _openAddContact),
               builder: (context, bottomReserve) => AppPaneScrollScaffold(
-                toolbar: const AppPaneToolbar(backLinkMinWidth: 60),
+                toolbar: AppPaneToolbar(
+                  backLinkMinWidth: 60,
+                  trailing: contactExchangeAvailable
+                      ? AppButton(
+                          key: const Key('contacts-exchange-entry'),
+                          onPressed: () => context.push('/contacts/exchange'),
+                          variant: AppButtonVariant.ghost,
+                          size: AppButtonSize.small,
+                          child: const Text('Contact exchange'),
+                        )
+                      : null,
+                ),
                 padding: EdgeInsets.only(
                   top: AppSpacing.md,
                   bottom: bottomReserve,

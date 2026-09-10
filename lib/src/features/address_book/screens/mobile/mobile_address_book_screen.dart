@@ -28,6 +28,7 @@ import '../../../address_scan/domain/address_scan_payload.dart';
 import '../../../address_scan/widgets/mobile_address_scan_card.dart';
 import '../../../address_scan/widgets/mobile_address_scan_view.dart'
     show MobileScanOutcome;
+import '../../../contacts/application/contact_exchange_controller.dart';
 import '../../models/address_book_contact.dart';
 import '../../models/address_format_validator.dart';
 import '../../providers/address_book_provider.dart';
@@ -120,6 +121,9 @@ class MobileAddressBookScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
+    final contactExchangeAvailable = ref.watch(
+      contactExchangeAvailableProvider,
+    );
     final state =
         ref.watch(addressBookProvider).value ?? const AddressBookState();
     final hasContacts = state.hasContacts;
@@ -149,6 +153,22 @@ class MobileAddressBookScreen extends ConsumerWidget {
                       )
                     : null,
               ),
+              if (contactExchangeAvailable)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                  ),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: AppButton(
+                      key: const Key('contacts-exchange-entry'),
+                      onPressed: () => context.push('/contacts/exchange'),
+                      variant: AppButtonVariant.ghost,
+                      size: AppButtonSize.medium,
+                      child: const Text('Contact exchange'),
+                    ),
+                  ),
+                ),
               Expanded(
                 child: !hasContacts
                     ? _NoContactsState(

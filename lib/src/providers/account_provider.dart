@@ -17,6 +17,7 @@ import '../core/storage/app_secure_store.dart';
 import '../core/storage/wallet_paths.dart';
 import '../features/swap/providers/swap_activity_store.dart';
 import '../features/zns/application/zns_lifecycle_guard.dart';
+import '../features/contacts/application/contact_lifecycle.dart';
 import '../features/migration/services/ironwood_migration_background_credential_store.dart';
 import '../features/migration/services/ironwood_migration_operation_registry.dart';
 import '../features/voting/voting_flow_models.dart';
@@ -549,9 +550,11 @@ class AccountNotifier extends AsyncNotifier<AccountState> {
 
     final shareTracking = ref.read(votingShareTrackingRegistryProvider);
     try {
+      await ContactLifecycle.quiesce(account: uuid);
       await shareTracking.quiesceAndDrain(accountUuid: uuid);
       await _removeAccountWithShareTrackingStopped(uuid);
     } finally {
+      ContactLifecycle.resume(account: uuid);
       shareTracking.resume(accountUuid: uuid);
       shareTracking.requestRestore();
     }
@@ -635,6 +638,11 @@ class AccountNotifier extends AsyncNotifier<AccountState> {
       log('removeAccount: failed to delete voting hotkeys for $uuid: $e\n$st');
     }
     try {
+      await _storage.deleteContactDataForAccount(uuid);
+    } catch (e, st) {
+      log('removeAccount: failed to delete contact data for $uuid: $e\n$st');
+    }
+    try {
       await ref.read(votingDraftPersistenceProvider).deleteForAccount(uuid);
     } catch (e, st) {
       log('removeAccount: failed to delete voting drafts for $uuid: $e\n$st');
@@ -705,12 +713,14 @@ class AccountNotifier extends AsyncNotifier<AccountState> {
     final shareTracking = ref.read(votingShareTrackingRegistryProvider);
     var restoreAfterFailure = false;
     try {
+      await ContactLifecycle.quiesce();
       await shareTracking.quiesceAndDrain();
       await _resetWalletWithShareTrackingStopped();
     } catch (error) {
       restoreAfterFailure = error is! WalletResetException || !error.dbDeleted;
       rethrow;
     } finally {
+      ContactLifecycle.resume();
       shareTracking.resume();
       if (restoreAfterFailure) shareTracking.requestRestore();
     }

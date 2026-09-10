@@ -39,6 +39,7 @@ copy-review-viewer.html
 rust/target/
 rust/build/
 rust/zns-core/target/
+rust/contact-core/target/
 scripts/zns/node_modules/
 scripts/zns/output/
 

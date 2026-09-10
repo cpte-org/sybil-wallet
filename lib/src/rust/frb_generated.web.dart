@@ -6,6 +6,7 @@
 // Static analysis wrongly picks the IO variant, thus ignore this
 // ignore_for_file: argument_type_not_assignable
 
+import 'api/contacts.dart';
 import 'api/keystone.dart';
 import 'api/network_privacy.dart';
 import 'api/secret.dart';
@@ -300,6 +301,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ConfigSwitchKind dco_decode_config_switch_kind(dynamic raw);
+
+  @protected
+  ContactEndpointResult dco_decode_contact_endpoint_result(dynamic raw);
+
+  @protected
+  ContactIdentityResult dco_decode_contact_identity_result(dynamic raw);
+
+  @protected
+  ContactIntroductionResult dco_decode_contact_introduction_result(dynamic raw);
+
+  @protected
+  ContactRequestResult dco_decode_contact_request_result(dynamic raw);
 
   @protected
   DelegationConfirmation dco_decode_delegation_confirmation(dynamic raw);
@@ -1251,6 +1264,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ConfigSwitchKind sse_decode_config_switch_kind(SseDeserializer deserializer);
+
+  @protected
+  ContactEndpointResult sse_decode_contact_endpoint_result(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ContactIdentityResult sse_decode_contact_identity_result(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ContactIntroductionResult sse_decode_contact_introduction_result(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ContactRequestResult sse_decode_contact_request_result(
+    SseDeserializer deserializer,
+  );
 
   @protected
   DelegationConfirmation sse_decode_delegation_confirmation(
@@ -2425,6 +2458,30 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_config_switch_kind(
     ConfigSwitchKind self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_contact_endpoint_result(
+    ContactEndpointResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_contact_identity_result(
+    ContactIdentityResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_contact_introduction_result(
+    ContactIntroductionResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_contact_request_result(
+    ContactRequestResult self,
     SseSerializer serializer,
   );
 

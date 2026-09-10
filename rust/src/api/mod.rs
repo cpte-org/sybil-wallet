@@ -1,3 +1,4 @@
+pub mod contacts;
 pub mod keystone;
 pub mod network_privacy;
 pub mod secret;

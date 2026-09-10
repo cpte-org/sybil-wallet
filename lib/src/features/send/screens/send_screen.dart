@@ -30,6 +30,7 @@ import '../../../providers/wallet_provider.dart';
 import '../../../providers/zec_price_change_provider.dart';
 import '../../../rust/api/sync.dart' as rust_sync;
 import '../../address_book/models/address_book_contact.dart';
+import '../../contacts/domain/contact_models.dart';
 import '../../address_book/providers/address_book_provider.dart';
 import '../../address_book/widgets/address_book_contact_picker_modal.dart';
 import '../../migration/providers/ironwood_migration_announcement_provider.dart';
@@ -189,6 +190,7 @@ class _AddressTextEditingController extends TextEditingController {
 }
 
 class _SendComposeBodyState extends ConsumerState<_SendComposeBody> {
+  ContactRecipientSnapshot? _contactRecipient;
   static const _singleLineFieldOverlayReserve = 20.0;
   static const _singleLineFieldGap = AppSpacing.s;
   static const _multilineFieldOverlayReserve = 24.0;
@@ -240,6 +242,7 @@ class _SendComposeBodyState extends ConsumerState<_SendComposeBody> {
   void _applyPrefill(SendPrefillArgs? prefill) {
     if (prefill == null) return;
     _addressController.text = prefill.address;
+    _contactRecipient = prefill.contactRecipient;
     if (prefill.amountText != null) {
       _amountText = prefill.amountText!.trim();
       _amountController.text = _amountText;
@@ -313,6 +316,7 @@ class _SendComposeBodyState extends ConsumerState<_SendComposeBody> {
   }
 
   void _selectContact(AddressBookContact contact) {
+    _contactRecipient = null;
     final address = contact.address.trim();
     _addressController.value = TextEditingValue(
       text: address,
@@ -381,6 +385,9 @@ class _SendComposeBodyState extends ConsumerState<_SendComposeBody> {
   }
 
   void _handleAddressChanged() {
+    if (_addressController.text.trim() != _contactRecipient?.address) {
+      _contactRecipient = null;
+    }
     _addressSeq++;
     _maxDebounceTimer?.cancel();
     setState(() {
@@ -926,6 +933,7 @@ class _SendComposeBodyState extends ConsumerState<_SendComposeBody> {
         addressType: _addressType,
         amountZatoshi: amountZatoshi,
         memo: memo.isNotEmpty ? memo : null,
+        contactRecipient: _contactRecipient,
       );
       activeProposalId = reviewArgs.proposalId;
 
@@ -939,7 +947,9 @@ class _SendComposeBodyState extends ConsumerState<_SendComposeBody> {
       log('Send: review preparation error: $e');
       if (!mounted) return;
       setState(() {
-        _error = friendlyProposeSendError(e.toString());
+        _error = e is ContactFailure
+            ? e.message
+            : friendlyProposeSendError(e.toString());
         _isSending = false;
       });
     } finally {
@@ -1029,7 +1039,11 @@ class _SendComposeBodyState extends ConsumerState<_SendComposeBody> {
     // so the user knows the pasted/typed address is the intended one.
     // Validation messages keep priority over the match line.
     String? matchedRecipientName;
-    if (_hasValidAddress) {
+    if (_contactRecipient != null &&
+        _addressController.text.trim() == _contactRecipient!.address) {
+      matchedRecipientName = _contactRecipient!.label;
+    }
+    if (_hasValidAddress && _contactRecipient == null) {
       final recipient = sendReviewRecipientFor(
         contacts: addressBookContacts,
         address: _addressController.text.trim(),

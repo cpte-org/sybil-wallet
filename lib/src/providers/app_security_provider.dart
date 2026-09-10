@@ -5,6 +5,7 @@ import '../core/security/password_policy.dart';
 import '../core/storage/app_secure_store.dart';
 import '../core/storage/wallet_paths.dart';
 import '../features/migration/models/ironwood_migration_phases.dart';
+import '../features/contacts/application/contact_lifecycle.dart';
 import '../rust/api/sync.dart' as rust_sync;
 import '../rust/api/wallet.dart' as rust_wallet;
 import 'rpc_endpoint_provider.dart';
@@ -186,14 +187,19 @@ class AppSecurityNotifier extends Notifier<AppSecurityState> {
       throw ArgumentError(newPasswordError);
     }
     await ref.read(passwordChangePreflightProvider)();
-    final didChange = await _store.changePassword(
-      currentPassword: currentPassword,
-      newPassword: newPassword,
-    );
-    if (didChange) {
-      state = state.copyWith(isPasswordConfigured: true, isUnlocked: true);
+    try {
+      await ContactLifecycle.quiesce();
+      final didChange = await _store.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      if (didChange) {
+        state = state.copyWith(isPasswordConfigured: true, isUnlocked: true);
+      }
+      return didChange;
+    } finally {
+      ContactLifecycle.resume();
     }
-    return didChange;
   }
 
   void lock() {

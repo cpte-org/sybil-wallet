@@ -30,6 +30,7 @@ import '../../../../providers/rpc_endpoint_provider.dart';
 import '../../../../providers/sync_provider.dart';
 import '../../../../providers/zec_price_change_provider.dart';
 import '../../../../rust/api/sync.dart' as rust_sync;
+import '../../../contacts/domain/contact_models.dart';
 import '../../../address_book/models/address_book_contact.dart';
 import '../../../address_book/providers/address_book_provider.dart';
 import '../../../address_book/widgets/contact_name_inline.dart';
@@ -171,6 +172,7 @@ class MobileSendAmountArgs {
     required this.addressType,
     this.contactLabel,
     this.contactPictureId,
+    this.contactRecipient,
   });
 
   final String sendFlowId;
@@ -178,6 +180,7 @@ class MobileSendAmountArgs {
   final String addressType;
   final String? contactLabel;
   final String? contactPictureId;
+  final ContactRecipientSnapshot? contactRecipient;
 }
 
 class MobileSendReviewDraftArgs {
@@ -191,6 +194,7 @@ class MobileSendReviewDraftArgs {
     this.memo,
     this.contactLabel,
     this.contactPictureId,
+    this.contactRecipient,
   });
 
   final String sendFlowId;
@@ -202,6 +206,7 @@ class MobileSendReviewDraftArgs {
   final String? memo;
   final String? contactLabel;
   final String? contactPictureId;
+  final ContactRecipientSnapshot? contactRecipient;
 }
 
 class MobileSendAmountScreen extends StatelessWidget {
@@ -219,6 +224,7 @@ class MobileSendAmountScreen extends StatelessWidget {
       initialAddressType: args.addressType,
       initialContactLabel: args.contactLabel,
       initialContactPictureId: args.contactPictureId,
+      initialContactRecipient: args.contactRecipient,
     );
   }
 }
@@ -244,6 +250,7 @@ class MobileSendReviewScreen extends StatelessWidget {
       initialMemo: args.memo,
       initialContactLabel: args.contactLabel,
       initialContactPictureId: args.contactPictureId,
+      initialContactRecipient: args.contactRecipient,
     );
   }
 }
@@ -313,6 +320,7 @@ class MobileSendScreen extends ConsumerStatefulWidget {
     this.initialMemo,
     this.initialContactLabel,
     this.initialContactPictureId,
+    this.initialContactRecipient,
     this.initialRecipientFocused = false,
     super.key,
   });
@@ -344,6 +352,7 @@ class MobileSendScreen extends ConsumerStatefulWidget {
   /// Preview/test seam for recipient summary states.
   final String? initialContactLabel;
   final String? initialContactPictureId;
+  final ContactRecipientSnapshot? initialContactRecipient;
   final bool initialRecipientFocused;
 
   /// Preview/test seam for the direct Rust validation call.
@@ -374,6 +383,7 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
   String _addressType = '';
   String? _contactLabel;
   String? _contactPictureId;
+  ContactRecipientSnapshot? _contactRecipient;
   int _addressSeq = 0;
 
   // Amount state. `_amountText` stays canonical ZEC text for Rust/review.
@@ -424,6 +434,8 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
       _contactLabel = initialContactLabel.trim();
     }
     _contactPictureId = widget.initialContactPictureId;
+    _contactRecipient = widget.initialContactRecipient;
+    if (_contactRecipient != null) _contactLabel = _contactRecipient!.label;
     final initialMemo = widget.initialMemo;
     if (initialMemo != null && initialMemo.trim().isNotEmpty) {
       _memo = initialMemo.trim();
@@ -542,6 +554,7 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
   void _handleAddressChanged({bool clearContact = true}) {
     setState(() {
       if (clearContact) {
+        _contactRecipient = null;
         _contactLabel = null;
         _contactPictureId = null;
       }
@@ -559,6 +572,7 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
       selection: TextSelection.collapsed(offset: address.length),
     );
     setState(() {
+      _contactRecipient = null;
       _contactLabel = contact.label.trim().isEmpty
           ? null
           : contact.label.trim();
@@ -618,6 +632,7 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
             addressType: _addressType,
             contactLabel: _contactLabel,
             contactPictureId: _contactPictureId,
+            contactRecipient: _contactRecipient,
           ),
         ),
       );
@@ -1115,6 +1130,7 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
             memo: _memo,
             contactLabel: _contactLabel,
             contactPictureId: _contactPictureId,
+            contactRecipient: _contactRecipient,
           ),
         ),
       );
@@ -1332,6 +1348,7 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
         address: address,
         addressType: _addressType,
         amountZatoshi: amountZatoshi,
+        contactRecipient: _contactRecipient,
         memo: memo.isNotEmpty ? memo : null,
       );
     } catch (e) {
@@ -1340,7 +1357,9 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
       setState(() {
         _isConfirmingSend = false;
         _phase = _SendPhase.failed;
-        _error = friendlyProposeSendError(e.toString());
+        _error = e is ContactFailure
+            ? e.message
+            : friendlyProposeSendError(e.toString());
       });
       return;
     }
@@ -1477,6 +1496,13 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
     required Iterable<AddressBookContact> contacts,
     required Map<String, AccountInfo> ownAccounts,
   }) {
+    final selected = _contactRecipient;
+    if (selected != null && selected.address == address.trim()) {
+      return _ReviewRecipientPresentation(
+        headline: selected.label,
+        verifyTitle: selected.label,
+      );
+    }
     final contact = sendRecipientContactFor(
       contacts: contacts,
       address: address,

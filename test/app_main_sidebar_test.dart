@@ -8,6 +8,9 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zcash_wallet/src/features/contacts/application/contact_exchange_controller.dart';
+import 'package:zcash_wallet/src/features/contacts/presentation/contact_exchange_screen.dart';
+import 'package:zcash_wallet/src/features/contacts/presentation/contact_introduction_screen.dart';
 import 'package:zcash_wallet/src/app_bootstrap.dart';
 import 'package:zcash_wallet/src/features/zns/application/zns_controller.dart';
 import 'package:zcash_wallet/src/features/zns/presentation/zns_wallet_screen.dart';
@@ -70,6 +73,27 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('home route'), findsOneWidget);
     expect(find.byType(ZnsWalletScreen), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('introductions preserve the routed sidebar and back navigation', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _sidebarHarness(_syncedSyncState, initialLocation: '/contacts/exchange'),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Introductions and reciprocal setup'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ContactIntroductionScreen), findsOneWidget);
+    expect(find.byType(AppMainSidebar), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Back to contact exchange'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ContactExchangeScreen), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('sidebar_home_button')));
+    await tester.pumpAndSettle();
+    expect(find.text('home route'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -1259,6 +1283,14 @@ Widget _sidebarHarness(
         ),
       ),
       GoRoute(path: '/names', builder: (_, _) => const ZnsWalletScreen()),
+      GoRoute(
+        path: '/contacts/exchange',
+        builder: (_, _) => const ContactExchangeScreen(),
+      ),
+      GoRoute(
+        path: '/contacts/introductions',
+        builder: (_, _) => const ContactIntroductionScreen(),
+      ),
       GoRoute(path: '/accounts', builder: (_, _) => const Text('accounts')),
       GoRoute(
         path: '/send',
@@ -1339,6 +1371,8 @@ Widget _sidebarHarness(
 
   return ProviderScope(
     overrides: [
+      contactExchangeAvailableProvider.overrideWithValue(true),
+      contactExchangeProvider.overrideWith(_SidebarContactController.new),
       znsControllerProvider.overrideWith(_SidebarZnsController.new),
       appBootstrapProvider.overrideWithValue(bootstrap),
       syncProvider.overrideWith(() => _FakeSyncNotifier(syncState)),
@@ -1375,6 +1409,14 @@ Widget _sidebarHarness(
       ),
     ),
   );
+}
+
+class _SidebarContactController extends ContactExchangeController {
+  @override
+  ContactExchangeState build() => const ContactExchangeState(available: true);
+
+  @override
+  void cancelTransient() {}
 }
 
 class _FakePaySelectedAssetStore implements PaySelectedAssetStore {

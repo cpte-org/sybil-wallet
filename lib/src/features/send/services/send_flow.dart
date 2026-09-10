@@ -21,6 +21,8 @@ import '../../../providers/rpc_endpoint_failover_provider.dart';
 import '../../../providers/rpc_endpoint_provider.dart';
 import '../../../providers/sync_provider.dart';
 import '../../../rust/api/sync.dart' as rust_sync;
+import '../../contacts/application/contact_exchange_controller.dart';
+import '../../contacts/domain/contact_models.dart';
 import 'sapling_params.dart';
 
 /// Route-extra payload for the review/status legs of the send flow.
@@ -38,6 +40,7 @@ class SendReviewArgs {
     required this.needsSaplingParams,
     this.memo,
     this.flowKind = SendFlowKind.send,
+    this.contactRecipient,
   });
 
   final BigInt proposalId;
@@ -50,6 +53,7 @@ class SendReviewArgs {
   final bool needsSaplingParams;
   final String? memo;
   final SendFlowKind flowKind;
+  final ContactRecipientSnapshot? contactRecipient;
 
   bool get isShielded => addressType == 'unified' || addressType == 'sapling';
 }
@@ -176,8 +180,16 @@ Future<SendReviewArgs> proposeSendTransfer({
   required BigInt amountZatoshi,
   String? memo,
   SendFlowKind flowKind = SendFlowKind.send,
+  ContactRecipientSnapshot? contactRecipient,
   Future<String> Function() loadDbPath = getWalletDbPath,
 }) async {
+  void checkContact() => validateSendContact(
+    ref,
+    contactRecipient,
+    address: address,
+    accountUuid: accountUuid,
+  );
+  checkContact();
   final proposal = await ref
       .read(syncProvider.notifier)
       .runWithAuthoritativeSpendable(
@@ -185,6 +197,7 @@ Future<SendReviewArgs> proposeSendTransfer({
         operation: () async {
           final dbPath = await loadDbPath();
           final endpoint = ref.read(rpcEndpointProvider);
+          checkContact();
           return rust_sync.proposeSend(
             dbPath: dbPath,
             network: endpoint.networkName,
@@ -196,6 +209,16 @@ Future<SendReviewArgs> proposeSendTransfer({
           );
         },
       );
+  try {
+    checkContact();
+  } catch (_) {
+    await discardSendProposal(
+      proposalId: proposal.proposalId,
+      sendFlowId: sendFlowId,
+      logContext: 'ContactSend(stale-proposal)',
+    );
+    rethrow;
+  }
   return SendReviewArgs(
     proposalId: proposal.proposalId,
     sendFlowId: sendFlowId,
@@ -207,7 +230,35 @@ Future<SendReviewArgs> proposeSendTransfer({
     memo: (memo != null && memo.isNotEmpty) ? memo : null,
     needsSaplingParams: proposal.needsSaplingParams,
     flowKind: flowKind,
+    contactRecipient: contactRecipient,
   );
+}
+
+/// A typed contact selection must survive every send stage. This check never
+/// resolves a mutable public handle or treats an address match as identity.
+void validateSendContact(
+  WidgetRef ref,
+  ContactRecipientSnapshot? recipient, {
+  required String address,
+  required String accountUuid,
+}) {
+  if (recipient == null) return;
+  final account = ref.read(accountProvider).value?.activeAccount;
+  if (!ref.read(appSecurityProvider).isUnlocked ||
+      account?.uuid != accountUuid ||
+      account?.isHardware != false) {
+    throw const ContactFailure(
+      'Unlock the software account used to select this contact.',
+    );
+  }
+  ref
+      .read(contactExchangeProvider.notifier)
+      .validateRecipient(
+        recipient,
+        address: address,
+        accountUuid: accountUuid,
+        network: ref.read(rpcEndpointFailoverProvider).current.networkName,
+      );
 }
 
 /// Idempotent proposal release for every non-consuming exit path.
@@ -420,6 +471,12 @@ Future<SendBroadcastOutcome> runSendBroadcast({
   );
 
   try {
+    validateSendContact(
+      ref,
+      args.contactRecipient,
+      address: args.address,
+      accountUuid: args.proposalAccountUuid,
+    );
     final dbPath = await getWalletDbPath();
     final endpoint = ref.read(rpcEndpointFailoverProvider).current;
     var saplingParams = await loadSaplingParamsStatus();
@@ -469,6 +526,12 @@ Future<SendBroadcastOutcome> runSendBroadcast({
     String? broadcastMessageForFallback;
 
     if (isHardware) {
+      validateSendContact(
+        ref,
+        args.contactRecipient,
+        address: args.address,
+        accountUuid: args.proposalAccountUuid,
+      );
       if (keystone == null) {
         throw Exception('Missing Keystone transaction signature.');
       }
@@ -544,6 +607,12 @@ Future<SendBroadcastOutcome> runSendBroadcast({
         final password = ref
             .read(appSecurityProvider.notifier)
             .requireSessionPasswordForNativeSecretUse();
+        validateSendContact(
+          ref,
+          args.contactRecipient,
+          address: args.address,
+          accountUuid: args.proposalAccountUuid,
+        );
         result = await rust_sync.executeProposalWithMacosStoredMnemonic(
           dbPath: dbPath,
           lightwalletdUrl: endpoint.normalizedLightwalletdUrl,
@@ -572,6 +641,12 @@ Future<SendBroadcastOutcome> runSendBroadcast({
 
         late final Future<rust_sync.ExecuteProposalResult> resultFuture;
         try {
+          validateSendContact(
+            ref,
+            args.contactRecipient,
+            address: args.address,
+            accountUuid: args.proposalAccountUuid,
+          );
           resultFuture = rust_sync.executeProposal(
             dbPath: dbPath,
             lightwalletdUrl: endpoint.normalizedLightwalletdUrl,
@@ -640,7 +715,9 @@ Future<SendBroadcastOutcome> runSendBroadcast({
     );
   } catch (e) {
     log('SendBroadcast: ERROR: $e');
-    final message = friendlyBroadcastError(e.toString());
+    final message = e is ContactFailure
+        ? e.message
+        : friendlyBroadcastError(e.toString());
     if (await abortRequested()) return aborted();
     if (!proposalReleased) {
       await discardSendProposal(
