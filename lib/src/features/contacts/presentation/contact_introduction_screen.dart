@@ -19,6 +19,8 @@ import '../application/contact_introduction_providers.dart';
 import '../application/contact_mutation_gate.dart';
 import '../data/contact_introduction_gateway.dart';
 import '../domain/contact_models.dart';
+import '../domain/contact_packet_kind.dart';
+import 'contact_packet_delivery_controls.dart';
 
 class ContactIntroductionScreen extends ConsumerWidget {
   const ContactIntroductionScreen({super.key});
@@ -34,6 +36,23 @@ class ContactIntroductionScreen extends ConsumerWidget {
             onAccepted: () =>
                 ref.read(contactExchangeProvider.notifier).reload(),
             onCopy: SensitiveClipboard.copyText,
+            inboxBuilder: (selected) => ContactPacketDeliveryControls.inbox(
+              onSelected: selected,
+              kinds: const {
+                ContactPacketKind.ask,
+                ContactPacketKind.offer,
+                ContactPacketKind.consent,
+                ContactPacketKind.delivery,
+                ContactPacketKind.response,
+              },
+            ),
+            sendBuilder: (packet, expires, contactId, identity) =>
+                ContactPacketDeliveryControls.send(
+                  packet: packet,
+                  expiresAt: expires,
+                  contactId: contactId,
+                  recipientIdentity: identity,
+                ),
           )
         : const Center(
             child: Text(
@@ -101,10 +120,14 @@ class ContactIntroductionView extends StatefulWidget {
     required this.coordinator,
     this.onCopy,
     this.onAccepted,
+    this.inboxBuilder,
+    this.sendBuilder,
   });
   final ContactIntroductionCoordinator coordinator;
   final Future<void> Function(String)? onCopy;
   final Future<void> Function()? onAccepted;
+  final Widget Function(Future<void> Function(String))? inboxBuilder;
+  final Widget Function(String, DateTime, String?, String?)? sendBuilder;
 
   @override
   State<ContactIntroductionView> createState() =>
@@ -116,11 +139,14 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
   final _packet = TextEditingController(),
       _outgoing = TextEditingController(),
       _suggestion = TextEditingController(),
+      _freshResponse = TextEditingController(),
       _label = TextEditingController();
   ContactIntroductionOverview? _overview;
   IntroductionTask _task = IntroductionTask.pair;
   String? _peer, _subject, _output, _error, _notice, _outputInstruction;
   DateTime? _outputExpiresAt;
+  String? _outputContactId;
+  String? _outputRecipientIdentity;
   Object? _review;
   bool _consent = false, _busy = false, _reloadNeeded = false;
   int _epoch = 0;
@@ -142,7 +168,7 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
     coordinator.pauseReview();
     WidgetsBinding.instance.removeObserver(this);
     ContactMutationGate.listeners.remove(_bookChanged);
-    for (final c in [_packet, _outgoing, _suggestion, _label]) {
+    for (final c in [_packet, _outgoing, _suggestion, _label, _freshResponse]) {
       c.dispose();
     }
     super.dispose();
@@ -211,7 +237,10 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
   }
 
   void _reset() {
+    _outputContactId = null;
+    _outputRecipientIdentity = null;
     coordinator.pauseReview();
+    _freshResponse.clear();
     _expiry?.cancel();
     _epoch++;
     if (mounted) {
@@ -303,18 +332,54 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
     };
   }
 
+  Future<void> _importPacket(String packet) {
+    if (_busy) return Future.value();
+    _reset();
+    return _run(() async {
+      final kind = contactPacketKind(packet);
+      if (kind == ContactPacketKind.response) {
+        final epoch = _epoch;
+        final original = await coordinator.pendingAcceptancePacket();
+        if (!mounted || epoch != _epoch) return;
+        _task = IntroductionTask.accept;
+        _packet.text = original;
+        _freshResponse.text = packet;
+      } else {
+        _task = switch (kind) {
+          ContactPacketKind.ask => IntroductionTask.offer,
+          ContactPacketKind.offer => IntroductionTask.consent,
+          ContactPacketKind.consent => IntroductionTask.endorse,
+          ContactPacketKind.delivery => IntroductionTask.accept,
+          _ => throw const ContactFailure(
+            'This packet is not an introduction.',
+          ),
+        };
+        _packet.text = packet;
+        _peer = null;
+        _subject = null;
+      }
+      _notice =
+          'Packet loaded, not verified. Choose the applicable contacts and review the details.';
+    });
+  }
+
   Future<void> _confirm() async {
     final review = _review;
     if (review is IntroductionReview) _outputExpiresAt = review.wire.expiresAt;
     if (_task == IntroductionTask.request) {
+      _outputContactId = _selectedPeer;
+      _outputRecipientIdentity = _selectedContact?.identity;
       _outputInstruction =
-          'Send this request to ${_selectedContact?.label}. Keep this wallet unlocked while you wait for their endorsed reply.';
-      _outputExpiresAt = coordinator.clock().add(const Duration(minutes: 15));
-      _expiry?.cancel();
-      _expiry = Timer(const Duration(minutes: 15), _reset);
+          'Send this invitation to ${_selectedContact?.label}. You can close the wallet and resume the saved invitation later.';
       _output = await coordinator.createRequest(
         _selectedPeer,
         consent: _consent,
+      );
+      _outputExpiresAt = await coordinator.pendingRequestExpiry();
+      _expiry?.cancel();
+      _expiry = Timer(
+        _outputExpiresAt!.difference(coordinator.clock()),
+        _reset,
       );
     } else if (review is ReciprocalContactReview) {
       await coordinator.confirmAssociation(
@@ -325,14 +390,20 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
     } else if (review is IntroductionReview) {
       switch (review.stage) {
         case IntroductionWireStage.ask:
+          _outputContactId = review.contacts.last.id;
+          _outputRecipientIdentity = review.contacts.last.identity;
           _outputInstruction =
               'Send this offer to ${review.contacts.last.label}. Ask them to review and return their approval packet.';
           _output = await coordinator.confirmOffer(review, consent: _consent);
         case IntroductionWireStage.offer:
+          _outputContactId = review.contacts.first.id;
+          _outputRecipientIdentity = review.contacts.first.identity;
           _outputInstruction =
               'Send this approval to ${review.contacts.first.label}. They must review and endorse the exact details before forwarding them.';
           _output = await coordinator.confirmConsent(review, consent: _consent);
         case IntroductionWireStage.consent:
+          _outputContactId = review.contacts.first.id;
+          _outputRecipientIdentity = review.contacts.first.identity;
           _outputInstruction =
               'Send this endorsed introduction to ${review.contacts.first.label}. They must choose a local label and explicitly accept it.';
           _output = await coordinator.confirmDelivery(
@@ -344,6 +415,7 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
             review,
             label: _label.text,
             consent: _consent,
+            freshResponse: _freshResponse.text,
           );
           await widget.onAccepted?.call();
           _notice =
@@ -459,6 +531,8 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
               _text(
                 'An introduction records the introducer’s claim, not proof of a person’s identity or spending authority. Alice can see Bob’s new receiving address. Contact keys are not recovered from the wallet seed.',
               ),
+              if (widget.inboxBuilder != null)
+                widget.inboxBuilder!(_importPacket),
               DropdownButtonFormField<IntroductionTask>(
                 key: ValueKey(_task),
                 initialValue: _task,
@@ -533,7 +607,7 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
                 ),
               if (_task == IntroductionTask.request) ...[
                 _text(
-                  'Authorize your selected contact to arrange an introduction. The request lasts 15 minutes. Locking, switching accounts or networks, or restarting invalidates it.',
+                  'Authorize your selected contact to arrange an introduction. New invitations last 30 days and can be resumed after unlocking or restarting. Final acceptance requires a fresh address check and your approval.',
                 ),
                 if (_selectedContact != null)
                   _detail(
@@ -575,12 +649,44 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
                     'New receiving address (visible to the introducer)',
                     review.address!,
                   ),
-                if (review.stage == IntroductionWireStage.delivery)
+                if (review.stage == IntroductionWireStage.delivery) ...[
+                  _text(
+                    'Before accepting, ask the introduced person to confirm these receiving details using a fresh address check. They can reply from contact exchange using their existing relationship key.',
+                  ),
+                  AppButton(
+                    onPressed: _busy
+                        ? null
+                        : () => unawaited(
+                            _run(() async {
+                              final request = await coordinator
+                                  .createAcceptanceRequest(
+                                    review,
+                                    consent: true,
+                                  );
+                              _freshResponse.clear();
+                              _consent = false;
+                              _output = request.json;
+                              _outputContactId = null;
+                              _outputRecipientIdentity = null;
+                              _outputExpiresAt = request.expiresAt;
+                              _outputInstruction =
+                                  'Send this address check to the introduced person, directly or through your introducer. Paste their signed response below. It expires at ${request.expiresAt.toUtc()}.';
+                            }),
+                          ),
+                    child: const Text('Create fresh address check'),
+                  ),
+                  _field(
+                    'Fresh signed address response',
+                    _freshResponse,
+                    packet: true,
+                    label: true,
+                  ),
                   _field(
                     'Unique private label on this wallet',
                     _label,
                     label: true,
                   ),
+                ],
               ],
               if (review != null || _task == IntroductionTask.request) ...[
                 CheckboxListTile(
@@ -594,7 +700,11 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
                   title: Text(_approvalText, style: AppTypography.bodyMedium),
                 ),
                 AppButton(
-                  onPressed: !_busy && _consent
+                  onPressed:
+                      !_busy &&
+                          _consent &&
+                          (_task != IntroductionTask.accept ||
+                              _freshResponse.text.isNotEmpty)
                       ? () => unawaited(_run(_confirm))
                       : null,
                   child: Text(
@@ -609,6 +719,13 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
               if (_output != null) ...[
                 const SizedBox(height: AppSpacing.sm),
                 _text(_outputInstruction ?? 'Packet ready.'),
+                if (widget.sendBuilder != null && _outputExpiresAt != null)
+                  widget.sendBuilder!(
+                    _output!,
+                    _outputExpiresAt!,
+                    _outputContactId,
+                    _outputRecipientIdentity,
+                  ),
                 AppButton(
                   onPressed: !_busy && widget.onCopy != null
                       ? () => unawaited(
@@ -657,6 +774,33 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
                 _text(
                   'Confirmed reciprocal pairings: ${_overview!.associations.length}',
                 ),
+                for (final request in _overview!.pendingRequests)
+                  AppButton(
+                    constrainContent: true,
+                    variant: AppButtonVariant.ghost,
+                    onPressed: _busy
+                        ? null
+                        : () {
+                            _reset();
+                            setState(() => _task = IntroductionTask.accept);
+                            unawaited(
+                              _run(() async {
+                                final resumed = await coordinator.resumeRequest(
+                                  request.hash,
+                                );
+                                _output = resumed.packet;
+                                _outputExpiresAt = resumed.expiresAt;
+                                _outputInstruction =
+                                    'Invitation resumed. Paste the endorsed reply to review it, or copy this original invitation to resend. A fresh address check is still required before acceptance.';
+                              }),
+                            );
+                          },
+                    child: Text(
+                      'Resume invitation via ${request.label} · ${request.expiresAt.toUtc()}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 for (final hash in _overview!.savedEndorsements)
                   AppButton(
                     variant: AppButtonVariant.ghost,

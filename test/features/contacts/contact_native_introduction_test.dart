@@ -89,6 +89,9 @@ void main() {
           aliceAtCarol.id,
           consent: true,
         );
+        // The invitation can wait while people are offline. Later approvals
+        // and the final address proof use the current clock, not fixture time.
+        clock.now = clock.now.add(const Duration(days: 1));
         final askReview = await alice.introductions.reviewAsk(
           carolAtAlice.id,
           bobAtAlice.id,
@@ -169,6 +172,10 @@ void main() {
           ),
           delivery,
         );
+        final pendingInvitation =
+            (await carol.introductions.overview()).pendingRequests.single;
+        await carol.reopen();
+        await carol.introductions.resumeRequest(pendingInvitation.hash);
         final deliveryReview = await carol.introductions.reviewDelivery(
           delivery,
         );
@@ -193,10 +200,50 @@ void main() {
           throwsA(isA<ContactFailure>()),
         );
         expect(await carol.repository.load(carol.scope), hasLength(1));
+        final freshness = await carol.introductions.createAcceptanceRequest(
+          deliveryReview,
+          consent: true,
+        );
+        final relationshipSigner = await bob.repository.loadSigner(
+          bob.scope,
+          freshIdentity,
+        );
+        expect(relationshipSigner, isNotNull);
+        late String freshResponse;
+        try {
+          freshResponse = await bob.gateway.sign(
+            bob.scope,
+            freshness.json,
+            relationshipSigner!,
+            clock.now,
+          );
+          final replacement = await carol.introductions.createAcceptanceRequest(
+            deliveryReview,
+            consent: true,
+          );
+          await expectLater(
+            carol.introductions.acceptDelivery(
+              deliveryReview,
+              label: 'Robert',
+              consent: true,
+              freshResponse: freshResponse,
+            ),
+            throwsA(anything),
+          );
+          freshResponse = await bob.gateway.sign(
+            bob.scope,
+            replacement.json,
+            relationshipSigner,
+            clock.now,
+          );
+        } finally {
+          relationshipSigner?.clear();
+        }
         final accepted = await carol.introductions.acceptDelivery(
           deliveryReview,
           label: 'Robert', // A local choice, distinct from the suggestion.
           consent: true,
+          freshResponse: freshResponse,
         );
         expect(accepted.identity, freshIdentity);
         expect(accepted.address, freshAddress);

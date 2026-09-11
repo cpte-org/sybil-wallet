@@ -70,6 +70,11 @@ class SecureContactRepository implements ContactRepository {
   Future<ContactSigner?> loadSigner(ContactScope scope, String identity) async {
     final book = await _books.loadBook(scope);
     try {
+      if (book.quarantinedSigners.any((s) => s.identity == identity)) {
+        throw const ContactFailure(
+          'This restored relationship key is inactive until recovery reconciliation is completed.',
+        );
+      }
       final stored = book.signers
           .where((s) => s.identity == identity)
           .firstOrNull;
@@ -140,6 +145,11 @@ class SecureContactRepository implements ContactRepository {
       final book = await _books.loadBook(scope);
       try {
         beforeWrite?.call();
+        if (book.quarantinedSigners.any((s) => s.identity == signer.identity)) {
+          throw const ContactFailure(
+            'A restored relationship key cannot overwrite active signing state.',
+          );
+        }
         final existing = book.signers
             .where((s) => s.identity == signer.identity)
             .firstOrNull;

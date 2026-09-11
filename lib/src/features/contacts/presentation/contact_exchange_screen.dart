@@ -18,6 +18,8 @@ import '../../address_book/models/address_book_contact.dart';
 import '../../send/models/send_prefill_args.dart';
 import '../application/contact_exchange_controller.dart';
 import '../domain/contact_models.dart';
+import '../domain/contact_packet_kind.dart';
+import 'contact_packet_delivery_controls.dart';
 
 export '../domain/contact_models.dart';
 
@@ -47,6 +49,17 @@ class ContactExchangeScreen extends ConsumerWidget {
     final content = ContactExchangeView(
       // Never carry partially entered exchanges across account or network switches.
       key: ValueKey(scope),
+      inboxBuilder: (selected) => ContactPacketDeliveryControls.inbox(
+        onSelected: selected,
+        kinds: const {ContactPacketKind.request, ContactPacketKind.response},
+      ),
+      sendBuilder: (packet, expires, contactId, identity) =>
+          ContactPacketDeliveryControls.send(
+            packet: packet,
+            expiresAt: expires,
+            contactId: contactId,
+            recipientIdentity: identity,
+          ),
       state: available
           ? state
           : ContactExchangeState(
@@ -55,6 +68,10 @@ class ContactExchangeScreen extends ConsumerWidget {
                   'Contact exchange is available only for unlocked software accounts on testnet or regtest.',
             ),
       callbacks: ContactExchangeCallbacks(
+        onBackup: () {
+          controller.cancelTransient();
+          context.push('/contacts/backup');
+        },
         onReload: controller.reload,
         onIntroductions: () {
           controller.cancelTransient();
@@ -67,6 +84,7 @@ class ContactExchangeScreen extends ConsumerWidget {
         onPrepareShare: controller.prepareShare,
         onConfirmShare: controller.confirmShare,
         onCancel: controller.cancelTransient,
+        onPauseReview: controller.pauseExchange,
         onClearError: controller.clearError,
         onCopy: (text, message) async {
           await SensitiveClipboard.copyText(text);
@@ -119,11 +137,23 @@ class ContactExchangeScreen extends ConsumerWidget {
           child: Column(
             children: [
               AppPaneToolbar(
-                leading: AppButton(
-                  onPressed: back,
-                  variant: AppButtonVariant.ghost,
-                  size: AppButtonSize.small,
-                  child: const Text('Back to contacts'),
+                leading: Row(
+                  children: [
+                    AppButton(
+                      onPressed: back,
+                      variant: AppButtonVariant.ghost,
+                      size: AppButtonSize.small,
+                      child: const Text('Back to contacts'),
+                    ),
+                    AppButton(
+                      onPressed: available
+                          ? () => context.push('/contacts/delivery')
+                          : null,
+                      variant: AppButtonVariant.ghost,
+                      size: AppButtonSize.small,
+                      child: const Text('Private delivery'),
+                    ),
+                  ],
                 ),
               ),
               Expanded(child: content),
@@ -144,6 +174,7 @@ class ContactExchangeScreen extends ConsumerWidget {
 class ContactExchangeCallbacks {
   const ContactExchangeCallbacks({
     this.onReload,
+    this.onBackup,
     this.onIntroductions,
     this.onStartRequest,
     this.onPreviewResponse,
@@ -155,8 +186,9 @@ class ContactExchangeCallbacks {
     this.onClearError,
     this.onSend,
     this.onCopy,
+    this.onPauseReview,
   });
-  final VoidCallback? onIntroductions;
+  final VoidCallback? onIntroductions, onBackup;
   final Future<void> Function()? onReload;
   final Future<void> Function({String? contactId})? onStartRequest;
   final Future<void> Function(String)? onPreviewResponse;
@@ -171,6 +203,7 @@ class ContactExchangeCallbacks {
   final VoidCallback? onCancel, onClearError;
   final ValueChanged<String>? onSend;
   final Future<void> Function(String text, String successMessage)? onCopy;
+  final VoidCallback? onPauseReview;
 }
 
 /// A deterministic presentation surface: no wallet, storage or Rust calls.
@@ -180,10 +213,14 @@ class ContactExchangeView extends StatefulWidget {
     required this.state,
     this.callbacks = const ContactExchangeCallbacks(),
     this.now,
+    this.inboxBuilder,
+    this.sendBuilder,
   });
   final ContactExchangeState state;
   final ContactExchangeCallbacks callbacks;
   final DateTime Function()? now;
+  final Widget Function(Future<void> Function(String))? inboxBuilder;
+  final Widget Function(String, DateTime, String?, String?)? sendBuilder;
 
   @override
   State<ContactExchangeView> createState() => _ContactExchangeViewState();
@@ -195,6 +232,7 @@ class _ContactExchangeViewState extends State<ContactExchangeView> {
   final _label = TextEditingController();
   bool _verified = false, _shareConsent = false, _working = false;
   bool _responseTooLong = false, _requestTooLong = false;
+  int _importEpoch = 0;
   String? _confirmSuspend, _localError;
   late final Timer _expiryTimer;
   static const _limit = 32768;
@@ -212,6 +250,32 @@ class _ContactExchangeViewState extends State<ContactExchangeView> {
       data.shareReview != null ||
       data.response != null;
   bool expired(DateTime deadline) => !now.isBefore(deadline);
+  Future<void> _importPacket(String packet) async {
+    if (!enabled) return;
+    final epoch = ++_importEpoch;
+    actions.onPauseReview?.call();
+    // Let the controller's review-clearing update settle before pre-filling.
+    // Account/lock changes dispose or invalidate this view in the meantime.
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted || epoch != _importEpoch || !data.available) return;
+    setState(() {
+      _verified = false;
+      _shareConsent = false;
+      _response.clear();
+      _incomingRequest.clear();
+      _responseTooLong = false;
+      _requestTooLong = false;
+      switch (contactPacketKind(packet)) {
+        case ContactPacketKind.request:
+          _incomingRequest.text = packet;
+        case ContactPacketKind.response:
+          _response.text = packet;
+        default:
+          _localError = 'This packet is not a direct contact exchange.';
+      }
+    });
+  }
+
   String? candidateKey(ContactCandidateView? value) => value == null
       ? null
       : '${value.identity}|${value.address}|${value.previousAddress}|${value.sequence}|${value.expiresAt.toIso8601String()}';
@@ -237,6 +301,7 @@ class _ContactExchangeViewState extends State<ContactExchangeView> {
   void didUpdateWidget(covariant ContactExchangeView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!data.available) {
+      _importEpoch++;
       _response.clear();
       _incomingRequest.clear();
       _label.clear();
@@ -341,6 +406,11 @@ class _ContactExchangeViewState extends State<ContactExchangeView> {
                 spacing: AppSpacing.sm,
                 runSpacing: AppSpacing.s,
                 children: [
+                  if (actions.onBackup != null)
+                    AppButton(
+                      onPressed: enabled ? actions.onBackup : null,
+                      child: const Text('Contact backup'),
+                    ),
                   Text(
                     'Contact exchange',
                     style: AppTypography.headlineLarge.copyWith(
@@ -373,6 +443,8 @@ class _ContactExchangeViewState extends State<ContactExchangeView> {
                       'Use an unlocked software account on testnet or regtest.',
                 ),
               if (data.available) ...[
+                if (widget.inboxBuilder != null)
+                  widget.inboxBuilder!(_importPacket),
                 if (actions.onIntroductions != null)
                   AppButton(
                     onPressed: enabled ? actions.onIntroductions : null,
@@ -538,6 +610,13 @@ class _ContactExchangeViewState extends State<ContactExchangeView> {
         ),
         const SizedBox(height: AppSpacing.s),
         _payloadOutput('Request to share', request.json),
+        if (widget.sendBuilder != null)
+          widget.sendBuilder!(
+            request.json,
+            request.expiresAt,
+            request.contactId,
+            request.identity,
+          ),
         const SizedBox(height: AppSpacing.s),
         Align(
           alignment: Alignment.centerLeft,
@@ -610,7 +689,9 @@ class _ContactExchangeViewState extends State<ContactExchangeView> {
           ),
           _paragraph(
             context,
-            candidate.isUpdate
+            candidate.requiresRecoveryCheck
+                ? 'This contact came from a backup that may be outdated. Independently compare the complete identity and fresh receiving address with the person before enabling payments.'
+                : candidate.isUpdate
                 ? 'This reply uses the recognized contact identity. Review the receiving address before accepting the update.'
                 : 'A valid signature identifies a key, not a person. Compare the complete identity and receiving address in person or through an independently authenticated channel.',
           ),
@@ -661,7 +742,7 @@ class _ContactExchangeViewState extends State<ContactExchangeView> {
             key: const Key('contacts-verify-acceptance'),
             checked: _verified,
             enabled: enabled && !isExpired,
-            label: candidate.isUpdate
+            label: candidate.isUpdate && !candidate.requiresRecoveryCheck
                 ? 'I reviewed this recognized identity and its receiving address update.'
                 : 'I independently compared this complete identity and receiving address with the person.',
             onChanged: (value) => setState(() => _verified = value),
@@ -803,6 +884,8 @@ class _ContactExchangeViewState extends State<ContactExchangeView> {
         ),
         const SizedBox(height: AppSpacing.s),
         _payloadOutput('Signed reply to share', response),
+        if (widget.sendBuilder != null && data.responseExpiresAt != null)
+          widget.sendBuilder!(response, data.responseExpiresAt!, null, null),
         const SizedBox(height: AppSpacing.sm),
         Wrap(
           spacing: AppSpacing.s,
@@ -870,7 +953,7 @@ class _ContactExchangeViewState extends State<ContactExchangeView> {
               ContactTrustStatus.suspended =>
                 'Suspended: payments and address updates are blocked. A new signature from this key cannot remove the restriction.',
               ContactTrustStatus.restored =>
-                'Restored contact: independent verification is required before use. This experiment does not provide restoration or identity replacement.',
+                'Restored contact: request a fresh address response and independently verify it before enabling payments.',
               ContactTrustStatus.retired =>
                 'Retired identity: this record is retained as history and cannot be used for payment.',
               ContactTrustStatus.accepted => '',

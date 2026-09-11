@@ -77,6 +77,7 @@ class ContactExchangeController extends Notifier<ContactExchangeState> {
   _Share? _share;
   ContactSigner? _preparingSigner;
   String? _response, _error;
+  DateTime? _responseExpiresAt;
   bool _loaded = false, _loading = false, _disposed = false;
   int _epoch = 0, _task = 0, _generation = 0, _inFlight = 0;
   int _bookGeneration = 0;
@@ -142,6 +143,7 @@ class ContactExchangeController extends Notifier<ContactExchangeState> {
       contacts: List.unmodifiable(_contacts),
       request: _request,
       response: _response,
+      responseExpiresAt: _responseExpiresAt,
       candidate: candidate == null
           ? null
           : ContactCandidateView(
@@ -150,6 +152,8 @@ class ContactExchangeController extends Notifier<ContactExchangeState> {
               sequence: candidate.endpoint.sequence,
               expiresAt: candidate.endpoint.expiresAt,
               previousAddress: candidate.previous?.address,
+              requiresRecoveryCheck:
+                  candidate.previous?.status == ContactTrustStatus.restored,
               label: candidate.previous?.label,
             ),
       shareReview: share == null
@@ -286,6 +290,7 @@ class ContactExchangeController extends Notifier<ContactExchangeState> {
     _request = null;
     _candidate = null;
     _response = null;
+    _responseExpiresAt = null;
   }
 
   // Copying a public request into another app is part of the exchange. Keep
@@ -358,6 +363,7 @@ class ContactExchangeController extends Notifier<ContactExchangeState> {
       json: request.json,
       expiresAt: request.expiresAt,
       contactId: previous?.id,
+      identity: previous?.identity,
       label: previous?.label,
     );
     _expireAt(request.expiresAt);
@@ -617,6 +623,7 @@ class ContactExchangeController extends Notifier<ContactExchangeState> {
     _share = null;
     share.signer.clear();
     _response = response;
+    _responseExpiresAt = share.request.expiresAt;
   });
 
   ContactRecipientSnapshot recipientFor(String id) {

@@ -6,6 +6,7 @@
 // Static analysis wrongly picks the IO variant, thus ignore this
 // ignore_for_file: argument_type_not_assignable
 
+import 'api/contact_backup.dart';
 import 'api/contacts.dart';
 import 'api/keystone.dart';
 import 'api/network_privacy.dart';

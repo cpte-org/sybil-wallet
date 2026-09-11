@@ -18,6 +18,7 @@ void introductionWidgetTests(AppFormFactor formFactor) {
     double height = 1500,
     Future<void> Function()? onAccepted,
     Future<void> Function(String)? onCopy,
+    Widget Function(Future<void> Function(String))? inboxBuilder,
   }) async {
     expect(kAppFormFactor, formFactor);
     tester.view.devicePixelRatio = 1;
@@ -38,6 +39,7 @@ void introductionWidgetTests(AppFormFactor formFactor) {
             body: SafeArea(
               child: ContactIntroductionView(
                 coordinator: actor.coordinator,
+                inboxBuilder: inboxBuilder,
                 onAccepted: onAccepted,
                 onCopy: (packet) async {
                   copies?.add(packet);
@@ -100,6 +102,46 @@ void introductionWidgetTests(AppFormFactor formFactor) {
       );
     }
   }
+
+  testWidgets(
+    'inbox response fills the pending introduction without accepting it',
+    (tester) async {
+      final ceremony = IntroductionTestCeremony();
+      await ceremony.throughDelivery();
+      final review = await ceremony.carol.coordinator.reviewDelivery(
+        ceremony.delivery,
+      );
+      await ceremony.carol.prepareFreshCheck(review);
+      late Future<void> Function(String) importPacket;
+      await pump(
+        tester,
+        ceremony.carol,
+        inboxBuilder: (selected) {
+          importPacket = selected;
+          return const SizedBox();
+        },
+      );
+      const response = '["zcash-contact/exchange",null,null]';
+      await importPacket(response);
+      await tester.pump();
+      final texts = tester
+          .widgetList<EditableText>(find.byType(EditableText))
+          .map((w) => w.controller.text);
+      expect(texts, contains(ceremony.delivery));
+      // The response is retained for a fresh review; it is not trusted on import.
+      expect((await ceremony.carol.book()).contacts, hasLength(1));
+      expect(find.text('Accept contact'), findsNothing);
+      await tap(tester, 'Review details');
+      expect(
+        tester
+            .widgetList<EditableText>(find.byType(EditableText))
+            .map((w) => w.controller.text),
+        contains(response),
+      );
+      expect(enabled(tester, 'Accept contact'), isFalse);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
   testWidgets(
     'request and offer selectors publish only after both UI approvals',
@@ -305,12 +347,20 @@ void introductionWidgetTests(AppFormFactor formFactor) {
       await tap(tester, 'Review details');
       expect(find.text(ceremony.carol.current!.network), findsNothing);
       expect(enabled(tester, 'Accept contact'), isFalse);
-      await input(tester, 1, 'My Bob');
+      final addressReview = await ceremony.carol.coordinator.reviewDelivery(
+        ceremony.delivery,
+      );
+      ceremony.carol.configureFreshResponse(addressReview);
+      // Rebuild the UI's identical coordinator review before requesting a check.
+      await tap(tester, 'Review details');
+      await tap(tester, 'Create fresh address check');
+      await input(tester, 1, 'fake-fresh-response');
+      await input(tester, 2, 'My Bob');
       await tap(
         tester,
         'I accept these exact details based on Alice’s claim that this is Bob.',
       );
-      await input(tester, 1, 'Private Bob');
+      await input(tester, 2, 'Private Bob');
       expect(enabled(tester, 'Accept contact'), isFalse);
       await capture(tester, key, 'carol-review');
       await tap(

@@ -43,6 +43,7 @@ class SecureContactIntroductionRepository
       book.associations.length,
       book.sessions.length,
       book.signers.length,
+      book.quarantinedSigners.length,
       book.provenance.length,
     ].any((count) => count > contactBookMaxRecords)) {
       throw const ContactFailure(

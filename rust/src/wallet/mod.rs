@@ -1,3 +1,5 @@
+pub(crate) mod account_secret;
+pub mod contact_backup;
 use std::num::NonZeroU32;
 
 use zcash_client_backend::data_api::wallet::ConfirmationsPolicy;

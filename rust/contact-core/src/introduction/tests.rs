@@ -8,6 +8,51 @@ fn id(byte: u8) -> String {
 const NOW: u64 = 1000;
 const ADDRESS: &str = "public-test-address";
 
+#[test]
+fn invitation_survives_delay_but_not_its_deadline_or_domain_substitution() {
+    let ask = create_ask(Network::Test, &id(1), &[2; 32], NOW).unwrap();
+    assert!(verify(
+        Role::Ask,
+        Network::Test,
+        &id(2),
+        &id(1),
+        None,
+        None,
+        &ask.packet_json,
+        NOW + 86400,
+        validate
+    )
+    .is_ok());
+    assert!(verify(
+        Role::Ask,
+        Network::Test,
+        &id(2),
+        &id(1),
+        None,
+        None,
+        &ask.packet_json,
+        NOW + INVITATION_TTL,
+        validate
+    )
+    .is_err());
+    let substituted = ask.packet_json.replace(
+        "zcash-contact/intro-invitation",
+        "zcash-contact/intro-request",
+    );
+    assert!(verify(
+        Role::Ask,
+        Network::Test,
+        &id(2),
+        &id(1),
+        None,
+        None,
+        &substituted,
+        NOW,
+        validate
+    )
+    .is_err());
+}
+
 fn validate(_: Network, address: &str) -> bool {
     address == ADDRESS
 }
@@ -64,7 +109,7 @@ fn four_builders_round_trip_and_preserve_the_exact_transcript() {
         assert_eq!(got, delivery);
         assert_eq!(got.request_json, ask.request_json);
         assert_eq!(got.request_hash, ask.request_hash);
-        assert_eq!(got.expires_at, NOW + 900);
+        assert_eq!(got.expires_at, NOW + INVITATION_TTL);
         assert_eq!(consent.offer_json, offer.offer_json);
         assert_eq!(got.endpoint_json, consent.endpoint_json);
         assert_eq!(got.endpoint_hash, consent.endpoint_hash);
@@ -138,7 +183,7 @@ fn builders_reject_wrong_roles_saved_transcripts_old_keys_addresses_and_expiry()
         &[5; 32],
         ADDRESS,
         &offer.packet_json,
-        NOW + 900,
+        NOW + INVITATION_TTL,
         validate
     )
     .is_err());

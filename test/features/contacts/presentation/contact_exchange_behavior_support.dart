@@ -164,7 +164,7 @@ void runContactExchangeBehaviorTests() {
   });
 
   testWidgets(
-    'suspended and restored contacts cannot send or request updates',
+    'restored contacts can request verification while payments remain blocked',
     (tester) async {
       var sends = 0;
       var requests = 0;
@@ -183,7 +183,10 @@ void runContactExchangeBehaviorTests() {
           ),
         );
         expect(contactButtonEnabled(tester, 'contacts-send-alice'), isFalse);
-        expect(contactButtonEnabled(tester, 'contacts-update-alice'), isFalse);
+        expect(
+          contactButtonEnabled(tester, 'contacts-update-alice'),
+          contact.status == ContactTrustStatus.restored,
+        );
       }
       expect(sends, 0);
       expect(requests, 0);

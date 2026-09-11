@@ -8,6 +8,7 @@ import 'package:zcash_wallet/src/features/contacts/application/contact_lifecycle
 import 'package:zcash_wallet/src/features/contacts/application/contact_mutation_gate.dart';
 import 'package:zcash_wallet/src/features/contacts/domain/contact_introduction_models.dart';
 import 'package:zcash_wallet/src/features/contacts/domain/contact_models.dart';
+import 'package:zcash_wallet/src/features/contacts/data/contact_gateway.dart';
 
 import 'contact_test_fakes.dart';
 
@@ -15,6 +16,119 @@ import 'contact_introduction_test_fixtures.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  test(
+    'explicit resume verifies saved requester context and cannot revive cancellation',
+    () async {
+      final c = IntroductionTestCeremony();
+      await c.throughDelivery();
+      final saved =
+          (await c.carol.coordinator.overview()).pendingRequests.single;
+      c.carol.coordinator.dispose();
+      c.carol.reopen();
+      final resumed = await c.carol.coordinator.resumeRequest(saved.hash);
+      expect(resumed.packet, c.ask);
+      final review = await c.carol.coordinator.reviewDelivery(c.delivery);
+      await expectLater(
+        c.carol.coordinator.acceptDelivery(review, label: 'Bob', consent: true),
+        throwsA(isA<ContactFailure>()),
+      );
+      await c.carol.coordinator.cancel();
+      await expectLater(
+        c.carol.coordinator.resumeRequest(saved.hash),
+        throwsA(isA<ContactFailure>()),
+      );
+      expect((await c.carol.coordinator.overview()).pendingRequests, isEmpty);
+    },
+  );
+
+  test(
+    'acceptance requires a current exact-identity address response',
+    () async {
+      final c = IntroductionTestCeremony();
+      await c.throughDelivery();
+      final review = await c.carol.coordinator.reviewDelivery(c.delivery);
+      Future<void> rejected({String? response}) => expectLater(
+        c.carol.coordinator.acceptDelivery(
+          review,
+          label: 'Bob',
+          consent: true,
+          freshResponse: response,
+        ),
+        throwsA(isA<ContactFailure>()),
+      );
+      await rejected();
+      await expectLater(
+        c.carol.coordinator.createAcceptanceRequest(review, consent: false),
+        throwsA(isA<ContactFailure>()),
+      );
+      final response = await c.carol.prepareFreshCheck(review);
+      final expected = c.carol.direct.endpoint;
+      for (final wrong in [
+        ContactWireEndpoint(
+          identity: testIdentity(99),
+          address: expected.address,
+          sequence: expected.sequence,
+          expiresAt: expected.expiresAt,
+        ),
+        ContactWireEndpoint(
+          identity: expected.identity,
+          address: 'changed-address',
+          sequence: expected.sequence,
+          expiresAt: expected.expiresAt,
+        ),
+        ContactWireEndpoint(
+          identity: expected.identity,
+          address: expected.address,
+          sequence: expected.sequence + 1,
+          expiresAt: expected.expiresAt,
+        ),
+      ]) {
+        c.carol.direct.endpoint = wrong;
+        await rejected(response: response);
+      }
+      c.carol.direct.endpoint = expected;
+      c.carol.now = expected.expiresAt;
+      await rejected(response: response);
+      expect((await c.carol.book()).contacts, hasLength(1));
+    },
+  );
+
+  test(
+    'review pause preserves only the nonce; invalidation rejects a late fresh response',
+    () async {
+      final c = IntroductionTestCeremony();
+      await c.throughDelivery();
+      var review = await c.carol.coordinator.reviewDelivery(c.delivery);
+      final response = await c.carol.prepareFreshCheck(review);
+      c.carol.coordinator.pauseReview();
+      await expectLater(
+        c.carol.coordinator.acceptDelivery(
+          review,
+          label: 'Bob',
+          consent: true,
+          freshResponse: response,
+        ),
+        throwsA(isA<ContactFailure>()),
+      );
+      review = await c.carol.coordinator.reviewDelivery(c.delivery);
+      c.carol.direct.verifyGate = Completer<ContactWireEndpoint>();
+      final before = c.carol.direct.verifications;
+      final pending = c.carol.coordinator.acceptDelivery(
+        review,
+        label: 'Bob',
+        consent: true,
+        freshResponse: response,
+      );
+      await pumpEventQueue();
+      expect(c.carol.direct.verifications, before + 1);
+      c.carol.coordinator.invalidate();
+      final rejected = expectLater(pending, throwsA(isA<ContactFailure>()));
+      c.carol.direct.verifyGate!.complete(c.carol.direct.endpoint);
+      await rejected;
+      expect((await c.carol.book()).contacts, hasLength(1));
+    },
+  );
 
   test(
     'reciprocal setup requires exact independently approved pair and cannot reuse an outgoing key',
@@ -92,10 +206,12 @@ void main() {
         throwsA(isA<ContactFailure>()),
       );
       final writes = c.carol.store.writes;
+      final freshResponse = await c.carol.prepareFreshCheck(review);
       final accepted = await c.carol.coordinator.acceptDelivery(
         review,
         label: 'Bob',
         consent: true,
+        freshResponse: freshResponse,
       );
       expect(c.carol.store.writes, writes + 1);
       final book = await c.carol.book();
@@ -454,12 +570,14 @@ void main() {
       await pumpEventQueue();
       final old = direct.recipientFor('Alice');
       final review = await c.carol.coordinator.reviewDelivery(c.delivery);
+      final freshResponse = await c.carol.prepareFreshCheck(review);
       c.carol.wire.verifyGate = Completer<void>();
       c.carol.wire.verifyEntered = Completer<void>();
       final acceptance = c.carol.coordinator.acceptDelivery(
         review,
         label: 'Bob',
         consent: true,
+        freshResponse: freshResponse,
       );
       await c.carol.wire.verifyEntered!.future;
       final suspension = direct.suspendContact('Alice');

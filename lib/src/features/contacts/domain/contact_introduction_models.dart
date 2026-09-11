@@ -310,17 +310,21 @@ class ContactBook {
     List<ContactPeerAssociation> associations = const [],
     List<ContactIntroductionSession> sessions = const [],
     List<IntroductionStoredSigner> signers = const [],
+    List<IntroductionStoredSigner> quarantinedSigners = const [],
     List<ContactIntroductionProvenance> provenance = const [],
   }) : contacts = List.unmodifiable(contacts),
        associations = List.unmodifiable(associations),
        sessions = List.unmodifiable(sessions),
        signers = List.unmodifiable(signers),
+       quarantinedSigners = List.unmodifiable(quarantinedSigners),
        provenance = List.unmodifiable(provenance);
 
   final List<VerifiedContact> contacts;
   final List<ContactPeerAssociation> associations;
   final List<ContactIntroductionSession> sessions;
   final List<IntroductionStoredSigner> signers;
+  // Restored keys must never enter active signing without state reconciliation.
+  final List<IntroductionStoredSigner> quarantinedSigners;
   final List<ContactIntroductionProvenance> provenance;
 
   ContactBook copyWith({
@@ -328,17 +332,19 @@ class ContactBook {
     List<ContactPeerAssociation>? associations,
     List<ContactIntroductionSession>? sessions,
     List<IntroductionStoredSigner>? signers,
+    List<IntroductionStoredSigner>? quarantinedSigners,
     List<ContactIntroductionProvenance>? provenance,
   }) => ContactBook(
     contacts: contacts ?? this.contacts,
     associations: associations ?? this.associations,
     sessions: sessions ?? this.sessions,
     signers: signers ?? this.signers,
+    quarantinedSigners: quarantinedSigners ?? this.quarantinedSigners,
     provenance: provenance ?? this.provenance,
   );
 
   void clearSecrets() {
-    for (final signer in signers) {
+    for (final signer in [...signers, ...quarantinedSigners]) {
       signer.clear();
     }
   }
@@ -353,11 +359,15 @@ class ContactBook {
     ],
     'introductionSessions': [for (final session in sessions) session.toJson()],
     'introductionSigners': [for (final signer in signers) signer.toJson()],
+    'quarantinedSigners': [
+      for (final signer in quarantinedSigners) signer.toJson(),
+    ],
     'provenance': [for (final item in provenance) item.toJson()],
   };
 
   static ContactBook decode(Object? value, ContactScope scope) {
     final decodedSigners = <IntroductionStoredSigner>[];
+    final quarantined = <IntroductionStoredSigner>[];
     try {
       final map = _object(
         value,
@@ -366,6 +376,7 @@ class ContactBook {
           'associations',
           'introductionSessions',
           'introductionSigners',
+          'quarantinedSigners',
           'provenance',
         },
       );
@@ -393,6 +404,12 @@ class ContactBook {
           decodedSigners.add(IntroductionStoredSigner.decode(value));
         }
       }
+      if (map.containsKey('quarantinedSigners')) {
+        for (final value in _list(map['quarantinedSigners'])) {
+          quarantined.add(IntroductionStoredSigner.decode(value));
+        }
+      }
+      _unique([...decodedSigners, ...quarantined].map((s) => s.identity));
       _unique(contacts.map((contact) => contact.id));
       _unique(contacts.map((contact) => contact.identity));
       _unique(contacts.map((contact) => contact.label.toLowerCase()));
@@ -408,10 +425,11 @@ class ContactBook {
         associations: associations,
         sessions: sessions,
         signers: decodedSigners,
+        quarantinedSigners: quarantined,
         provenance: provenance,
       );
     } catch (_) {
-      for (final signer in decodedSigners) {
+      for (final signer in [...decodedSigners, ...quarantined]) {
         signer.clear();
       }
       throw const ContactFailure(

@@ -38,7 +38,9 @@ class VerifiedContact {
   final int sequence, revision;
   final ContactTrustStatus status;
   bool get canPay => status == ContactTrustStatus.accepted;
-  bool get canRequestUpdate => status == ContactTrustStatus.accepted;
+  bool get canRequestUpdate =>
+      status == ContactTrustStatus.accepted ||
+      status == ContactTrustStatus.restored;
 
   VerifiedContact copyWith({
     String? label,
@@ -182,10 +184,11 @@ class ContactRequestView {
     required this.expiresAt,
     this.contactId,
     this.label,
+    this.identity,
   });
   final String json;
   final DateTime expiresAt;
-  final String? contactId, label;
+  final String? contactId, label, identity;
   bool get isUpdate => contactId != null;
 }
 
@@ -196,8 +199,10 @@ class ContactCandidateView {
     required this.sequence,
     required this.expiresAt,
     this.previousAddress,
+    this.requiresRecoveryCheck = false,
     this.label,
   });
+  final bool requiresRecoveryCheck;
   final String identity, address;
   final int sequence;
   final DateTime expiresAt;
@@ -231,6 +236,7 @@ class ContactExchangeState {
     this.candidate,
     this.shareReview,
     this.response,
+    this.responseExpiresAt,
   });
   final bool available, loading, busy;
   final String? error, unavailableReason;
@@ -239,4 +245,5 @@ class ContactExchangeState {
   final ContactCandidateView? candidate;
   final ContactShareReview? shareReview;
   final String? response;
+  final DateTime? responseExpiresAt;
 }

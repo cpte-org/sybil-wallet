@@ -105,6 +105,18 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/vizor.desktop.in" "${APP_DESKTOP_FIL
 install(TARGETS ${BINARY_NAME} RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}"
   COMPONENT Runtime)
 
+# Experimental contact delivery: private pipes to a dedicated native process.
+# The upstream AGPL runtime is opt-in, pinned by tools/simplex/README.md.
+enable_language(C)
+add_executable(simplex-host "${CMAKE_CURRENT_SOURCE_DIR}/../tools/simplex/native_host.c")
+target_link_libraries(simplex-host PRIVATE ${CMAKE_DL_LIBS})
+install(TARGETS simplex-host RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}"
+  COMPONENT Runtime)
+if(DEFINED ENV{SIMPLEX_LIBS_DIR})
+  install(DIRECTORY "$ENV{SIMPLEX_LIBS_DIR}/"
+    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}/simplex" COMPONENT Runtime)
+endif()
+
 install(FILES "${APP_DESKTOP_FILE}"
   DESTINATION "${INSTALL_BUNDLE_DATA_DIR}/applications"
   COMPONENT Runtime)

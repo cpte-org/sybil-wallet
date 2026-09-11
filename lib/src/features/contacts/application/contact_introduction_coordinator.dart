@@ -56,6 +56,7 @@ class ContactIntroductionOverview {
     required Iterable<ContactPeerAssociation> associations,
     required Iterable<ContactIntroductionProvenance> provenance,
     required Iterable<String> savedEndorsements,
+    this.pendingRequests = const [],
   }) : contacts = List.unmodifiable(contacts),
        associations = List.unmodifiable(associations),
        provenance = List.unmodifiable(provenance),
@@ -64,6 +65,20 @@ class ContactIntroductionOverview {
   final List<ContactPeerAssociation> associations;
   final List<ContactIntroductionProvenance> provenance;
   final List<String> savedEndorsements;
+  final List<({String hash, String label, DateTime expiresAt})> pendingRequests;
+}
+
+class _IntroductionAddressCheck {
+  const _IntroductionAddressCheck(
+    this.scope,
+    this.packet,
+    this.request,
+    this.requestHash,
+  );
+  final ContactScope scope;
+  final String packet;
+  final ContactWireRequest request;
+  final String requestHash;
 }
 
 /// Stateful authority boundary for the gated testnet experiment. No UI or
@@ -94,6 +109,7 @@ class ContactIntroductionCoordinator {
   int _epoch = 0;
   int? _clockFloor;
   Timer? _reviewExpiry;
+  _IntroductionAddressCheck? _addressCheck;
 
   DateTime get _now {
     final value = clock();
@@ -132,6 +148,7 @@ class ContactIntroductionCoordinator {
   void invalidate() {
     pauseReview();
     _live.clear();
+    _addressCheck = null;
   }
 
   void dispose() {
@@ -359,7 +376,7 @@ class ContactIntroductionCoordinator {
     final saved = hash == null ? null : _session(book, role, hash);
     if (saved == null || saved.phase != ContactIntroductionPhase.published) {
       throw const ContactFailure(
-        'No live introduction is pending. Start a new exchange.',
+        'No invitation is selected. Resume a saved invitation or start a new exchange.',
       );
     }
     _liveTime(saved.expiresAt);
@@ -403,6 +420,23 @@ class ContactIntroductionCoordinator {
           contacts: book.contacts,
           associations: book.associations,
           provenance: book.provenance,
+          pendingRequests: List.unmodifiable([
+            for (final s in book.sessions)
+              if (s.role == ContactIntroductionRole.requester &&
+                  s.phase == ContactIntroductionPhase.published &&
+                  s.pins.length == 1 &&
+                  now.isBefore(s.expiresAt))
+                (
+                  hash: s.requestHash,
+                  label:
+                      book.contacts
+                          .where((c) => c.id == s.pins.single.contactId)
+                          .firstOrNull
+                          ?.label ??
+                      'Unavailable contact',
+                  expiresAt: s.expiresAt,
+                ),
+          ]),
           savedEndorsements: book.sessions
               .where(
                 (s) =>
@@ -555,6 +589,49 @@ class ContactIntroductionCoordinator {
     },
     mutation: true,
   );
+
+  Future<DateTime> pendingRequestExpiry() => _run(
+    (current, epoch, book) async =>
+        _pending(book, ContactIntroductionRole.requester).expiresAt,
+  );
+
+  /// Explicitly select a durable invitation after unlocking/restarting. This
+  /// restores only its request nonce, never a prior review or address proof.
+  Future<IntroductionWireResult> resumeRequest(String hash) => _run((
+    current,
+    epoch,
+    book,
+  ) async {
+    _clearReview();
+    _addressCheck = null;
+    final session = _session(book, ContactIntroductionRole.requester, hash);
+    if (session == null ||
+        session.phase != ContactIntroductionPhase.published ||
+        session.pins.length != 1 ||
+        session.outputPacket == null) {
+      throw const ContactFailure('No pending invitation is available.');
+    }
+    _checkPins(book, session.pins);
+    _liveTime(session.expiresAt);
+    final pin = session.pins.single;
+    // Verify our original signature from the intended introducer's perspective.
+    final result = await gateway.verify(
+      current,
+      IntroductionWireStage.ask,
+      pin.outgoingIdentity,
+      pin.identity,
+      session.outputPacket!,
+      _now,
+    );
+    _check(current, epoch);
+    if (result.request != session.requestJson ||
+        result.requestHash != hash ||
+        !result.expiresAt.isAtSameMomentAs(session.expiresAt)) {
+      throw const ContactFailure('The saved invitation could not be verified.');
+    }
+    _live[ContactIntroductionRole.requester] = hash;
+    return result;
+  });
 
   Future<IntroductionReview> reviewAsk(
     String carolId,
@@ -1174,10 +1251,73 @@ class ContactIntroductionCoordinator {
     return review;
   });
 
+  /// An introduction authenticates provenance, not current address possession.
+  /// Request a fresh response from the exact introduced relationship key before
+  /// acceptance. This public nonce survives a review pause for app switching;
+  /// invalidation (lock/account/network change) discards it. No approval survives.
+  Future<ContactWireRequest> createAcceptanceRequest(
+    IntroductionReview review, {
+    required bool consent,
+  }) => _run((current, epoch, book) async {
+    _checkReview(book, review);
+    if (!consent || review.stage != IntroductionWireStage.delivery) {
+      throw const ContactFailure(
+        'Approve checking this introduced identity first.',
+      );
+    }
+    final session = _pending(book, ContactIntroductionRole.requester);
+    if (session.requestHash != review.wire.requestHash) {
+      throw const ContactFailure('The pending introduction changed.');
+    }
+    _addressCheck = null;
+    final request = await directGateway.createRequest(
+      current,
+      review.identity,
+      _now,
+    );
+    _check(current, epoch);
+    _checkReview(book, review);
+    _liveTime(request.expiresAt);
+    if (request.subject != review.identity) {
+      throw const ContactFailure('The address check has the wrong identity.');
+    }
+    _addressCheck = _IntroductionAddressCheck(
+      current,
+      review.input,
+      request,
+      review.wire.requestHash,
+    );
+    return request;
+  });
+
+  /// Recover only the already-reviewed transcript associated with our live
+  /// address nonce. The imported reply must still be verified at acceptance.
+  Future<String> pendingAcceptancePacket() => _run((
+    current,
+    epoch,
+    book,
+  ) async {
+    final check = _addressCheck;
+    if (check == null || check.scope != current) {
+      throw const ContactFailure(
+        'No fresh introduction address check is pending. Review the introduction and create one first.',
+      );
+    }
+    final session = _pending(book, ContactIntroductionRole.requester);
+    if (session.requestHash != check.requestHash) {
+      throw const ContactFailure(
+        'The selected invitation changed. Create a new address check for it.',
+      );
+    }
+    _liveTime(check.request.expiresAt);
+    return check.packet;
+  });
+
   Future<VerifiedContact> acceptDelivery(
     IntroductionReview review, {
     required String label,
     required bool consent,
+    String? freshResponse,
   }) => _run((current, epoch, book) async {
     _checkReview(book, review);
     if (!consent || review.stage != IntroductionWireStage.delivery) {
@@ -1189,6 +1329,18 @@ class ContactIntroductionCoordinator {
     if (session.requestHash != review.wire.requestHash) {
       throw const ContactFailure('The pending introduction changed.');
     }
+    final check = _addressCheck;
+    if (check == null ||
+        check.scope != current ||
+        check.packet != review.input ||
+        freshResponse == null ||
+        freshResponse.isEmpty ||
+        utf8.encode(freshResponse).length > contactIntroductionPacketMaxBytes) {
+      throw const ContactFailure(
+        'Request and verify a fresh address response before accepting this contact.',
+      );
+    }
+    _liveTime(check.request.expiresAt);
     final name = contactLabel(label), alice = session.pins.single;
     final result = await gateway.verify(
       current,
@@ -1201,6 +1353,24 @@ class ContactIntroductionCoordinator {
     );
     _check(current, epoch);
     _checkReview(book, review);
+    final fresh = await directGateway.verify(
+      current,
+      check.request.json,
+      freshResponse,
+      _now,
+    );
+    _check(current, epoch);
+    _checkReview(book, review);
+    _liveTime(check.request.expiresAt);
+    _liveTime(fresh.expiresAt);
+    if (!identical(_addressCheck, check) ||
+        fresh.identity != result.identity ||
+        fresh.address != result.address ||
+        fresh.sequence != result.sequence) {
+      throw const ContactFailure(
+        'The fresh response differs from the introduced receiving details. Ask for a new introduction.',
+      );
+    }
     if (book.contacts.any(
           (c) =>
               c.label.toLowerCase() == name.toLowerCase() ||
@@ -1248,9 +1418,12 @@ class ContactIntroductionCoordinator {
           ),
         ],
       ),
-      expires: session.expiresAt,
+      expires: check.request.expiresAt.isBefore(session.expiresAt)
+          ? check.request.expiresAt
+          : session.expiresAt,
     );
     _live.remove(ContactIntroductionRole.requester);
+    _addressCheck = null;
     _clearReview();
     return accepted;
   }, mutation: true);

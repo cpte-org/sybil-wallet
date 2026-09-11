@@ -7,6 +7,7 @@ import 'package:zcash_wallet/src/core/storage/app_secure_store.dart';
 import 'package:zcash_wallet/src/features/contacts/application/contact_introduction_coordinator.dart';
 import 'package:zcash_wallet/src/features/contacts/application/contact_mutation_gate.dart';
 import 'package:zcash_wallet/src/features/contacts/data/contact_introduction_gateway.dart';
+import 'package:zcash_wallet/src/features/contacts/data/contact_gateway.dart';
 import 'package:zcash_wallet/src/features/contacts/data/contact_introduction_repository.dart';
 import 'package:zcash_wallet/src/features/contacts/data/contact_repository.dart';
 import 'package:zcash_wallet/src/features/contacts/domain/contact_introduction_models.dart';
@@ -342,6 +343,22 @@ class IntroductionTestActor {
     }
   }, mutation: true);
   Future<ContactBook> book() => repo.loadBook(fixed);
+
+  void configureFreshResponse(IntroductionReview review) {
+    direct.expiry = now.add(const Duration(minutes: 5));
+    direct.endpoint = ContactWireEndpoint(
+      identity: review.identity!,
+      address: review.address!,
+      sequence: review.wire.sequence!,
+      expiresAt: direct.expiry,
+    );
+  }
+
+  Future<String> prepareFreshCheck(IntroductionReview review) async {
+    configureFreshResponse(review);
+    await coordinator.createAcceptanceRequest(review, consent: true);
+    return 'fake-fresh-response';
+  }
 }
 
 class IntroductionTestCeremony {

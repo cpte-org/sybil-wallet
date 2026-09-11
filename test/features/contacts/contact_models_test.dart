@@ -47,12 +47,16 @@ void main() {
   );
 
   test(
-    'only accepted trust state enables payment and ordinary address updates',
+    'only accepted contacts can pay; restored contacts can request verification',
     () {
       for (final status in ContactTrustStatus.values) {
         final contact = testContact(status: status);
         expect(contact.canPay, status == ContactTrustStatus.accepted);
-        expect(contact.canRequestUpdate, status == ContactTrustStatus.accepted);
+        expect(
+          contact.canRequestUpdate,
+          status == ContactTrustStatus.accepted ||
+              status == ContactTrustStatus.restored,
+        );
       }
     },
   );

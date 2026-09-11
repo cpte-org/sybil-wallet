@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import 'src/features/zns/presentation/zns_wallet_screen.dart';
 import 'src/features/contacts/presentation/contact_exchange_screen.dart';
 import 'src/features/contacts/presentation/contact_introduction_screen.dart';
+import 'src/features/contacts/presentation/contact_delivery_screen.dart';
+import 'src/features/contacts/presentation/contact_backup_screen.dart';
 import 'package:desktop_window_bootstrap/desktop_window_bootstrap.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -891,6 +893,14 @@ List<RouteBase> _desktopRoutes(Ref ref) => [
   GoRoute(
     path: '/contacts/introductions',
     builder: (_, _) => const ContactIntroductionScreen(),
+  ),
+  GoRoute(
+    path: '/contacts/backup',
+    builder: (_, _) => const ContactBackupScreen(),
+  ),
+  GoRoute(
+    path: '/contacts/delivery',
+    builder: (_, _) => const ContactDeliveryScreen(),
   ),
   GoRoute(path: '/activity', builder: (_, _) => const ActivityScreen()),
   GoRoute(

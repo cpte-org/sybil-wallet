@@ -473,6 +473,16 @@ class AppSecureStore {
     }
   }
 
+  /// Enumerate names only; secret values still require the unlocked read path.
+  Future<List<String>> storedKeysWithPrefix(String prefix) async {
+    if (prefix.isEmpty) throw ArgumentError.value(prefix);
+    final entries = await _runStorageOperation(
+      'read scoped storage keys',
+      _storage.readAll,
+    );
+    return entries.keys.where((key) => key.startsWith(prefix)).toList();
+  }
+
   Future<bool> isPasswordConfigured() async {
     final verifier = await readPlain(_passwordVerifierKey);
     final salt = await readPlain(_passwordVerifierSaltKey);

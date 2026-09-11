@@ -13,6 +13,9 @@ use sha2::{Digest, Sha256};
 use zeroize::Zeroizing;
 
 const ERROR: &str = "Invalid or expired contact introduction.";
+// Invitation lifetime is separate from the wallet's short-lived final address
+// challenge. Legacy requests retain their original 15-minute lifetime.
+const INVITATION_TTL: u64 = 30 * 24 * 60 * 60;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Verified {
@@ -58,10 +61,14 @@ fn request(value: &Value, network: Network, now: u64) -> Option<Value> {
     fixed::<32>(r[2].as_str()?)?;
     let issued = integer(&r[3])?;
     let expires = integer(&r[4])?;
+    let ttl = match r[0].as_str()? {
+        "zcash-contact/intro-request" => 900,
+        "zcash-contact/intro-invitation" => INVITATION_TTL,
+        _ => return None,
+    };
     (now <= MAX_SAFE_INTEGER
-        && r[0] == "zcash-contact/intro-request"
         && r[1] == network.wire_name()
-        && expires == issued.checked_add(900)?
+        && expires == issued.checked_add(ttl)?
         && issued <= now
         && now < expires)
         .then_some(digest(value))
@@ -297,7 +304,7 @@ pub fn create_ask(
     let own_ca_identity = key_identity(&key);
     paired(peer_ac_identity, &own_ca_identity).ok_or(ERROR)?;
     let expires = now
-        .checked_add(900)
+        .checked_add(INVITATION_TTL)
         .filter(|v| *v <= MAX_SAFE_INTEGER)
         .ok_or(ERROR)?;
     let mut sid = [0; 32];
@@ -305,7 +312,7 @@ pub fn create_ask(
         .try_fill_bytes(&mut sid)
         .map_err(|_| "Contact randomness is unavailable.")?;
     let r = json!([
-        "zcash-contact/intro-request",
+        "zcash-contact/intro-invitation",
         network.wire_name(),
         URL_SAFE_NO_PAD.encode(sid),
         now,

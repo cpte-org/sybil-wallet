@@ -178,25 +178,49 @@ void main() {
     },
   );
 
+  test('retired contacts cannot pay or authorize updates', () async {
+    for (final status in [ContactTrustStatus.retired]) {
+      final h = ContactHarness(
+        repository: FakeContactRepository([testContact(status: status)]),
+      );
+      await h.ready();
+      expect(
+        () => h.controller.recipientFor('alice'),
+        throwsA(isA<ContactFailure>()),
+      );
+      await h.controller.startRequest(contactId: 'alice');
+      expect(h.state.request, isNull);
+      expect(h.gateway.requestedSubject, isNull);
+    }
+  });
+
   test(
-    'restored and retired contacts cannot pay or authorize ordinary updates',
+    'restored contact requires a fresh response and explicit recovery check',
     () async {
-      for (final status in [
-        ContactTrustStatus.restored,
-        ContactTrustStatus.retired,
-      ]) {
-        final h = ContactHarness(
-          repository: FakeContactRepository([testContact(status: status)]),
-        );
-        await h.ready();
-        expect(
-          () => h.controller.recipientFor('alice'),
-          throwsA(isA<ContactFailure>()),
-        );
-        await h.controller.startRequest(contactId: 'alice');
-        expect(h.state.request, isNull);
-        expect(h.gateway.requestedSubject, isNull);
-      }
+      final h = ContactHarness(
+        repository: FakeContactRepository([
+          testContact(status: ContactTrustStatus.restored),
+        ]),
+      );
+      await h.ready();
+      expect(
+        () => h.controller.recipientFor('alice'),
+        throwsA(isA<ContactFailure>()),
+      );
+      await h.controller.startRequest(contactId: 'alice');
+      await h.controller.previewResponse('fixture-response');
+      expect(h.state.candidate?.requiresRecoveryCheck, isTrue);
+      await h.controller.acceptResponse(
+        label: 'Alice',
+        independentlyVerified: false,
+      );
+      expect(h.repository.contacts.single.canPay, isFalse);
+      await h.controller.acceptResponse(
+        label: 'Alice',
+        independentlyVerified: true,
+      );
+      expect(h.repository.contacts.single.canPay, isTrue);
+      expect(h.repository.contacts.single.address, 'test-address-new');
     },
   );
 
