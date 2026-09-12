@@ -23,6 +23,8 @@ class ZnsScreen extends StatefulWidget {
 class _ZnsScreenState extends State<ZnsScreen> {
   final _name = TextEditingController();
   final _recipient = TextEditingController();
+  final _extraDeposit = TextEditingController(text: '0');
+  bool _showExtraDeposit = false;
   final _receivingAddress = TextEditingController();
   final _operationKey = GlobalKey();
   final _reviewKey = GlobalKey();
@@ -56,6 +58,8 @@ class _ZnsScreenState extends State<ZnsScreen> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.data.accountId != data.accountId) {
       _name.clear();
+      _extraDeposit.text = '0';
+      _showExtraDeposit = false;
       _acceptedReview = false;
       _showBalances = false;
     }
@@ -71,10 +75,14 @@ class _ZnsScreenState extends State<ZnsScreen> {
     }
     if (oldWidget.data.operation == null && data.operation != null) {
       _name.clear();
+      _extraDeposit.text = '0';
+      _showExtraDeposit = false;
       _scrollTo(_operationKey);
     } else if (oldWidget.data.operation?.isComplete != true &&
         data.operation?.isComplete == true) {
       _name.clear();
+      _extraDeposit.text = '0';
+      _showExtraDeposit = false;
       _scrollTo(_operationKey);
     } else if (oldWidget.data.operation?.isComplete == true &&
         data.operation?.isComplete == false) {
@@ -123,6 +131,11 @@ class _ZnsScreenState extends State<ZnsScreen> {
           review.unifiedAddress,
           review.maxZec,
           review.deposit,
+          review.minimumDeposit,
+          review.extraDeposit,
+          review.usdTarget,
+          review.pricingMode,
+          review.minimumFloorApplies,
           review.maxBaseEth,
           review.gasReserve,
           review.existingCbZecSpend,
@@ -141,6 +154,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
   void dispose() {
     _name.dispose();
     _recipient.dispose();
+    _extraDeposit.dispose();
     _receivingAddress.dispose();
     super.dispose();
   }
@@ -169,9 +183,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
     const mobile = kAppFormFactor == AppFormFactor.mobile;
     Widget content = SingleChildScrollView(
       key: const Key('zns-scroll'),
-      padding: const EdgeInsets.all(
-        mobile ? AppSpacing.sm : AppSpacing.base,
-      ),
+      padding: const EdgeInsets.all(mobile ? AppSpacing.sm : AppSpacing.base),
       physics: mobile ? const AlwaysScrollableScrollPhysics() : null,
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       child: Align(
@@ -275,7 +287,10 @@ class _ZnsScreenState extends State<ZnsScreen> {
                 const SizedBox(height: AppSpacing.md),
               ],
               if (data.operation case final operation?) ...[
-                KeyedSubtree(key: _operationKey, child: _operationCard(operation)),
+                KeyedSubtree(
+                  key: _operationKey,
+                  child: _operationCard(operation),
+                ),
                 const SizedBox(height: AppSpacing.md),
               ],
               if (data.review case final review?) ...[
@@ -292,8 +307,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
               ],
               if (_editing) _searchCard(),
               const SizedBox(height: AppSpacing.md),
-              if (data.baseOwnerAddress.isNotEmpty ||
-                  data.canWithdrawClaims)
+              if (data.baseOwnerAddress.isNotEmpty || data.canWithdrawClaims)
                 _balancesCard(),
               const SizedBox(height: AppSpacing.md),
             ],
@@ -388,7 +402,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
               icon: AppIcons.lock,
               title: 'One deposit. A name that stays yours.',
               text:
-                  'Deposit cbZEC once and keep your name active with an annual refresh. Exit after 365 days to receive your deposit back. Earlier exit returns your deposit minus a 10% fee and forfeits unvested rewards.',
+                  'Deposit cbZEC once and keep your name active with an annual refresh. Exit after 365 days to receive your deposit back. The early-exit fee starts at 10% and falls to zero over the original 365 days. Early release pays the elapsed fraction of accrued rewards.',
             ),
             const SizedBox(height: AppSpacing.md),
             _Address(
@@ -402,13 +416,42 @@ class _ZnsScreenState extends State<ZnsScreen> {
             ),
             const SizedBox(height: AppSpacing.md),
             AppButton(
+              key: const Key('zns-extra-toggle'),
+              variant: AppButtonVariant.secondary,
+              onPressed: () =>
+                  setState(() => _showExtraDeposit = !_showExtraDeposit),
+              child: const Text('Optional extra bond'),
+            ),
+            if (_showExtraDeposit) ...[
+              const SizedBox(height: AppSpacing.sm),
+              AppTextField(
+                key: const Key('zns-extra-deposit'),
+                controller: _extraDeposit,
+                label: 'Extra cbZEC',
+                hintText: '0',
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _small(
+                'Add cbZEC only when registering. Rewards are proportional to the actual total bond. The same maturity and exit terms apply to the full bond.',
+              ),
+            ],
+            const SizedBox(height: AppSpacing.md),
+            AppButton(
               key: const Key('zns-prepare'),
               onPressed:
                   data.canWrite &&
                       data.walletUnifiedAddress.isNotEmpty &&
                       actions.onPrepareRegistration != null
                   ? () => actions.onPrepareRegistration!(
-                      ZnsRegistrationInput(name: _normalizedName),
+                      ZnsRegistrationInput(
+                        name: _normalizedName,
+                        extraDeposit: _extraDeposit.text.trim().isEmpty
+                            ? '0'
+                            : _extraDeposit.text.trim(),
+                      ),
                     )
                   : null,
               expand: true,
@@ -512,13 +555,33 @@ class _ZnsScreenState extends State<ZnsScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
+          if (registering && review.usdTarget != null) ...[
+            _detail('Length-based bond target', '\$${review.usdTarget} USD'),
+            _detail(
+              'Pricing mode',
+              review.pricingMode == 1
+                  ? 'Fixed cbZEC fallback'
+                  : review.minimumFloorApplies
+                  ? 'USD pricing · minimum bond floor'
+                  : 'USD oracle quote',
+            ),
+            if (review.minimumDeposit != null)
+              _detail('Minimum bond', '${review.minimumDeposit} cbZEC'),
+            if (review.minimumFloorApplies)
+              const Text(
+                'The minimum cbZEC floor applies before any optional extra. '
+                'Its USD value may exceed the target.',
+              ),
+            if (review.extraDeposit != null)
+              _detail('Optional extra bond', '${review.extraDeposit} cbZEC'),
+          ],
           if (registering || withdrawing || transferring)
             _detail(
               withdrawing
                   ? 'Principal to withdraw'
                   : transferring
                   ? 'Deposit transferred'
-                  : 'Registration deposit',
+                  : 'Maximum registration bond',
               '${review.deposit} cbZEC',
             ),
           if (review.maturityAt case final date?)
@@ -609,7 +672,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
                   ? 'Early release fee: 10%'
                   : 'Your name will be released',
               text: review.exitPreview?.early == true
-                  ? 'Your deposit returns minus a 10% early-release fee, rounded up to the smallest cbZEC unit. The fee and all unvested rewards go to other eligible names, or the contract reserve if none remain. Another person can register your released name.'
+                  ? 'The early-release fee declines linearly from 10% to zero over your original 365 days, rounded up to the smallest cbZEC unit. You receive the elapsed fraction of accrued rewards. The remainder and fee go to other eligible bonds proportionally, or the reserve if none remain. Another person can register your released name.'
                   : 'Your deposit and vested rewards will return to your Base account. Another person can register your released name. Network and conversion costs are not refunded.',
             )
           else if (transferring)
@@ -640,7 +703,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
               icon: AppIcons.lock,
               title: 'Your initial holding period is 365 days',
               text:
-                  'Earlier exit returns your deposit minus a 10% fee and forfeits all unvested rewards. Refreshes, address updates and reward claims never restart this period. Rewards accrue immediately, may be zero, and can be claimed after your original maturity.',
+                  'The early-exit fee starts at 10% and declines to zero over the original 365 days. Early release pays the elapsed fraction of accrued rewards and forfeits the rest. Rewards are proportional to your actual bond, may be zero, and become separately claimable at maturity. Refreshes and transfers keep the original clocks. No top-ups or automatic compounding.',
             ),
             const SizedBox(height: AppSpacing.s),
             _small(
@@ -963,7 +1026,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
           _small(
             owned.isMature
                 ? 'Your initial holding period is complete. Releasing now returns your full deposit and vested rewards.'
-                : 'Rewards accrue now and become claimable at your original maturity. Releasing early returns your deposit minus a 10% fee and forfeits all unvested rewards.',
+                : 'Rewards accrue proportionally to your bond and become separately claimable at the original maturity. The exit fee declines from 10% to zero over 365 days; early release pays the elapsed fraction of accrued rewards.',
           ),
         const SizedBox(height: AppSpacing.sm),
         _small(
@@ -1179,10 +1242,10 @@ class _ZnsScreenState extends State<ZnsScreen> {
   Widget _eyebrow(String text) => Text(
     text.isEmpty
         ? text
-        : text.toLowerCase().replaceRange(0, 1, text[0]).replaceAll(
-            'nft',
-            'NFT',
-          ),
+        : text
+              .toLowerCase()
+              .replaceRange(0, 1, text[0])
+              .replaceAll('nft', 'NFT'),
     style: AppTypography.labelSmall.copyWith(
       color: context.colors.text.secondary,
     ),

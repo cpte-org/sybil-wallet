@@ -149,7 +149,7 @@ class ZnsWalletGateway implements ZnsEngineGateway {
             owner: p.owner,
             unifiedAddress: p.unifiedAddress,
             expiresAt: p.graceEndsAt.toInt(),
-            deposit: s.fixedDeposit,
+            deposit: p.principal,
             positionId: p.positionId,
             maturityAt: p.maturityAt.toInt(),
             refreshDueAt: p.refreshDueAt.toInt(),
@@ -175,7 +175,7 @@ class ZnsWalletGateway implements ZnsEngineGateway {
     }
     return ZnsChainView(
       timestamp: s.block.timestamp.toInt(),
-      deposit: s.fixedDeposit,
+      deposit: p?.principal ?? BigInt.zero,
       eth: s.nativeBalance,
       token: s.tokenBalance,
       allowance: s.allowance,
@@ -197,7 +197,7 @@ class ZnsWalletGateway implements ZnsEngineGateway {
       owner: r.owner,
       unifiedAddress: r.unifiedAddress,
       expiresAt: r.expiresAt.toInt(),
-      deposit: lastSnapshot?.fixedDeposit ?? BigInt.zero,
+      deposit: BigInt.zero,
       positionId: r.positionId,
       maturityAt: 0,
       refreshDueAt: 0,
@@ -206,6 +206,10 @@ class ZnsWalletGateway implements ZnsEngineGateway {
       rewardCreditScaled: BigInt.zero,
     );
   }
+
+  @override
+  Future<ZnsRegistrationQuote> quoteRegistration(String name) =>
+      rpc.quoteRegistration(name);
 
   @override
   Future<Map<String, dynamic>> exitPreview(BigInt positionId) async {
@@ -355,7 +359,7 @@ class ZnsWalletGateway implements ZnsEngineGateway {
     'router': config.kyberRouterAddress,
     if (delegate.isNotEmpty) 'delegate': delegate,
     'maxValueWei': (intent?.maxEthWei ?? BigInt.from(10).pow(18)).toString(),
-    'maxGasLimit': '3000000',
+    'maxGasLimit': intent?.kind == 'register' ? '6000000' : '3000000',
     'maxFeePerGasWei': '100000000000',
     'maxTotalFeeWei':
         (gasRemaining ?? intent?.maxGasFeeWei ?? BigInt.from(10).pow(18))
@@ -363,7 +367,7 @@ class ZnsWalletGateway implements ZnsEngineGateway {
     'maxTokenAmount':
         ((intent?.requiredTokenUnits ?? BigInt.zero) > BigInt.zero
                 ? intent!.requiredTokenUnits
-                : lastSnapshot?.fixedDeposit ?? BigInt.one)
+                : BigInt.one)
             .toString(),
   };
   @override
@@ -424,9 +428,10 @@ class ZnsWalletGateway implements ZnsEngineGateway {
       );
     }
     final fee = await rpc.feeQuote();
-    // Allow headroom for a long registry record plus a destination swap in the
-    // atomic transaction. The exact estimate and total reviewed fee still bind.
-    final gas = BigInt.from(3000000);
+    // Long records with weighted-expiry maintenance can exceed 3m gas. Reserve
+    // the registration ceiling plus headroom for the approval/delegate/swap.
+    // The actual estimate and the total fee shown in review still bind.
+    final gas = BigInt.from(kind == 'register' ? 6000000 : 3000000);
     return (fee.executionCeiling(gas) + await _extraFee(16000, gas)) *
         BigInt.from(kind == 'register' ? 4 : 1);
   }
@@ -470,6 +475,12 @@ class ZnsWalletGateway implements ZnsEngineGateway {
 
     ensureQuoteFresh();
     await rpc.verifyProtocol();
+    if (intent.kind == 'register') {
+      znsCheckRegistrationQuote(
+        intent,
+        await rpc.quoteRegistration(intent.name),
+      );
+    }
     final previouslyReserved = intent.transactions.fold(
       BigInt.zero,
       (sum, tx) => sum + BigInt.parse(tx['feeCeiling'] as String? ?? '0'),
@@ -558,7 +569,7 @@ class ZnsWalletGateway implements ZnsEngineGateway {
       }
     }
     if (operation['kind'] == 'release' &&
-        !znsSameExitPreview(
+        !znsExitWithinReview(
           intent.exitPreview,
           await exitPreview(intent.positionId),
         )) {
@@ -572,6 +583,13 @@ class ZnsWalletGateway implements ZnsEngineGateway {
       final dbPath = await getWalletDbPath();
       ensureAuthorized();
       ensureQuoteFresh();
+      if (intent.kind == 'register') {
+        znsCheckRegistrationQuote(
+          intent,
+          await rpc.quoteRegistration(intent.name),
+        );
+        ensureAuthorized();
+      }
       final signed =
           jsonDecode(
                 await rust.znsSign(

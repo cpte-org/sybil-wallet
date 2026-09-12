@@ -44,6 +44,10 @@ fn register() -> Operation {
         name: "alice".into(),
         unified_address: "u1-vector-not-valid-ua".into(),
         secret: format!("0x{}", "22".repeat(32)),
+        max_deposit: "500000".into(),
+        extra_deposit: "100000".into(),
+        expected_pricing_mode: 0,
+        deadline: "2000000000".into(),
     }
 }
 fn atomic(swap: Option<Swap>) -> Operation {
@@ -51,6 +55,9 @@ fn atomic(swap: Option<Swap>) -> Operation {
         name: "alice".into(),
         unified_address: "u1-vector-not-valid-ua".into(),
         secret: format!("0x{}", "22".repeat(32)),
+        max_deposit: "500000".into(),
+        extra_deposit: "100000".into(),
+        expected_pricing_mode: 0,
         amount: "500000".into(),
         swap,
         deadline: "2000000000".into(),
@@ -62,7 +69,7 @@ fn atomic(swap: Option<Swap>) -> Operation {
 fn protocol_and_old_economics_are_rejected_before_signing() {
     assert_eq!(
         alloy_primitives::keccak256(
-            "ZNS:cbZEC:deposit365:refresh365:grace90:earlyFee10:forfeitRewards:reserveCarry:erc721:multiName:clearUA"
+            "ZNS:cbZEC:tieredUSD:floor100k:fixedFallback:deposit365:refresh365:grace90:linearFee10:linearRewards:weighted:reserveCarry:erc721:multiName:clearUA"
         )
         .to_string(),
         PROTOCOL_ID
@@ -72,6 +79,14 @@ fn protocol_and_old_economics_are_rejected_before_signing() {
     assert!(sign(&key(), &c, &register(), &tx())
         .unwrap_err()
         .contains("protocol"));
+    c = config();
+    c.protocol_id = "0x5b477b433de8bfd31d0858e304a495c1990a455a04103df90cb0372494ab7431".into();
+    for operation in [register(), atomic(None)] {
+        assert!(prepare(&c, &key_address(&key()).to_string(), &operation).is_err());
+        assert!(sign(&key(), &c, &operation, &tx())
+            .unwrap_err()
+            .contains("protocol"));
+    }
     let mut missing = serde_json::to_value(config()).unwrap();
     missing.as_object_mut().unwrap().remove("protocolId");
     assert!(serde_json::from_value::<Config>(missing).is_err());
@@ -85,9 +100,155 @@ fn protocol_and_old_economics_are_rejected_before_signing() {
     let mut old_register = serde_json::to_value(register()).unwrap();
     old_register["years"] = serde_json::json!(1);
     assert!(serde_json::from_value::<Operation>(old_register).is_err());
-    for legacy in ["annualFee", "fixedBond", "claimableBond", "activeNameOf"] {
+    c = config();
+    c.protocol_id = "0xd1a382e424de62cfc7a26d4829be41e2b15b5d49ae43bd839f997afde7a0538f".into();
+    assert!(prepare(&c, &key_address(&key()).to_string(), &register()).is_err());
+    for legacy in [
+        "annualFee",
+        "fixedBond",
+        "fixedDeposit",
+        "claimableBond",
+        "activeNameOf",
+    ] {
         assert!(abi::read_call(legacy, &serde_json::json!({"owner":config().registry})).is_err());
     }
+}
+
+#[test]
+fn registration_requires_explicit_review_fields_and_rejects_invalid_limits() {
+    let owner = key_address(&key()).to_string();
+    for operation in [register(), atomic(None)] {
+        let value = serde_json::to_value(operation).unwrap();
+        for field in [
+            "maxDeposit",
+            "extraDeposit",
+            "expectedPricingMode",
+            "deadline",
+        ] {
+            let mut missing = value.clone();
+            missing.as_object_mut().unwrap().remove(field);
+            assert!(
+                serde_json::from_value::<Operation>(missing).is_err(),
+                "missing {field}"
+            );
+        }
+        for (field, invalid) in [
+            ("maxDeposit", serde_json::json!("0")),
+            ("maxDeposit", serde_json::json!("1000001")),
+            ("maxDeposit", serde_json::json!("-1")),
+            ("extraDeposit", serde_json::json!("500000")),
+            ("extraDeposit", serde_json::json!("500001")),
+            ("extraDeposit", serde_json::json!("1.5")),
+            ("expectedPricingMode", serde_json::json!(2)),
+            ("deadline", serde_json::json!("0")),
+            ("deadline", serde_json::json!("-1")),
+        ] {
+            let mut invalid_operation = value.clone();
+            invalid_operation[field] = invalid;
+            let invalid_operation: Operation = serde_json::from_value(invalid_operation).unwrap();
+            assert!(
+                sign(&key(), &config(), &invalid_operation, &tx()).is_err(),
+                "invalid {field}"
+            );
+        }
+        for mode in [0, 1] {
+            let mut supported = value.clone();
+            supported["expectedPricingMode"] = serde_json::json!(mode);
+            supported["extraDeposit"] = serde_json::json!("0");
+            let supported: Operation = serde_json::from_value(supported).unwrap();
+            assert!(prepare(&config(), &owner, &supported).is_ok());
+        }
+        for malformed in [
+            serde_json::json!("0"),
+            serde_json::json!(-1),
+            serde_json::json!(256),
+        ] {
+            let mut invalid = value.clone();
+            invalid["expectedPricingMode"] = malformed;
+            assert!(serde_json::from_value::<Operation>(invalid).is_err());
+        }
+    }
+}
+
+#[test]
+fn direct_and_atomic_registration_bind_identical_pricing_bounds() {
+    let c = config();
+    let owner = key_address(&key()).to_string();
+    let direct = prepare(&c, &owner, &register()).unwrap();
+    let fixture: serde_json::Value =
+        serde_json::from_str(include_str!("../tests/fixtures/tiered-registration.json")).unwrap();
+    assert_eq!(PROTOCOL_ID, fixture["protocol"]);
+    assert_eq!(direct.data, fixture["data"]);
+    assert!(direct.data.starts_with("0x48824541"));
+    let call = abi::registerCall::abi_decode(&bytes(&direct.data).unwrap(), true).unwrap();
+    assert_eq!(call.maxDeposit, U256::from(500000));
+    assert_eq!(call.extraDeposit, U256::from(100000));
+    assert_eq!(call.expectedPricingMode, 0);
+    assert_eq!(call.deadline, U256::from(2000000000));
+    let batch = prepare(&c, &owner, &atomic(None)).unwrap();
+    let batch = abi::executeCall::abi_decode(&bytes(&batch.data).unwrap(), true).unwrap();
+    assert_eq!(batch.calls.len(), 2);
+    assert_eq!(
+        batch.calls[1].data.as_ref(),
+        bytes(&direct.data).unwrap().as_slice()
+    );
+    assert_eq!(batch.deadline, call.deadline);
+    let approval = abi::approveCall::abi_decode(&batch.calls[0].data, true).unwrap();
+    assert_eq!(approval.amount, call.maxDeposit);
+    for amount in ["499999", "500001"] {
+        let mut operation = serde_json::to_value(atomic(None)).unwrap();
+        operation["amount"] = serde_json::json!(amount);
+        let operation: Operation = serde_json::from_value(operation).unwrap();
+        assert!(prepare(&c, &owner, &operation)
+            .unwrap_err()
+            .contains("approval"));
+    }
+}
+
+#[test]
+fn registration_quote_preserves_whole_dollars_mode_and_timestamp() {
+    let call = abi::read_call("quoteRegistration", &serde_json::json!({"name":"alice"})).unwrap();
+    assert_eq!(
+        abi::quoteRegistrationCall::abi_decode(&bytes(&call).unwrap(), true)
+            .unwrap()
+            .name,
+        "alice"
+    );
+    for (mode, updated_at) in [(0u8, 1700000000u64), (1u8, 0u64)] {
+        let encoded = (
+            U256::from(500000),
+            U256::from(100),
+            U256::from(mode),
+            U256::from(updated_at),
+        )
+            .abi_encode_params();
+        let decoded =
+            abi::decode_result("quoteRegistration", &format!("0x{}", hex::encode(encoded)))
+                .unwrap();
+        assert_eq!(
+            decoded,
+            serde_json::json!({"minimumDeposit":"500000","usdTarget":"100","mode":mode,"priceUpdatedAt":updated_at.to_string()})
+        );
+    }
+    for (minimum, mode) in [(0u64, 0u8), (500000, 2)] {
+        let encoded = (
+            U256::from(minimum),
+            U256::from(100),
+            U256::from(mode),
+            U256::ZERO,
+        )
+            .abi_encode_params();
+        assert!(
+            abi::decode_result("quoteRegistration", &format!("0x{}", hex::encode(encoded)))
+                .is_err()
+        );
+    }
+    assert!(abi::read_call("quoteRegistration", &serde_json::json!({"name":"UPPER"})).is_err());
+    assert!(abi::decode_result(
+        "quoteRegistration",
+        &format!("0x{}", hex::encode(U256::from(500000).abi_encode()))
+    )
+    .is_err());
 }
 
 #[test]
@@ -167,12 +328,14 @@ fn economic_read_abi_preserves_scaled_rewards_and_initial_maturity() {
         true,
         false,
         scale + U256::from(7),
+        U256::from(830_000_000u64),
     )
         .abi_encode_params();
     let result =
         abi::decode_result("positionInfo", &format!("0x{}", hex::encode(position))).unwrap();
     assert_eq!(result["maturityAt"], "31536100");
     assert_eq!(result["refreshDueAt"], "63072100");
+    assert_eq!(result["principal"], "830000000");
     assert_eq!(
         result["rewardCreditScaled"],
         (scale + U256::from(7)).to_string()
@@ -182,6 +345,22 @@ fn economic_read_abi_preserves_scaled_rewards_and_initial_maturity() {
     assert_eq!(result["principalForfeited"], "25");
     assert_eq!(result["early"], true);
     assert!(abi::decode_result("positionInfo", "0x00").is_err());
+    let old_position = (
+        address(&config().registry).unwrap(),
+        "alice".to_owned(),
+        "u1test".to_owned(),
+        100u64,
+        31536100u64,
+        63072100u64,
+        70848100u64,
+        true,
+        false,
+        scale + U256::from(7),
+    )
+        .abi_encode_params();
+    assert!(
+        abi::decode_result("positionInfo", &format!("0x{}", hex::encode(old_position))).is_err()
+    );
 }
 
 #[test]
@@ -253,7 +432,7 @@ fn commitment_matches_viem_and_binds_every_field() {
     );
     assert_eq!(
         expected.to_string(),
-        "0x30114b1f56152b940676cf53a9b9d4d08a23d7f91a22cc5ce0a21a285c05248f"
+        "0x0e59f593ca5ecd3bc428cb2ea79ab7ea755fe8f154f5bfd3ed74879e5e50a806"
     );
     assert_ne!(
         expected,
@@ -353,7 +532,9 @@ fn eip1559_envelope_recovers_owner_and_changes_with_chain() {
     let signed = sign(&key(), &c, &register(), &tx()).unwrap();
     let raw = bytes(&signed.raw_transaction).unwrap();
     // Independent viem mnemonicToAccount(...).signTransaction result.
-    assert_eq!(signed.raw_transaction, "0x02f9015182210507830f42408405f5e1008307a12094111111111111111111111111111111111111111180b8e4f5de1230000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a022222222222222222222222222222222222222222222222222222222222222220000000000000000000000000000000000000000000000000000000000000005616c696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001675312d766563746f722d6e6f742d76616c69642d756100000000000000000000c080a0970530e698174e98deb27855103efbda5952da4665dd636828e859021b520d72a016db7503dcc622fa8275e4f5338651905ef2a2505447968f5a61d4df10123521");
+    let fixture: serde_json::Value =
+        serde_json::from_str(include_str!("../tests/fixtures/tiered-registration.json")).unwrap();
+    assert_eq!(signed.raw_transaction, fixture["raw"]);
     assert_eq!(raw[0], 2);
     assert_eq!(recover(&raw), key_address(&key()));
     let rlp = Rlp::new(&raw[1..]);
@@ -553,7 +734,7 @@ fn read_abi_vectors_and_name_validation() {
     );
     assert_eq!(
         abi::decode_result(
-            "fixedDeposit",
+            "positionIdOf",
             &format!("0x{}", hex::encode(U256::from(42).abi_encode()))
         )
         .unwrap(),

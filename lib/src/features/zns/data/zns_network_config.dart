@@ -51,7 +51,7 @@ class ZnsNetworkConfig {
   }
 
   static const protocolId =
-      '0xd1a382e424de62cfc7a26d4829be41e2b15b5d49ae43bd839f997afde7a0538f';
+      '0x341e17a38bbce04892f4e0d0ff4a570669fb9e5addb830fd0bee83cd44ce0520';
   static final rewardScale = BigInt.from(10).pow(24);
   static const canonicalCbZec = '0xB2000000000000000000008501b13360000cb2EC';
   static const canonicalKyberRouter =

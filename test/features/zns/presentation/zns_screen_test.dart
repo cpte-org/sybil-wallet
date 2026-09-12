@@ -31,6 +31,40 @@ void main() {
       tester.widget<AppButton>(find.byKey(Key(key))).onPressed != null;
 
   testWidgets(
+    'registration review distinguishes the USD minimum floor from extra',
+    (tester) async {
+      await show(
+        tester,
+        const ZnsViewData(
+          isConfigured: true,
+          review: ZnsReviewView(
+            name: 'alice',
+            unifiedAddress: 'u1synthetic',
+            maxZec: '0.01',
+            deposit: '0.003',
+            gasReserve: '0.0001',
+            estimatedDuration: 'A few minutes',
+            usdTarget: '100',
+            pricingMode: 0,
+            minimumDeposit: '0.001',
+            extraDeposit: '0.002',
+            minimumFloorApplies: true,
+          ),
+        ),
+      );
+      expect(find.text('USD pricing · minimum bond floor'), findsOneWidget);
+      expect(
+        find.textContaining('Its USD value may exceed the target.'),
+        findsOneWidget,
+      );
+      expect(find.text('0.001 cbZEC'), findsOneWidget);
+      expect(find.text('0.002 cbZEC'), findsOneWidget);
+      expect(find.text('0.003 cbZEC'), findsOneWidget);
+      expect(find.text('USD oracle quote'), findsNothing);
+    },
+  );
+
+  testWidgets(
     'custom receiving address is passed to review and cleared on name change',
     (tester) async {
       String? reviewed;
@@ -167,7 +201,16 @@ void main() {
     await tester.tap(find.byKey(const Key('zns-prepare')));
     expect(request?.name, 'river');
     expect(find.byKey(const Key('zns-budget')), findsNothing);
-    expect(find.textContaining('Earlier exit returns'), findsOneWidget);
+    expect(find.textContaining('early-exit fee starts at 10%'), findsOneWidget);
+    expect(request?.extraDeposit, '0');
+    expect(find.byKey(const Key('zns-extra-deposit')), findsNothing);
+    await tester.ensureVisible(find.byKey(const Key('zns-extra-toggle')));
+    await tester.tap(find.byKey(const Key('zns-extra-toggle')));
+    await tester.pump();
+    await tester.enterText(find.byKey(const Key('zns-extra-deposit')), '0.25');
+    await tester.ensureVisible(find.byKey(const Key('zns-prepare')));
+    await tester.tap(find.byKey(const Key('zns-prepare')));
+    expect(request?.extraDeposit, '0.25');
   });
 
   testWidgets('hardware accounts can look up but cannot prepare registration', (

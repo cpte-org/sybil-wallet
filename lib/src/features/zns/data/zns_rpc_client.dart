@@ -1,4 +1,5 @@
 import 'zns_abi.dart';
+import '../domain/zns_operation.dart';
 import 'zns_http_transport.dart';
 import 'zns_network_config.dart';
 
@@ -45,7 +46,7 @@ class ZnsRegistrySnapshot {
     required this.owner,
     required this.token,
     required this.tokenDecimals,
-    required this.fixedDeposit,
+    required this.registrationQuote,
     required this.minimumCommitmentAge,
     required this.maximumCommitmentAge,
     required this.nativeBalance,
@@ -62,8 +63,8 @@ class ZnsRegistrySnapshot {
   final ZnsBlock block;
   final String owner, token;
   final int tokenDecimals;
-  final BigInt fixedDeposit,
-      minimumCommitmentAge,
+  final ZnsRegistrationQuote? registrationQuote;
+  final BigInt minimumCommitmentAge,
       maximumCommitmentAge,
       nativeBalance,
       tokenBalance,
@@ -77,7 +78,6 @@ class ZnsRegistrySnapshot {
   final int positionOffset;
   String get activeName =>
       selectedPosition?.participating == true ? selectedPosition!.name : '';
-  BigInt registrationCost() => fixedDeposit;
 }
 
 class ZnsPosition {
@@ -93,6 +93,7 @@ class ZnsPosition {
     required this.participating,
     required this.retired,
     required this.rewardCreditScaled,
+    required this.principal,
     required this.block,
   });
   final BigInt positionId,
@@ -100,7 +101,8 @@ class ZnsPosition {
       maturityAt,
       refreshDueAt,
       graceEndsAt,
-      rewardCreditScaled;
+      rewardCreditScaled,
+      principal;
   final String owner, name, unifiedAddress;
   final bool participating, retired;
   final ZnsBlock block;
@@ -316,7 +318,6 @@ class ZnsRpcClient {
     }
     final ownerWord = ZnsAbi.addressWord(owner);
     final values = await Future.wait([
-      _uint(registry, '0xf76e947b', tag),
       _uint(registry, '0x2e4f692a', tag),
       _uint(registry, '0x8ccb9ea6', tag),
       request('eth_getBalance', [owner, tag]).then(znsParseQuantity),
@@ -336,7 +337,7 @@ class ZnsRpcClient {
       throw const ZnsDataException('Malformed claimable funds response');
     }
     // Bound discovery to twenty owned NFTs, all from one canonical block.
-    final total = values[6];
+    final total = values[5];
     final start = BigInt.from(offset) >= total ? 0 : offset;
     final count = (total - BigInt.from(start)) > BigInt.from(20)
         ? 20
@@ -374,32 +375,31 @@ class ZnsRpcClient {
     } else {
       position = positions.isEmpty ? null : positions.first;
     }
+    final quote = registrationName == null
+        ? null
+        : await _registrationQuote(registrationName, at);
     await _canonical(at);
-    if (values[0] <= BigInt.zero ||
-        values[1] <= BigInt.zero ||
-        values[2] <= values[1]) {
-      throw const ZnsDataException(
-        'Invalid registry deposit or commitment window',
-      );
+    if (values[0] <= BigInt.zero || values[1] <= values[0]) {
+      throw const ZnsDataException('Invalid registry commitment window');
     }
     return ZnsRegistrySnapshot(
       block: at,
       owner: owner,
       token: token,
       tokenDecimals: decimals.toInt(),
-      fixedDeposit: values[0],
-      minimumCommitmentAge: values[1],
-      maximumCommitmentAge: values[2],
-      nativeBalance: values[3],
-      tokenBalance: values[4],
-      allowance: values[5],
+      registrationQuote: quote,
+      minimumCommitmentAge: values[0],
+      maximumCommitmentAge: values[1],
+      nativeBalance: values[2],
+      tokenBalance: values[3],
+      allowance: values[4],
       selectedPosition: position,
       positions: positions,
       totalPositions: total,
       positionOffset: start,
       claimablePrincipal: claims.word(0),
       claimableRewardsScaled: claims.word(32),
-      commitmentTimestamp: values[7],
+      commitmentTimestamp: values[6],
     );
   }
 
@@ -431,8 +431,8 @@ class ZnsRpcClient {
     return ZnsPosition(
       positionId: id,
       owner: owner,
-      name: result.stringAt(0, 1, minimum: 320, maximum: 63),
-      unifiedAddress: result.stringAt(0, 2, minimum: 320),
+      name: result.stringAt(0, 1, minimum: 352, maximum: 63),
+      unifiedAddress: result.stringAt(0, 2, minimum: 352),
       registeredAt: registered,
       maturityAt: maturity,
       refreshDueAt: refresh,
@@ -440,8 +440,43 @@ class ZnsRpcClient {
       participating: participating == BigInt.one,
       retired: retired == BigInt.one,
       rewardCreditScaled: result.word(288),
+      principal: result.word(320),
       block: at,
     );
+  }
+
+  Future<ZnsRegistrationQuote> _registrationQuote(
+    String name,
+    ZnsBlock at,
+  ) async {
+    znsValidateLabel(name);
+    final result = ZnsAbi(
+      await _call(
+        config.registryAddress,
+        ZnsAbi.stringCall('0xe57a4675', name),
+        znsQuantity(at.number),
+      ),
+    );
+    if (result.bytes.length != 128 ||
+        result.word(0) == BigInt.zero ||
+        result.word(32) == BigInt.zero ||
+        result.word(64) > BigInt.one) {
+      throw const ZnsDataException('Invalid registration quote');
+    }
+    return ZnsRegistrationQuote(
+      minimumDeposit: result.word(0),
+      usdTarget: result.word(32),
+      pricingMode: result.word(64).toInt(),
+      priceUpdatedAt: result.word(96),
+    );
+  }
+
+  Future<ZnsRegistrationQuote> quoteRegistration(String name) async {
+    final at = await block();
+    await verifyProtocol(at: at);
+    final quote = await _registrationQuote(name, at);
+    await _canonical(at);
+    return quote;
   }
 
   Future<ZnsPosition> positionInfo(BigInt id) async {

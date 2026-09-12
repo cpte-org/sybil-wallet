@@ -115,8 +115,18 @@ class _IntentDecoder {
       case 'f14fcbc8':
         encoded.exact(32);
         return {'kind': 'commit', 'commitment': encoded.hexAt(0, 32)};
-      case 'f5de1230':
-        final name = encoded.dynamicAt(0, 0, 96, maximum: 63);
+      case '48824541':
+        final name = encoded.dynamicAt(0, 0, 224, maximum: 63);
+        final maximumDeposit = encoded.abi.word(96),
+            extraDeposit = encoded.abi.word(128);
+        final pricingMode = encoded.abi.word(160),
+            deadline = encoded.abi.word(192);
+        if (maximumDeposit == BigInt.zero ||
+            extraDeposit >= maximumDeposit ||
+            pricingMode > BigInt.one ||
+            deadline == BigInt.zero) {
+          throw const FormatException('Invalid confirmed registration pricing');
+        }
         final ua = encoded.dynamicAt(0, 1, name.end, maximum: 512);
         encoded.exact(ua.end);
         final label = utf8.decode(name.bytes);
@@ -132,6 +142,10 @@ class _IntentDecoder {
           'name': label,
           'unifiedAddress': address,
           'secret': encoded.hexAt(64, 32),
+          'maxDeposit': maximumDeposit.toString(),
+          'extraDeposit': extraDeposit.toString(),
+          'expectedPricingMode': pricingMode.toInt(),
+          'deadline': deadline.toString(),
         };
       case '0f421135':
         final ua = encoded.dynamicAt(0, 1, 64, maximum: 512);
@@ -205,7 +219,7 @@ class _IntentDecoder {
     }
     encoded.exact(cursor);
     if (spent.bitLength > 256 ||
-        BigInt.parse(calls[length - 2]['amount'] as String) == BigInt.zero) {
+        calls[length - 2]['amount'] != calls.last['maxDeposit']) {
       throw const FormatException('Invalid atomic transaction amount');
     }
     return {

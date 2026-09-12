@@ -35,6 +35,8 @@ class Gateway implements ZnsEngineGateway {
   BigInt allowance = BigInt.from(500), claimable = BigInt.zero;
   BigInt swapValue = BigInt.from(1000), fundingZatoshi = BigInt.from(100);
   ZnsRecord? owned, occupied;
+  BigInt quotedMinimum = BigInt.from(500);
+  int pricingMode = 0;
   BigInt? requestedId;
   String? requestedName;
   @override
@@ -74,6 +76,14 @@ class Gateway implements ZnsEngineGateway {
     );
   }
 
+  @override
+  Future<ZnsRegistrationQuote> quoteRegistration(String name) async =>
+      ZnsRegistrationQuote(
+        minimumDeposit: quotedMinimum,
+        usdTarget: BigInt.from(100),
+        pricingMode: pricingMode,
+        priceUpdatedAt: BigInt.from(now),
+      );
   @override
   Future<ZnsRecord?> lookup(String name) async => occupied;
   @override
@@ -193,6 +203,14 @@ ZnsOperation intent({String kind = 'register', String? salt}) => ZnsOperation(
   maxZatoshi: BigInt.from(100),
   maxEthWei: BigInt.from(1150),
   requiredTokenUnits: kind == 'register' ? BigInt.from(500) : BigInt.zero,
+  registrationQuote: kind == 'register'
+      ? ZnsRegistrationQuote(
+          minimumDeposit: BigInt.from(500),
+          usdTarget: BigInt.from(100),
+          pricingMode: 0,
+          priceUpdatedAt: BigInt.from(900),
+        )
+      : null,
   maxGasFeeWei: BigInt.from(100),
   createdAt: DateTime.utc(2026, 9, 8),
   exitPreview: kind == 'release'
@@ -215,12 +233,13 @@ ZnsRecord record({
   int maturity = 1500,
   bool participating = true,
   bool retired = false,
+  BigInt? principal,
 }) => ZnsRecord(
   name: 'alice',
   owner: owner,
   unifiedAddress: ua,
   expiresAt: expiry,
-  deposit: BigInt.from(500),
+  deposit: principal ?? BigInt.from(500),
   positionId: BigInt.from(id),
   maturityAt: maturity,
   refreshDueAt: expiry - 90,
@@ -274,6 +293,156 @@ void main() {
     }
     engines.clear();
   });
+
+  test('extra bond is reviewed and carried into atomic registration', () async {
+    gateway.supportsAtomic = true;
+    gateway.token = BigInt.from(1000);
+    final op = await engine.prepare(
+      name: 'alice',
+      ua: 'u1synthetic',
+      extraDeposit: BigInt.from(250),
+    );
+    expect(op.requiredTokenUnits, BigInt.from(750));
+    expect(op.registrationQuote!.minimumDeposit, BigInt.from(500));
+    await engine.authorize(op);
+    expect(gateway.signs.single['maxDeposit'], '750');
+    expect(gateway.signs.single['amount'], '750');
+    expect(gateway.signs.single['extraDeposit'], '250');
+    expect(gateway.signs.single['expectedPricingMode'], 0);
+    expect(gateway.signs.single['deadline'], '1600');
+    expect(
+      (await ZnsJournal(storage).load(scope))!.extraDeposit,
+      BigInt.from(250),
+    );
+  });
+
+  for (final changeMode in [false, true]) {
+    test(
+      '${changeMode ? 'pricing mode change' : 'minimum increase'} blocks funding and needs a new review',
+      () async {
+        gateway.eth = BigInt.zero;
+        final op = await engine.prepare(name: 'alice', ua: 'u1synthetic');
+        if (changeMode) {
+          gateway.pricingMode = 1;
+        } else {
+          gateway.quotedMinimum = BigInt.from(501);
+        }
+        await expectLater(engine.authorize(op), throwsStateError);
+        expect(gateway.signs, isEmpty);
+        expect(gateway.fundingSends, 0);
+        expect(engine.operation, isNull);
+      },
+    );
+  }
+
+  test('same-mode lower quote stays within approved maximum', () async {
+    final op = await engine.prepare(name: 'alice', ua: 'u1synthetic');
+    gateway.quotedMinimum = BigInt.from(450);
+    await engine.authorize(op);
+    expect(gateway.signs.single['maxDeposit'], '500');
+    expect(gateway.signs.single['extraDeposit'], '0');
+    expect(gateway.signs.single['expectedPricingMode'], 0);
+  });
+
+  test(
+    'resumed quote preserves commitment and requires explicit renewed approval',
+    () async {
+      gateway.commitAt = gateway.now;
+      final op = await engine.prepare(name: 'alice', ua: 'u1synthetic');
+      await engine.authorize(op);
+      engine.pause();
+      gateway.pricingMode = 1;
+      gateway.quotedMinimum = BigInt.from(600);
+      final reviewed = await engine.prepare(
+        name: op.name,
+        ua: op.unifiedAddress,
+        continuation: op,
+        extraDeposit: op.extraDeposit,
+      );
+      expect(reviewed.secret, op.secret);
+      expect(reviewed.commitment, op.commitment);
+      expect(reviewed.registrationQuote!.pricingMode, 1);
+      expect(reviewed.requiredTokenUnits, BigInt.from(600));
+      expect(engine.authorized, isFalse);
+      expect(gateway.signs, isEmpty);
+      expect(engine.operation, same(op));
+    },
+  );
+
+  test(
+    'repricing retains limits covering funding that already happened',
+    () async {
+      final op = intent()
+        ..funding = {
+          'attempted': true,
+          'complete': true,
+          'maxZatoshi': '100',
+          'zecFee': '2',
+          'depositZatoshi': '98',
+        };
+      engine.operation = op;
+      final reviewed = await engine.prepare(
+        name: op.name,
+        ua: op.unifiedAddress,
+        continuation: op,
+      );
+      expect(reviewed.maxZatoshi, op.maxZatoshi);
+      await ZnsJournal(storage).save(reviewed, 'uuid-a');
+      expect(
+        (await ZnsJournal(storage).load(scope))!.funding!['depositZatoshi'],
+        '98',
+      );
+    },
+  );
+
+  test(
+    'pricing changes do not prevent reconciling existing signed bytes',
+    () async {
+      gateway.pricingMode = 1;
+      final op = intent()
+        ..pending = {
+          'hash': 'pending-register',
+          'kind': 'register',
+          'raw': 'existing-bytes',
+        };
+      await engine.authorize(op);
+      expect(gateway.broadcasts, ['existing-bytes']);
+      expect(gateway.signs, isEmpty);
+      expect(op.pending!['raw'], 'existing-bytes');
+    },
+  );
+
+  test('extra bond cannot be added to an existing position', () async {
+    gateway.owned = record();
+    await expectLater(
+      engine.prepare(
+        name: 'alice',
+        ua: 'u1synthetic',
+        kind: 'refresh',
+        extraDeposit: BigInt.one,
+      ),
+      throwsFormatException,
+    );
+    expect(gateway.signs, isEmpty);
+  });
+
+  for (final principal in [0, 501]) {
+    test(
+      'registration completion rejects out-of-review principal $principal',
+      () async {
+        gateway.owned = record(principal: BigInt.from(principal));
+        final op = intent()
+          ..transactions = [
+            {'hash': 'registered', 'kind': 'register', ...mined()},
+          ];
+        gateway.receipts['registered'] = mined();
+        await engine.authorize(op);
+        expect(op.isComplete, isFalse);
+        expect(engine.error, contains('current record differs'));
+        expect(gateway.signs, isEmpty);
+      },
+    );
+  }
 
   test('another owned NFT does not prevent a new registration', () async {
     gateway.owned = record();
@@ -600,6 +769,25 @@ void main() {
       expect(gateway.broadcasts, isEmpty);
     },
   );
+
+  test('favorable linear aging stays inside reviewed exit limits', () async {
+    gateway.owned = record();
+    final reviewed = await engine.prepare(
+      name: 'alice',
+      ua: 'u1synthetic',
+      kind: 'release',
+    );
+    gateway.currentExitPreview = {
+      ...reviewed.exitPreview!,
+      'principalReturned': '451',
+      'principalForfeited': '49',
+      'rewardsReturned': '1',
+    };
+    await engine.authorize(reviewed);
+    expect(gateway.signs.single, {'kind': 'release', 'positionId': '1'});
+    expect(reviewed.exitPreview!['principalForfeited'], '50');
+    expect(engine.error, isNull);
+  });
 
   for (final maturityChanged in [false, true]) {
     test(

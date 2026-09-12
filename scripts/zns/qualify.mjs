@@ -5,7 +5,7 @@ import {fileURLToPath} from 'node:url';
 import {spawn, spawnSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import solc from 'solc';
-import {createPublicClient, createWalletClient, http, parseEther, keccak256, encodeFunctionData, parseAbi} from 'viem';
+import {createPublicClient, createWalletClient, http, parseEther, keccak256, encodeFunctionData, parseAbi, zeroAddress} from 'viem';
 import {privateKeyToAccount} from 'viem/accounts';
 import {foundry} from 'viem/chains';
 
@@ -55,7 +55,10 @@ try {
   await pub.request({method:'anvil_setBalance',params:[owner,'0x8ac7230489e80000']});
   async function deploy(a,args=[]){const hash=await wallet.deployContract({abi:a.abi,bytecode:'0x'+a.evm.bytecode.object,args});const receipt=await pub.waitForTransactionReceipt({hash});assert.equal(receipt.status,'success');return receipt.contractAddress;}
   const tokenArtifact=artifact('TestToken.sol','TestToken');
-  const token=fork?'0xB2000000000000000000008501b13360000cb2EC':await deploy(tokenArtifact);
+  const token='0xB2000000000000000000008501b13360000cb2EC';
+  // The tiered registry and Rust policy both bind canonical cbZEC. Install the
+  // synthetic 8-decimal runtime at that address only on this local test chain.
+  if(!fork)await pub.request({method:'anvil_setCode',params:[token,'0x'+tokenArtifact.evm.deployedBytecode.object]});
   const holder='0x0fc47c17af86078d809358db1b4db2debc988566';
   async function fundToken(amount){
     if(!fork){await wallet.writeContract({address:token,abi:tokenArtifact.abi,functionName:'mint',args:[owner,amount]});return;}
@@ -66,71 +69,111 @@ try {
     assert.equal((await pub.waitForTransactionReceipt({hash:h})).status,'success');
     await pub.request({method:'anvil_stopImpersonatingAccount',params:[holder]});
   }
+  async function tokenBalance(address){return pub.readContract({address:token,abi:tokenArtifact.abi,functionName:'balanceOf',args:[address]});}
+  async function ensureTokenBalance(required){const balance=await tokenBalance(owner);if(balance<required)await fundToken(required-balance);}
   assert.equal(await pub.readContract({address:token,abi:tokenArtifact.abi,functionName:'decimals'}),8);
   const registryArtifact=artifact('contracts/ZcashNameService.sol','ZcashNameService');
-  const registry=await deploy(registryArtifact,[token,6000n]);
+  // Zero token selects canonical cbZEC; zero feeds on chain 31337 deliberately
+  // exercise the published fixed fallback, without introducing a live oracle.
+  const registry=await deploy(registryArtifact,[zeroAddress,zeroAddress,zeroAddress]);
   const delegate=await deploy(batch);
   const rollbackToken=fork?await deploy(tokenArtifact):token;
   const swap=await deploy(artifact('TestToken.sol','TestSwap'),[rollbackToken]);
+  const quotedRegistrations=[];
+  async function quoteRegistration(name){
+    const [minimumDeposit,usdTarget,mode,priceUpdatedAt]=await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'quoteRegistration',args:[name]});
+    assert(minimumDeposit>0n);assert(usdTarget>0n);
+    if(!fork)assert.equal(Number(mode),1,'Local deployment without oracle code must quote fallback mode');
+    quotedRegistrations.push({name,minimumDeposit:String(minimumDeposit),usdTarget:String(usdTarget),mode:Number(mode),priceUpdatedAt:String(priceUpdatedAt)});
+    return {minimumDeposit,usdTarget,mode:Number(mode),priceUpdatedAt};
+  }
+  const firstQuote=await quoteRegistration('alice');
   const config={chainId:31337,allowTestChain:true,registry,token,delegate,
-    protocolId:'0xd1a382e424de62cfc7a26d4829be41e2b15b5d49ae43bd839f997afde7a0538f',
-    maxValueWei:parseEther('1').toString(),maxGasLimit:'3000000',maxFeePerGasWei:'100000000000',maxTotalFeeWei:'100000000000000000',maxTokenAmount:'100000000'};
+    protocolId:'0x341e17a38bbce04892f4e0d0ff4a570669fb9e5addb830fd0bee83cd44ce0520',
+    maxValueWei:parseEther('1').toString(),maxGasLimit:'6000000',maxFeePerGasWei:'100000000000',maxTotalFeeWei:'100000000000000000',maxTokenAmount:String(firstQuote.minimumDeposit)};
+  assert.equal(await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'protocolId'}),config.protocolId);
+  assert.equal((await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'cbZEC'})).toLowerCase(),token.toLowerCase());
   const secret='0x'+'11'.repeat(32),ua='local-contract-fixture-address';
+  async function registration(name,unifiedAddress,secret){
+    const quote=await quoteRegistration(name),extraDeposit=0n;
+    const maxDeposit=quote.minimumDeposit+extraDeposit;
+    if(maxDeposit>BigInt(config.maxTokenAmount))config.maxTokenAmount=String(maxDeposit);
+    return {kind:'atomicRegister',name,unifiedAddress,secret,
+      maxDeposit:String(maxDeposit),extraDeposit:String(extraDeposit),expectedPricingMode:quote.mode,
+      amount:String(maxDeposit),existingTokenUnits:String(maxDeposit),swap:null,
+      deadline:String((await pub.getBlock()).timestamp+600n)};
+  }
   const op={kind:'commit',name:'alice',unifiedAddress:ua,secret};
   const prepared=core({config,operation:op}).prepared;
   const chainCommit=await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'makeCommitment',args:['alice',ua,owner,secret]});
   assert.equal(prepared.commitment,chainCommit);checks.push('Rust commitment equals deployed Solidity');
   async function send(operation){const nonce=await pub.getTransactionCount({address:owner,blockTag:'pending'});
-    const signed=core({config,operation,transaction:{nonce:String(nonce),gasLimit:'3000000',maxFeePerGas:'10000000000',maxPriorityFeePerGas:'1000000000',l1FeeWei:'0'}}).signed;
+    const signed=core({config,operation,transaction:{nonce:String(nonce),gasLimit:'6000000',maxFeePerGas:'10000000000',maxPriorityFeePerGas:'1000000000',l1FeeWei:'0'}}).signed;
     const hash=await pub.sendRawTransaction({serializedTransaction:signed.rawTransaction});assert.equal(hash,signed.transactionHash);
     return pub.waitForTransactionReceipt({hash});}
   assert.equal((await send(op)).status,'success');
-  const reveal={kind:'atomicRegister',name:'alice',unifiedAddress:ua,secret,amount:'6000',existingTokenUnits:'6000',swap:null,deadline:String((await pub.getBlock()).timestamp+600n)};
+  const reveal=await registration('alice',ua,secret);
   // First reveal fails before maturity. EIP-7702 delegation persists, but token
   // allowance/state changes are rolled back with the failed execution.
   assert.equal((await send(reveal)).status,'reverted');
   assert.equal(await pub.readContract({address:token,abi:tokenArtifact.abi,functionName:'allowance',args:[owner,registry]}),0n);
   assert.equal(await pub.getCode({address:owner}),'0xef0100'+delegate.slice(2).toLowerCase());
   checks.push('Immature reveal reverts atomically; delegation persistence explicit');
-  await fundToken(6000n);
+  await ensureTokenBalance(BigInt(reveal.maxDeposit));
+  const fundedOwnerBalance=await tokenBalance(owner);
   await pub.request({method:'evm_increaseTime',params:[61]});await pub.request({method:'evm_mine',params:[]});
   const snap=await pub.request({method:'evm_snapshot',params:[]});
   assert.equal((await send(reveal)).status,'success');
   const record=await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'recordOf',args:['alice']});
   assert.equal(record[0].toLowerCase(),owner.toLowerCase());assert.equal(record[1],ua);assert.equal(record[3],true);
-  assert.equal(await pub.readContract({address:token,abi:tokenArtifact.abi,functionName:'balanceOf',args:[registry]}),6000n);
-  checks.push('Rust-signed self-funded EIP-7702 registration preserves owner and full deposit');
+  const firstPositionId=await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'positionIdOf',args:['alice']});
+  const firstPosition=await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'positionInfo',args:[firstPositionId]});
+  assert.equal(firstPosition[10],BigInt(reveal.maxDeposit));
+  assert.equal(await tokenBalance(registry),firstPosition[10]);
+  assert.equal(await tokenBalance(owner),fundedOwnerBalance-firstPosition[10]);
+  checks.push('Rust-signed self-funded EIP-7702 registration binds the per-name quote and stores its actual principal');
   assert(await pub.request({method:'evm_revert',params:[snap]}));
   assert.equal((await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'recordOf',args:['alice']}))[3],false);
   checks.push('Local reorg removes registration while preserving recoverable commitment');
   assert.equal((await send(reveal)).status,'success');
   const positionId=await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'positionIdOf',args:['alice']});
   const info=await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'positionInfo',args:[positionId]});
+  const principal=info[10];assert.equal(principal,BigInt(reveal.maxDeposit));
   await pub.request({method:'evm_increaseTime',params:[365*24*60*60]});await pub.request({method:'evm_mine',params:[]});
   assert.equal((await send({kind:'refresh',positionId:String(positionId)})).status,'success');
   assert.equal((await send({kind:'update',positionId:String(positionId),unifiedAddress:'updated-fixture-address'})).status,'success');
   assert.equal((await send({kind:'claimRewards',positionId:String(positionId)})).status,'success');
   const refreshed=await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'positionInfo',args:[positionId]});
-  assert.equal(refreshed[4],info[4]);
+  assert.equal(refreshed[4],info[4]);assert.equal(refreshed[10],principal);
+  const beforeMatureRelease=await tokenBalance(owner);
   assert.equal((await send({kind:'release',positionId:String(positionId)})).status,'success');
   assert.equal((await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'recordOf',args:['alice']}))[3],false);
-  assert.equal(await pub.readContract({address:token,abi:tokenArtifact.abi,functionName:'balanceOf',args:[owner]}),6000n);
-  checks.push('Rust-signed refresh/update/claim preserve maturity; mature release returns full deposit');
+  assert.equal(await tokenBalance(owner),beforeMatureRelease+principal);
+  assert.equal(await tokenBalance(owner),fundedOwnerBalance);
+  checks.push('Rust-signed refresh/update/claim preserve maturity and actual principal; mature release returns the full stored principal');
   const longName='a'.repeat(63),longUA='u'.repeat(512),longSecret='0x'+'33'.repeat(32);
   assert.equal((await send({kind:'commit',name:longName,unifiedAddress:longUA,secret:longSecret})).status,'success');
   await pub.request({method:'evm_increaseTime',params:[61]});await pub.request({method:'evm_mine',params:[]});
-  const longReceipt=await send({...reveal,name:longName,unifiedAddress:longUA,secret:longSecret,deadline:String((await pub.getBlock()).timestamp+600n)});
-  assert.equal(longReceipt.status,'success');assert(longReceipt.gasUsed<3000000n);
+  const longReveal=await registration(longName,longUA,longSecret);
+  await ensureTokenBalance(BigInt(longReveal.maxDeposit));
+  const longReceipt=await send(longReveal);
+  assert.equal(longReceipt.status,'success');assert(longReceipt.gasUsed<6000000n);
+  const longId=await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'positionIdOf',args:[longName]});
+  const longPosition=await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'positionInfo',args:[longId]});
+  assert.equal(longPosition[10],BigInt(longReveal.maxDeposit));
   checks.push(`Maximum-length Rust-signed atomic registration succeeds (${longReceipt.gasUsed} gas)`);
   const extraSecret='0x'+'44'.repeat(32);
-  await fundToken(6000n);
   assert.equal((await send({kind:'commit',name:'second',unifiedAddress:ua,secret:extraSecret})).status,'success');
   await pub.request({method:'evm_increaseTime',params:[61]});await pub.request({method:'evm_mine',params:[]});
-  assert.equal((await send({...reveal,name:'second',secret:extraSecret,deadline:String((await pub.getBlock()).timestamp+600n)})).status,'success');
+  const secondReveal=await registration('second',ua,extraSecret);
+  await ensureTokenBalance(BigInt(secondReveal.maxDeposit));
+  assert.equal((await send(secondReveal)).status,'success');
   assert.equal(await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'balanceOf',args:[owner]}),2n);
   checks.push('One software account registers multiple independent NFTs');
   const giftId=await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'positionIdOf',args:['second']});
   const giftBefore=await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'positionInfo',args:[giftId]});
+  assert.equal(giftBefore[10],BigInt(secondReveal.maxDeposit));
+  assert.equal(await tokenBalance(registry),longPosition[10]+giftBefore[10]);
   assert.equal((await send({kind:'transfer',positionId:String(giftId),recipient:account.address})).status,'success');
   let gift=await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'positionInfo',args:[giftId]});
   assert.equal(gift[0].toLowerCase(),account.address.toLowerCase());assert.equal(gift[2],'');assert.deepEqual(gift.slice(3),giftBefore.slice(3));
@@ -138,9 +181,11 @@ try {
   assert.equal((await pub.waitForTransactionReceipt({hash:returnGift})).status,'success');
   gift=await pub.readContract({address:registry,abi:registryArtifact.abi,functionName:'positionInfo',args:[giftId]});
   assert.equal(gift[0].toLowerCase(),owner.toLowerCase());assert.equal(gift[2],'');assert.deepEqual(gift.slice(3),giftBefore.slice(3));
-  checks.push('Rust-signed NFT gift and safe return to a delegated account preserve financial rights and dates');
-  const buy=encodeFunctionData({abi:parseAbi(['function buy(uint256 amount) payable']),functionName:'buy',args:[7000n]});
-  const failing=encodeFunctionData({abi:registryArtifact.abi,functionName:'register',args:['alice',ua,'0x'+'22'.repeat(32)]});
+  checks.push('Rust-signed NFT gift and safe return to a delegated account preserve actual principal, financial rights and dates');
+  const attemptedRegistration=await registration('alice',ua,'0x'+'22'.repeat(32));
+  const buy=encodeFunctionData({abi:parseAbi(['function buy(uint256 amount) payable']),functionName:'buy',args:[BigInt(attemptedRegistration.maxDeposit)]});
+  const failing=encodeFunctionData({abi:registryArtifact.abi,functionName:'register',args:[attemptedRegistration.name,attemptedRegistration.unifiedAddress,attemptedRegistration.secret,
+    BigInt(attemptedRegistration.maxDeposit),BigInt(attemptedRegistration.extraDeposit),attemptedRegistration.expectedPricingMode,BigInt(attemptedRegistration.deadline)]});
   const before=await pub.readContract({address:rollbackToken,abi:tokenArtifact.abi,functionName:'balanceOf',args:[owner]});
   await pub.request({method:'anvil_impersonateAccount',params:[owner]});
   const external=encodeFunctionData({abi:batch.abi,functionName:'execute',args:[[{target:swap,value:1n,data:buy},{target:registry,value:0n,data:failing}],(await pub.getBlock()).timestamp+60n]});
@@ -151,8 +196,8 @@ try {
   checks.push('Destination failure rolls back an earlier swap-like asset purchase');
   await assert.rejects(pub.call({account:account.address,to:owner,data:external}));
   checks.push('External caller cannot execute the delegated account');
-  const result={testedAt:new Date().toISOString(),baseMainnetFork:fork,chainId:31337,delegateCodeHash:keccak256(runtime),owner,registry,token,delegate,checks,
-    limits:(fork?'Local Base mainnet fork with real cbZEC contract state; token funding uses local impersonation. ':'Local synthetic chain/token only. ')+ ' Zcash funding, live liquidity, Base fees and full Flutter signing not exercised. Test UA strings exercise contract behavior; wallet separately validates ZIP316.'};
+  const result={testedAt:new Date().toISOString(),baseMainnetFork:fork,chainId:31337,protocolId:config.protocolId,delegateCodeHash:keccak256(runtime),owner,registry,token,delegate,quotedRegistrations,checks,
+    limits:(fork?'Local Base mainnet fork with real cbZEC and canonical oracle state; token funding uses local impersonation. ':'Local synthetic chain/token only; missing canonical oracle code exercises fixed fallback. ')+ ' Oracle fault handling, linearly declining early-exit fees, linear reward vesting and principal-weighted allocation are not qualified by these checks. Zcash funding, live liquidity, Base fees and full Flutter signing are not exercised. Test UA strings exercise contract behavior; wallet separately validates ZIP316.'};
   await fs.writeFile(path.join(here,fork?'output/base-fork-qualification.json':'output/qualification.json'),JSON.stringify(result,null,2));
   console.log(JSON.stringify(result,null,2));
 } finally {node.kill('SIGTERM');}

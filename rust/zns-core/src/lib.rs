@@ -15,7 +15,7 @@ pub type Result<T> = std::result::Result<T, String>;
 
 pub const CBZEC: &str = "0xB2000000000000000000008501b13360000cb2EC";
 pub const KYBER: &str = "0x6131B5fae19EA4f9D964eAc0408E4408b66337b5";
-pub const PROTOCOL_ID: &str = "0xd1a382e424de62cfc7a26d4829be41e2b15b5d49ae43bd839f997afde7a0538f";
+pub const PROTOCOL_ID: &str = "0x341e17a38bbce04892f4e0d0ff4a570669fb9e5addb830fd0bee83cd44ce0520";
 
 pub fn address(value: &str) -> Result<Address> {
     value.parse().map_err(|_| "Invalid EVM address".into())
@@ -146,6 +146,13 @@ pub enum Operation {
         #[serde(rename = "unifiedAddress")]
         unified_address: String,
         secret: String,
+        #[serde(rename = "maxDeposit")]
+        max_deposit: String,
+        #[serde(rename = "extraDeposit")]
+        extra_deposit: String,
+        #[serde(rename = "expectedPricingMode")]
+        expected_pricing_mode: u8,
+        deadline: String,
     },
     Refresh {
         #[serde(rename = "positionId")]
@@ -182,6 +189,12 @@ pub enum Operation {
         #[serde(rename = "unifiedAddress")]
         unified_address: String,
         secret: String,
+        #[serde(rename = "maxDeposit")]
+        max_deposit: String,
+        #[serde(rename = "extraDeposit")]
+        extra_deposit: String,
+        #[serde(rename = "expectedPricingMode")]
+        expected_pricing_mode: u8,
         amount: String,
         swap: Option<Swap>,
         deadline: String,
@@ -240,6 +253,26 @@ pub fn prepare(config: &Config, owner: &str, operation: &Operation) -> Result<Pr
         }
         Ok(id)
     };
+    // The offline signer binds a reviewed ceiling and pricing mode. The
+    // registry recomputes the live minimum and enforces both at inclusion.
+    let registration_limits = |max: &str, extra: &str, mode: u8, deadline: &str| {
+        let max = number(max)?;
+        let extra = number(extra)?;
+        let deadline = number(deadline)?;
+        if max.is_zero() || max > number(&config.max_token_amount)? {
+            return Err("Registration deposit exceeds reviewed limit".to_string());
+        }
+        if extra >= max {
+            return Err("Extra deposit must leave room for the minimum deposit".to_string());
+        }
+        if mode > 1 {
+            return Err("Unsupported registration pricing mode".to_string());
+        }
+        if deadline.is_zero() {
+            return Err("Registration deadline must be positive".to_string());
+        }
+        Ok((max, extra, deadline))
+    };
     let data = match operation {
         Operation::Commit {
             name,
@@ -266,12 +299,22 @@ pub fn prepare(config: &Config, owner: &str, operation: &Operation) -> Result<Pr
             name,
             unified_address,
             secret,
+            max_deposit,
+            extra_deposit,
+            expected_pricing_mode,
+            deadline,
         } => {
             validate_registration(name, unified_address)?;
+            let (max, extra, deadline) =
+                registration_limits(max_deposit, extra_deposit, *expected_pricing_mode, deadline)?;
             abi::registerCall {
                 name: name.clone(),
                 unifiedAddress: unified_address.clone(),
                 secret: parse_secret(secret)?,
+                maxDeposit: max,
+                extraDeposit: extra,
+                expectedPricingMode: *expected_pricing_mode,
+                deadline,
             }
             .abi_encode()
         }
@@ -343,12 +386,20 @@ pub fn prepare(config: &Config, owner: &str, operation: &Operation) -> Result<Pr
             name,
             unified_address,
             secret,
+            max_deposit,
+            extra_deposit,
+            expected_pricing_mode,
             amount,
             swap,
             deadline,
             existing_token_units,
         } => {
             validate_registration(name, unified_address)?;
+            let (max, extra, deadline) =
+                registration_limits(max_deposit, extra_deposit, *expected_pricing_mode, deadline)?;
+            if number(amount)? != max {
+                return Err("Atomic approval must equal the reviewed deposit ceiling".into());
+            }
             config
                 .delegate
                 .as_ref()
@@ -400,6 +451,10 @@ pub fn prepare(config: &Config, owner: &str, operation: &Operation) -> Result<Pr
                     name: name.clone(),
                     unifiedAddress: unified_address.clone(),
                     secret: parse_secret(secret)?,
+                    maxDeposit: max,
+                    extraDeposit: extra,
+                    expectedPricingMode: *expected_pricing_mode,
+                    deadline,
                 }
                 .abi_encode()
                 .into(),
@@ -409,10 +464,6 @@ pub fn prepare(config: &Config, owner: &str, operation: &Operation) -> Result<Pr
             // value to itself is unnecessary; calls spend its existing ETH.
             value = U256::ZERO;
             authorization_required = true;
-            let deadline = number(deadline)?;
-            if deadline.is_zero() {
-                return Err("Atomic deadline must be positive".into());
-            }
             abi::executeCall { calls, deadline }.abi_encode()
         }
     };

@@ -103,7 +103,7 @@ class RpcFixture implements ZnsHttpTransport {
             wrongToken ? owner : ZnsNetworkConfig.canonicalCbZec,
           ]),
           '0x313ce567' => tuple([8]),
-          '0xf76e947b' => tuple([500]),
+          '0xe57a4675' => tuple([500, 100, 0, 100]),
           '0x2e4f692a' => tuple([60]),
           '0x8ccb9ea6' => tuple([86400]),
           '0x70a08231' => tuple([
@@ -136,6 +136,7 @@ class RpcFixture implements ZnsHttpTransport {
                   1,
                   0,
                   ZnsNetworkConfig.rewardScale + BigInt.from(7),
+                  750,
                 ]),
           '0xee0611eb' => tuple([
             1,
@@ -226,6 +227,7 @@ void main() {
           1,
           0,
           BigInt.zero,
+          750,
         ]);
       await expectLater(
         ZnsRpcClient(
@@ -246,6 +248,7 @@ void main() {
           1,
           0,
           BigInt.zero,
+          750,
         ]);
       expect(
         (await ZnsRpcClient(
@@ -258,14 +261,17 @@ void main() {
   );
 
   test(
-    'snapshot reads fixed deposit and scaled claims at one canonical block',
+    'snapshot reads name quote, actual principal and scaled claims at one canonical block',
     () async {
       final transport = RpcFixture();
       final snapshot = await ZnsRpcClient(
         configuration(),
         transport: transport,
-      ).registrySnapshot(owner);
-      expect(snapshot.registrationCost(), BigInt.from(500));
+      ).registrySnapshot(owner, registrationName: 'alice');
+      expect(snapshot.registrationQuote!.minimumDeposit, BigInt.from(500));
+      expect(snapshot.registrationQuote!.usdTarget, BigInt.from(100));
+      expect(snapshot.registrationQuote!.pricingMode, 0);
+      expect(snapshot.selectedPosition!.principal, BigInt.from(750));
       expect(snapshot.claimablePrincipal, BigInt.from(25));
       expect(
         snapshot.claimableRewardsScaled,
@@ -278,6 +284,7 @@ void main() {
       expect(snapshot.activeName, 'alice');
       expect(transport.readTags.every((tag) => tag == '0xa'), isTrue);
       expect(transport.selectors, isNot(contains('0x1dfda2e7')));
+      expect(transport.selectors, isNot(contains('0xf76e947b')));
     },
   );
   test('name lookup binds the stable position id during grace', () async {

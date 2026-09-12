@@ -11,18 +11,45 @@ class ZnsFundingNotSent implements Exception {
   String toString() => message;
 }
 
-bool znsSameExitPreview(
+/// Aging may improve an exit while the user reviews it. Only admit changes
+/// that preserve the reviewed maturity status and do not worsen any amount.
+bool znsExitWithinReview(
   Map<String, dynamic>? reviewed,
   Map<String, dynamic> current,
-) =>
-    reviewed != null &&
-    const [
-      'early',
-      'principalReturned',
-      'rewardsReturned',
-      'principalForfeited',
-      'rewardsForfeitedScaled',
-    ].every((key) => reviewed[key] == current[key]);
+) {
+  if (reviewed == null || reviewed['early'] != current['early']) return false;
+  for (final key in const [
+    'principalReturned',
+    'rewardsReturned',
+    'principalForfeited',
+    'rewardsForfeitedScaled',
+  ]) {
+    final before = BigInt.tryParse('${reviewed[key]}');
+    final after = BigInt.tryParse('${current[key]}');
+    if (before == null ||
+        after == null ||
+        before.isNegative ||
+        after.isNegative) {
+      return false;
+    }
+    if (key == 'principalReturned' || key == 'rewardsReturned') {
+      if (after < before) return false;
+    } else if (after > before) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void znsCheckRegistrationQuote(ZnsOperation op, ZnsRegistrationQuote quote) {
+  if (op.registrationQuote == null ||
+      quote.pricingMode != op.registrationQuote!.pricingMode ||
+      quote.minimumDeposit + op.extraDeposit > op.requiredTokenUnits) {
+    throw StateError(
+      'Registration pricing changed. Review the updated bond and pricing mode before continuing.',
+    );
+  }
+}
 
 class ZnsRecord {
   const ZnsRecord({
@@ -76,6 +103,7 @@ abstract interface class ZnsEngineGateway {
     String? registrationName,
   });
   Future<ZnsRecord?> lookup(String name);
+  Future<ZnsRegistrationQuote> quoteRegistration(String name);
   Future<Map<String, dynamic>> exitPreview(BigInt positionId);
   Future<Map<String, dynamic>> swapQuote(BigInt neededToken, BigInt? maxWei);
   Future<Map<String, dynamic>> fundingQuote(
@@ -210,9 +238,13 @@ class ZnsEngine {
     BigInt? maxZatoshi,
     String kind = 'register',
     String recipient = '',
+    BigInt? extraDeposit,
+    ZnsOperation? continuation,
   }) async {
     if (busy) throw StateError('An operation is already being prepared.');
-    if (operation != null && !operation!.isComplete) {
+    if (operation != null &&
+        !operation!.isComplete &&
+        !identical(continuation, operation)) {
       throw StateError('Resume the saved operation before starting another.');
     }
     if (![
@@ -225,6 +257,17 @@ class ZnsEngine {
       'transfer',
     ].contains(kind)) {
       throw const FormatException('Unsupported Names operation.');
+    }
+    if (continuation != null &&
+        (continuation.kind != 'register' ||
+            kind != 'register' ||
+            continuation.name != name ||
+            continuation.unifiedAddress != ua ||
+            continuation.pending != null ||
+            continuation.isComplete)) {
+      throw StateError(
+        'Only the unchanged pending registration can be repriced.',
+      );
     }
     if (kind != 'withdrawClaims') znsValidateLabel(name);
     if (maxZatoshi?.isNegative == true) {
@@ -275,8 +318,36 @@ class ZnsEngine {
         'Enter a different valid Base recipient address.',
       );
     }
-    final amount = kind == 'register' ? state.deposit : BigInt.zero;
+    final extra = extraDeposit ?? BigInt.zero;
+    if (extra.isNegative ||
+        extra.bitLength > 256 ||
+        (kind != 'register' && extra != BigInt.zero)) {
+      throw const FormatException(
+        'Extra bond is only available at registration.',
+      );
+    }
+    final quote = kind == 'register'
+        ? await gateway.quoteRegistration(name)
+        : null;
+    final amount = quote == null ? BigInt.zero : quote.minimumDeposit + extra;
+    if (amount.bitLength > 256) {
+      throw const FormatException('Registration bond overflow.');
+    }
     final reserve = await gateway.gasBudget(kind);
+    final priorGas =
+        continuation?.transactions.fold(
+          BigInt.zero,
+          (sum, tx) => sum + BigInt.parse(tx['feeCeiling'] as String? ?? '0'),
+        ) ??
+        BigInt.zero;
+    final priorValue =
+        continuation?.transactions
+            .where((tx) => tx['success'] == true)
+            .fold(
+              BigInt.zero,
+              (sum, tx) => sum + BigInt.parse(tx['value'] as String? ?? '0'),
+            ) ??
+        BigInt.zero;
     final shortfall = amount > state.token ? amount - state.token : BigInt.zero;
     final swap = shortfall > BigInt.zero
         ? await gateway.swapQuote(shortfall, null)
@@ -317,9 +388,9 @@ class ZnsEngine {
         );
       }
     }
-    final salt = await gateway.secret();
+    final salt = continuation?.secret ?? await gateway.secret();
     final commitment = kind == 'register'
-        ? await gateway.commitment(name, ua, salt)
+        ? continuation?.commitment ?? await gateway.commitment(name, ua, salt)
         : '0x${List.filled(64, '0').join()}';
     final positionId = ['register', 'withdrawClaims'].contains(kind)
         ? BigInt.zero
@@ -336,14 +407,32 @@ class ZnsEngine {
       secret: salt,
       commitment: commitment,
       kind: kind,
-      maxZatoshi: approvedZatoshi,
+      maxZatoshi:
+          continuation != null && continuation.maxZatoshi > approvedZatoshi
+          ? continuation.maxZatoshi
+          : approvedZatoshi,
       estimatedZatoshi: estimatedZatoshi,
       rateZatoshi: rateZatoshi,
       zcashFeeZatoshi: zcashFeeZatoshi,
-      maxEthWei: maxEth,
+      maxEthWei:
+          continuation != null &&
+              continuation.maxEthWei > maxEth + priorGas + priorValue
+          ? continuation.maxEthWei
+          : maxEth + priorGas + priorValue,
       requiredTokenUnits: amount,
-      maxGasFeeWei: reserve,
-      createdAt: DateTime.now().toUtc(),
+      registrationQuote: quote,
+      extraDeposit: extra,
+      maxGasFeeWei:
+          continuation != null && continuation.maxGasFeeWei > reserve + priorGas
+          ? continuation.maxGasFeeWei
+          : reserve + priorGas,
+      createdAt: continuation?.createdAt ?? DateTime.now().toUtc(),
+      phase: continuation?.phase ?? 'ready',
+      pending: continuation?.pending,
+      funding: continuation?.funding?['notRequired'] == true
+          ? null
+          : continuation?.funding,
+      transactions: continuation?.transactions ?? const [],
       baselineExpiry: state.position?.expiresAt ?? 0,
       maturityAt: kind == 'register'
           ? state.timestamp + znsHoldingSeconds
@@ -363,6 +452,18 @@ class ZnsEngine {
         !operation!.isComplete &&
         reviewed.secret != operation!.secret) {
       throw StateError('Another registration is already pending.');
+    }
+    if (reviewed.kind == 'register' &&
+        reviewed.pending == null &&
+        !reviewed.transactions.any(
+          (tx) =>
+              tx['success'] == true &&
+              ['register', 'atomicRegister'].contains(tx['kind']),
+        )) {
+      znsCheckRegistrationQuote(
+        reviewed,
+        await gateway.quoteRegistration(reviewed.name),
+      );
     }
     operation = reviewed;
     await _save(); // Durable secret and spend limits precede all external actions.
@@ -388,6 +489,11 @@ class ZnsEngine {
     if (owned == null ||
         owned.owner.toLowerCase() != scope.owner.toLowerCase() ||
         owned.name != op.name) {
+      return false;
+    }
+    if (op.kind == 'register' &&
+        (owned.deposit <= op.extraDeposit ||
+            owned.deposit > op.requiredTokenUnits)) {
       return false;
     }
     if (op.kind != 'register' && owned.positionId != op.positionId) {
@@ -433,7 +539,7 @@ class ZnsEngine {
   Future<void> _send(ZnsOperation op, Map<String, dynamic> intent) async {
     _guard();
     if (intent['kind'] == 'release' &&
-        !znsSameExitPreview(
+        !znsExitWithinReview(
           op.exitPreview,
           await gateway.exitPreview(op.positionId),
         )) {
@@ -468,7 +574,14 @@ class ZnsEngine {
           (['register', 'atomicRegister'].contains(kind) &&
               (receipt['name'] != op.name ||
                   receipt['unifiedAddress'] != op.unifiedAddress ||
-                  receipt['secret'] != op.secret))) {
+                  receipt['secret'] != op.secret ||
+                  (receipt['success'] == true &&
+                      (receipt['maxDeposit'] !=
+                              op.requiredTokenUnits.toString() ||
+                          receipt['extraDeposit'] !=
+                              op.extraDeposit.toString() ||
+                          receipt['expectedPricingMode'] !=
+                              op.registrationQuote?.pricingMode))))) {
         throw StateError(
           'A recovered transaction does not match this registration intent. Recovery was retained.',
         );
@@ -541,6 +654,7 @@ class ZnsEngine {
         );
       }
       if (op.kind == 'register') {
+        znsCheckRegistrationQuote(op, await gateway.quoteRegistration(op.name));
         final occupied = await gateway.lookup(op.name);
         if (occupied?.participating == true) {
           throw StateError(
@@ -583,6 +697,12 @@ class ZnsEngine {
         if (BigInt.parse(funding['maxZatoshi'] as String) > op.maxZatoshi) {
           throw StateError(
             'The fresh funding quote exceeds your approved ZEC budget.',
+          );
+        }
+        if (op.kind == 'register') {
+          znsCheckRegistrationQuote(
+            op,
+            await gateway.quoteRegistration(op.name),
           );
         }
         _guard();
@@ -650,6 +770,9 @@ class ZnsEngine {
           'unifiedAddress': op.unifiedAddress,
           'secret': op.secret,
           'amount': op.requiredTokenUnits.toString(),
+          'maxDeposit': op.requiredTokenUnits.toString(),
+          'extraDeposit': op.extraDeposit.toString(),
+          'expectedPricingMode': op.registrationQuote!.pricingMode,
           'existingTokenUnits': state.token.toString(),
           'deadline': (state.timestamp + 600).toString(),
           'swap': swap,
@@ -675,7 +798,15 @@ class ZnsEngine {
       if (['register', 'update'].contains(op.kind)) {
         command['unifiedAddress'] = op.unifiedAddress;
       }
-      if (op.kind == 'register') command['secret'] = op.secret;
+      if (op.kind == 'register') {
+        command.addAll({
+          'secret': op.secret,
+          'maxDeposit': op.requiredTokenUnits.toString(),
+          'extraDeposit': op.extraDeposit.toString(),
+          'expectedPricingMode': op.registrationQuote!.pricingMode,
+          'deadline': (state.timestamp + 600).toString(),
+        });
+      }
       if (op.kind == 'transfer') command['recipient'] = op.recipient;
       await _send(op, command);
     } catch (e) {

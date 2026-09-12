@@ -93,8 +93,8 @@ class ZnsLookupView {
 
 @immutable
 class ZnsRegistrationInput {
-  const ZnsRegistrationInput({required this.name});
-  final String name;
+  const ZnsRegistrationInput({required this.name, this.extraDeposit = '0'});
+  final String name, extraDeposit;
 }
 
 @immutable
@@ -108,6 +108,11 @@ class ZnsReviewView {
     required this.estimatedDuration,
     this.kind = ZnsReviewKind.registration,
     this.maxBaseEth,
+    this.minimumDeposit,
+    this.extraDeposit,
+    this.usdTarget,
+    this.pricingMode,
+    this.minimumFloorApplies = false,
     this.existingCbZecSpend,
     this.existingEthSpend,
     this.quoteExpiresIn,
@@ -133,6 +138,9 @@ class ZnsReviewView {
 
   /// Maximum ETH spent on Base, including gas and any cbZEC purchase.
   final String? maxBaseEth;
+  final String? minimumDeposit, extraDeposit, usdTarget;
+  final int? pricingMode;
+  final bool minimumFloorApplies;
   final String? existingCbZecSpend;
   final String? existingEthSpend;
   final String? quoteExpiresIn;

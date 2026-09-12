@@ -7,7 +7,7 @@ use serde_json::{json, Value};
 
 sol! {
     function commit(bytes32 commitment);
-    function register(string name, string unifiedAddress, bytes32 secret);
+    function register(string name, string unifiedAddress, bytes32 secret, uint256 maxDeposit, uint256 extraDeposit, uint8 expectedPricingMode, uint256 deadline);
     function refresh(uint256 positionId);
     function claimRewards(uint256 positionId);
     function release(uint256 positionId);
@@ -17,7 +17,7 @@ sol! {
     function approve(address spender, uint256 amount);
     function cbZEC() external view returns (address);
     function protocolId() external view returns (bytes32);
-    function fixedDeposit() external view returns (uint256);
+    function quoteRegistration(string name) external view returns (uint256 minimumDeposit, uint256 usdTarget, uint8 mode, uint256 priceUpdatedAt);
     function MIN_COMMITMENT_AGE() external view returns (uint256);
     function MAX_COMMITMENT_AGE() external view returns (uint256);
     function decimals() external view returns (uint8);
@@ -28,7 +28,7 @@ sol! {
     function tokenOfOwnerByIndex(address owner, uint256 index) external view returns (uint256);
     function ownerOf(uint256 tokenId) external view returns (address);
     function positionIdOf(string name) external view returns (uint256);
-    function positionInfo(uint256 positionId) external view returns (address owner, string name, string unifiedAddress, uint64 registeredAt, uint64 maturityAt, uint64 refreshDueAt, uint64 graceEndsAt, bool participating, bool retired, uint256 rewardCreditScaled);
+    function positionInfo(uint256 positionId) external view returns (address owner, string name, string unifiedAddress, uint64 registeredAt, uint64 maturityAt, uint64 refreshDueAt, uint64 graceEndsAt, bool participating, bool retired, uint256 rewardCreditScaled, uint256 principal);
     function exitPreview(uint256 positionId) external view returns (bool early, uint256 principalReturned, uint256 rewardsReturned, uint256 principalForfeited, uint256 rewardsForfeitedScaled);
     function available(string name) external view returns (bool);
     function resolve(string name) external view returns (string);
@@ -98,7 +98,7 @@ pub fn read_call(method: &str, args: &Value) -> Result<String> {
     let data = match method {
         "cbZEC" => cbZECCall {}.abi_encode(),
         "protocolId" => protocolIdCall {}.abi_encode(),
-        "fixedDeposit" => fixedDepositCall {}.abi_encode(),
+        "quoteRegistration" => quoteRegistrationCall { name: name()? }.abi_encode(),
         "MIN_COMMITMENT_AGE" => MIN_COMMITMENT_AGECall {}.abi_encode(),
         "MAX_COMMITMENT_AGE" => MAX_COMMITMENT_AGECall {}.abi_encode(),
         "decimals" => decimalsCall {}.abi_encode(),
@@ -156,8 +156,7 @@ pub fn decode_result(method: &str, data: &str) -> Result<Value> {
             .map_err(err)?
             .to_checksum(None)),
         "protocolId" => json!(B256::abi_decode(&data, true).map_err(err)?.to_string()),
-        "fixedDeposit"
-        | "MIN_COMMITMENT_AGE"
+        "MIN_COMMITMENT_AGE"
         | "MAX_COMMITMENT_AGE"
         | "balanceOf"
         | "allowance"
@@ -177,12 +176,21 @@ pub fn decode_result(method: &str, data: &str) -> Result<Value> {
             let v = claimableOfCall::abi_decode_returns(&data, true).map_err(err)?;
             json!({"principal":v.principal.to_string(),"rewardsScaled":v.rewardsScaled.to_string()})
         }
+        "quoteRegistration" => {
+            let v = quoteRegistrationCall::abi_decode_returns(&data, true).map_err(err)?;
+            if v.mode > 1 || v.minimumDeposit.is_zero() {
+                return Err("Unsupported registration quote".into());
+            }
+            json!({"minimumDeposit":v.minimumDeposit.to_string(),"usdTarget":v.usdTarget.to_string(),
+              "mode":v.mode,"priceUpdatedAt":v.priceUpdatedAt.to_string()})
+        }
         "positionInfo" => {
             let v = positionInfoCall::abi_decode_returns(&data, true).map_err(err)?;
             json!({"owner":v.owner.to_checksum(None),"name":v.name,"unifiedAddress":v.unifiedAddress,
               "registeredAt":v.registeredAt.to_string(),"maturityAt":v.maturityAt.to_string(),
               "refreshDueAt":v.refreshDueAt.to_string(),"graceEndsAt":v.graceEndsAt.to_string(),
-              "participating":v.participating,"retired":v.retired,"rewardCreditScaled":v.rewardCreditScaled.to_string()})
+              "participating":v.participating,"retired":v.retired,"rewardCreditScaled":v.rewardCreditScaled.to_string(),
+              "principal":v.principal.to_string()})
         }
         "exitPreview" => {
             let v = exitPreviewCall::abi_decode_returns(&data, true).map_err(err)?;

@@ -21,6 +21,12 @@ Map<String, dynamic> _record() => ZnsOperation(
   maxZatoshi: BigInt.from(100),
   maxEthWei: BigInt.from(1000),
   requiredTokenUnits: BigInt.from(500),
+  registrationQuote: ZnsRegistrationQuote(
+    minimumDeposit: BigInt.from(500),
+    usdTarget: BigInt.from(100),
+    pricingMode: 0,
+    priceUpdatedAt: BigInt.from(900),
+  ),
   maxGasFeeWei: BigInt.from(100),
   createdAt: DateTime.utc(2026, 9, 8),
 ).toJson();
@@ -55,6 +61,64 @@ ZnsOperation _decode(Map<String, dynamic> record) =>
     ZnsOperation.decode(jsonEncode(record), _scope);
 
 void main() {
+  test('floor-aware recovery rejects the preceding tiered policy', () {
+    final old = _record()
+      ..['policy'] =
+          'tieredUSD-fixedFallback-deposit365-refresh365-grace90-linearFee10-linearRewards-weighted-reserveCarry-erc721-multiName-clearUA';
+    expect(() => _decode(old), throwsFormatException);
+    expect(_decode(_record()).registrationQuote!.pricingMode, 0);
+  });
+
+  test('floor disclosure uses the quoted minimum before optional extra', () {
+    for (final (target, floor) in [
+      (2000, 2000000),
+      (500, 500000),
+      (200, 200000),
+      (100, 100000),
+      (50, 50000),
+    ]) {
+      ZnsRegistrationQuote quote(int units, int mode) => ZnsRegistrationQuote(
+        minimumDeposit: BigInt.from(units),
+        usdTarget: BigInt.from(target),
+        pricingMode: mode,
+        priceUpdatedAt: BigInt.from(900),
+      );
+      expect(quote(floor, 0).minimumBondFloor, BigInt.from(floor));
+      expect(quote(floor, 0).minimumFloorApplies, isTrue);
+      expect(quote(floor + 1, 0).minimumFloorApplies, isFalse);
+      expect(quote(floor, 1).minimumFloorApplies, isFalse);
+    }
+  });
+
+  test('recovery never invents registration pricing or extra-bond authority', () {
+    for (final key in [
+      'minimumDeposit',
+      'extraDeposit',
+      'usdTarget',
+      'expectedPricingMode',
+      'priceUpdatedAt',
+    ]) {
+      final missing = _record()..remove(key);
+      expect(() => _decode(missing), throwsFormatException);
+    }
+    expect(
+      () => _decode(_record()..['expectedPricingMode'] = 2),
+      throwsFormatException,
+    );
+    expect(
+      () => _decode(_record()..['extraDeposit'] = '1'),
+      throwsFormatException,
+    );
+    expect(
+      () => _decode(
+        _record()
+          ..['policy'] =
+              'deposit365-refresh365-grace90-earlyFee10-forfeitRewards-reserveCarry-erc721-multiName-clearUA',
+      ),
+      throwsFormatException,
+    );
+  });
+
   test(
     'NFT recovery binds the recipient and rejects the old economic policy',
     () {

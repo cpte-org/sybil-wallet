@@ -3,6 +3,25 @@ import 'dart:convert';
 final znsRewardScale = BigInt.from(10).pow(24);
 const znsHoldingSeconds = 365 * 24 * 60 * 60;
 const znsGraceSeconds = 90 * 24 * 60 * 60;
+const znsPolicy =
+    'tieredUSD-floor100k-fixedFallback-deposit365-refresh365-grace90-linearFee10-linearRewards-weighted-reserveCarry-erc721-multiName-clearUA';
+
+class ZnsRegistrationQuote {
+  const ZnsRegistrationQuote({
+    required this.minimumDeposit,
+    required this.usdTarget,
+    required this.pricingMode,
+    required this.priceUpdatedAt,
+  });
+  final BigInt minimumDeposit, usdTarget, priceUpdatedAt;
+  final int pricingMode;
+
+  /// Informational floor under the pinned 8-decimal, $100,000 floor policy.
+  /// The quoted minimum remains the sole authority for funding and signing.
+  BigInt get minimumBondFloor => usdTarget * BigInt.from(1000);
+  bool get minimumFloorApplies =>
+      pricingMode == 0 && minimumDeposit == minimumBondFloor;
+}
 
 BigInt znsParseAmount(String text, int decimals) {
   if (decimals < 0 ||
@@ -80,6 +99,8 @@ class ZnsOperation {
     required this.maxGasFeeWei,
     required this.createdAt,
     this.estimatedZatoshi,
+    this.registrationQuote,
+    BigInt? extraDeposit,
     this.rateZatoshi,
     this.zcashFeeZatoshi,
     this.recipient = '',
@@ -92,10 +113,12 @@ class ZnsOperation {
     this.maturityAt = 0,
     this.exitPreview,
     this.completedAt,
-  });
+  }) : extraDeposit = extraDeposit ?? BigInt.zero;
   // Informational dry-quote values, discarded on recovery. Spending authority
   // remains bound to the persisted integer limits, never these estimates.
   final BigInt? estimatedZatoshi, rateZatoshi, zcashFeeZatoshi;
+  final ZnsRegistrationQuote? registrationQuote;
+  final BigInt extraDeposit;
   final String recipient;
   final ZnsScope scope;
   final String name;
@@ -122,8 +145,7 @@ class ZnsOperation {
 
   Map<String, dynamic> toJson() => {
     'version': 1,
-    'policy':
-        'deposit365-refresh365-grace90-earlyFee10-forfeitRewards-reserveCarry-erc721-multiName-clearUA',
+    'policy': znsPolicy,
     'scope': scope.toJson(),
     'name': name,
     'unifiedAddress': unifiedAddress,
@@ -135,6 +157,13 @@ class ZnsOperation {
     'maxZatoshi': maxZatoshi.toString(),
     'maxEthWei': maxEthWei.toString(),
     'requiredTokenUnits': requiredTokenUnits.toString(),
+    'extraDeposit': extraDeposit.toString(),
+    if (registrationQuote case final quote?) ...{
+      'minimumDeposit': quote.minimumDeposit.toString(),
+      'usdTarget': quote.usdTarget.toString(),
+      'expectedPricingMode': quote.pricingMode,
+      'priceUpdatedAt': quote.priceUpdatedAt.toString(),
+    },
     'maxGasFeeWei': maxGasFeeWei.toString(),
     'createdAt': createdAt.toIso8601String(),
     'baselineExpiry': baselineExpiry,
@@ -152,8 +181,7 @@ class ZnsOperation {
     final value = jsonDecode(raw);
     if (value is! Map<String, dynamic> ||
         value['version'] != 1 ||
-        value['policy'] !=
-            'deposit365-refresh365-grace90-earlyFee10-forfeitRewards-reserveCarry-erc721-multiName-clearUA' ||
+        value['policy'] != znsPolicy ||
         value.containsKey('years') ||
         value['scope'] is! Map) {
       throw const FormatException('Unsupported ZNS recovery record.');
@@ -218,6 +246,32 @@ class ZnsOperation {
     final maxEthWei = savedAmount(value['maxEthWei']);
     final requiredTokenUnits = savedAmount(value['requiredTokenUnits']);
     final maxGasFeeWei = savedAmount(value['maxGasFeeWei']);
+    final extraDeposit = savedAmount(value['extraDeposit']);
+    ZnsRegistrationQuote? registrationQuote;
+    if (kind == 'register') {
+      final mode = value['expectedPricingMode'];
+      if (mode is! int || (mode != 0 && mode != 1)) {
+        throw const FormatException(
+          'Registration pricing must be reviewed again.',
+        );
+      }
+      registrationQuote = ZnsRegistrationQuote(
+        minimumDeposit: savedAmount(value['minimumDeposit']),
+        usdTarget: savedAmount(value['usdTarget']),
+        pricingMode: mode,
+        priceUpdatedAt: savedAmount(value['priceUpdatedAt']),
+      );
+      if (registrationQuote.minimumDeposit == BigInt.zero ||
+          registrationQuote.usdTarget == BigInt.zero ||
+          registrationQuote.minimumDeposit + extraDeposit !=
+              requiredTokenUnits) {
+        throw const FormatException('Inconsistent saved registration bond.');
+      }
+    } else if (extraDeposit != BigInt.zero) {
+      throw const FormatException(
+        'Extra bond is only available at registration.',
+      );
+    }
     if (maxGasFeeWei > maxEthWei ||
         (kind == 'register' && requiredTokenUnits == BigInt.zero) ||
         (kind != 'register' && requiredTokenUnits != BigInt.zero) ||
@@ -417,6 +471,8 @@ class ZnsOperation {
       maxZatoshi: maxZatoshi,
       maxEthWei: maxEthWei,
       requiredTokenUnits: requiredTokenUnits,
+      registrationQuote: registrationQuote,
+      extraDeposit: extraDeposit,
       maxGasFeeWei: maxGasFeeWei,
       createdAt: DateTime.parse(value['createdAt'] as String),
       baselineExpiry: value['baselineExpiry'] as int? ?? 0,

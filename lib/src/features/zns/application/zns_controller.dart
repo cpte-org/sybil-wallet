@@ -253,7 +253,11 @@ class ZnsController extends Notifier<ZnsViewData> {
         );
       }
       if (epoch != _epoch || !_unlocked) return;
-      final review = await engine.prepare(name: input.name, ua: ua);
+      final review = await engine.prepare(
+        name: input.name,
+        ua: ua,
+        extraDeposit: znsParseAmount(input.extraDeposit, 8),
+      );
       if (epoch == _epoch && _unlocked) _review = review;
     }),
   );
@@ -304,7 +308,22 @@ class ZnsController extends Notifier<ZnsViewData> {
           ..clear()
           ..addAll(preview);
       }
-      if (epoch == _epoch && _unlocked) _review = operation;
+      final reviewed =
+          operation.kind == 'register' &&
+              operation.pending == null &&
+              !operation.transactions.any(
+                (tx) =>
+                    tx['success'] == true &&
+                    ['register', 'atomicRegister'].contains(tx['kind']),
+              )
+          ? await engine.prepare(
+              name: operation.name,
+              ua: operation.unifiedAddress,
+              extraDeposit: operation.extraDeposit,
+              continuation: operation,
+            )
+          : operation;
+      if (epoch == _epoch && _unlocked) _review = reviewed;
     }),
   );
 
@@ -613,6 +632,7 @@ class ZnsController extends Notifier<ZnsViewData> {
     final raw = _error ?? _engine?.error;
     return raw == null ? null : znsFriendlyError(raw);
   }
+
   String _amount(BigInt value, int decimals) =>
       znsFormatAmount(value, decimals);
   String _reward(BigInt scaled) => _amount(scaled, 32);
@@ -748,10 +768,20 @@ class ZnsController extends Notifier<ZnsViewData> {
                   : _amount(review.zcashFeeZatoshi!, 8),
               deposit: _amount(
                 review.kind == 'transfer'
-                    ? chain?.deposit ?? BigInt.zero
+                    ? owned?.deposit ?? BigInt.zero
                     : review.requiredTokenUnits,
                 8,
               ),
+              minimumDeposit: review.registrationQuote == null
+                  ? null
+                  : _amount(review.registrationQuote!.minimumDeposit, 8),
+              extraDeposit: review.registrationQuote == null
+                  ? null
+                  : _amount(review.extraDeposit, 8),
+              usdTarget: review.registrationQuote?.usdTarget.toString(),
+              pricingMode: review.registrationQuote?.pricingMode,
+              minimumFloorApplies:
+                  review.registrationQuote?.minimumFloorApplies ?? false,
               maturityAt: review.kind == 'register' || review.maturityAt == 0
                   ? null
                   : _date(review.maturityAt),
