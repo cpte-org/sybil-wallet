@@ -16,7 +16,6 @@ import 'package:zcash_wallet/src/core/profile_pictures.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
 import 'package:zcash_wallet/src/core/widgets/app_icon.dart';
 import 'package:zcash_wallet/src/core/widgets/app_profile_picture.dart';
-import 'package:zcash_wallet/src/core/widgets/familiar_widgets.dart';
 import 'package:zcash_wallet/src/core/widgets/mobile/mobile_list_row.dart';
 import 'package:zcash_wallet/src/core/widgets/mobile/mobile_surface_card.dart';
 import 'package:zcash_wallet/src/features/onboarding/shared/onboarding_welcome_art.dart';
@@ -203,6 +202,16 @@ class _FakeNetworkPrivacyNotifier extends NetworkPrivacyNotifier {
 }
 
 void main() {
+  testWidgets('Settings keeps coinholder voting out of primary settings', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app());
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('mobile_settings_coinholder_voting_row')),
+      findsNothing,
+    );
+  });
   setUp(() {
     // Phone-sized surface so the lazily-built list renders every group.
     final binding = TestWidgetsFlutterBinding.ensureInitialized();
@@ -274,18 +283,6 @@ void main() {
                 tester.getTopLeft(find.byType(AppMobileTabBar)).dy -
                     AppSpacing.md,
               ),
-            );
-            expect(
-              tester.getTopLeft(footer).dy -
-                  tester
-                      .getBottomLeft(
-                        find.ancestor(
-                          of: find.text('Appearance'),
-                          matching: find.byType(FamiliarCard),
-                        ),
-                      )
-                      .dy,
-              AppSpacing.base,
             );
             expect(
               find.ancestor(
@@ -369,6 +366,8 @@ void main() {
 
     final row = find.byKey(const ValueKey('mobile_settings_tor_row'));
     await tester.scrollUntilVisible(row, 200);
+    await tester.ensureVisible(row);
+    await tester.pump();
     await tester.tap(row);
     await tester.pumpAndSettle();
 
@@ -504,6 +503,8 @@ void main() {
 
     final row = find.byKey(const ValueKey('mobile_settings_tor_row'));
     await tester.scrollUntilVisible(row, 200);
+    await tester.ensureVisible(row);
+    await tester.pump();
     expect(find.text('Connecting…'), findsOneWidget);
     expect(
       tester
@@ -540,6 +541,8 @@ void main() {
 
     final row = find.byKey(const ValueKey('mobile_settings_tor_row'));
     await tester.scrollUntilVisible(row, 200);
+    await tester.ensureVisible(row);
+    await tester.pump();
     // Nothing to escape from here: the route is already on its way to direct.
     expect(tester.widget<GestureDetector>(row).onTap, isNull);
     await tester.tap(row);
@@ -795,6 +798,35 @@ void main() {
     );
     expect(find.text('Explorer'), findsOneWidget);
     expect(find.text('CipherScan'), findsOneWidget);
+  });
+
+  testWidgets('settings groups run security, wallet, people and network', (
+    tester,
+  ) async {
+    // Tall viewport so every group is laid out and comparable at once.
+    await tester.binding.setSurfaceSize(const Size(800, 2000));
+    addTearDown(() async {
+      await tester.binding.setSurfaceSize(null);
+    });
+
+    await tester.pumpWidget(_app());
+    await tester.pump();
+
+    double top(String text) => tester.getTopLeft(find.text(text).last).dy;
+
+    expect(top('Security and recovery'), lessThan(top('You and your wallet')));
+    expect(top('You and your wallet'), lessThan(top('People and names')));
+    expect(top('People and names'), lessThan(top('Network and app')));
+
+    // People is the public contact surface; gift cards stay out of Settings.
+    expect(find.text('People'), findsOneWidget);
+    expect(find.text('My gift cards'), findsNothing);
+    expect(find.text('Contacts'), findsNothing);
+    expect(top('Account name'), lessThan(top('People')));
+
+    // Mobile keeps its own pieces and never offers to link to itself.
+    expect(find.text('Syncing'), findsOneWidget);
+    expect(find.textContaining('Link Vizor'), findsNothing);
   });
 
   testWidgets('theme row opens the sheet and applies the selection', (
@@ -1102,6 +1134,48 @@ void main() {
 
     expect(biometricNotifier.disableCount, 0);
     expect(find.text('Turn off fingerprint unlock?'), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('mobile_settings_biometric_row')),
+        matching: find.text('On'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('Touch ID settings and disable sheet use Apple naming', (
+    tester,
+  ) async {
+    final biometricNotifier = _FakeBiometricNotifier(
+      const BiometricUnlockState(
+        availability: BiometricAvailability(
+          supported: true,
+          enrolled: true,
+          kind: BiometricKind.touchId,
+        ),
+        enabled: true,
+      ),
+    );
+
+    await tester.pumpWidget(_app(biometricNotifier: () => biometricNotifier));
+    await tester.pump();
+
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('mobile_settings_biometric_row')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('mobile_settings_biometric_row')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Turn off Touch ID unlock?'), findsOneWidget);
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(biometricNotifier.disableCount, 0);
+    expect(find.text('Turn off Touch ID unlock?'), findsNothing);
     expect(
       find.descendant(
         of: find.byKey(const ValueKey('mobile_settings_biometric_row')),

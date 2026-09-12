@@ -3,12 +3,15 @@ import 'dart:io' show Platform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../main.dart' show log;
+import '../../../core/storage/linux_keyring_coordinator.dart';
+import '../../../core/storage/linux_secret_operation_guard.dart';
 import '../../../core/storage/wallet_paths.dart';
 import '../../../providers/account_provider.dart';
 import '../../../providers/app_security_provider.dart';
 import '../../../providers/rpc_endpoint_failover_provider.dart';
 import '../../../providers/sync_provider.dart';
 import '../../../rust/api/sync.dart' as rust_sync;
+import '../../send/services/send_flow.dart';
 import '../domain/swap_contract.dart';
 import '../models/swap_deposit_broadcast_result.dart';
 
@@ -32,6 +35,7 @@ class RustSwapDepositSender implements SwapDepositSender {
   RustSwapDepositSender(this._ref, {this.beforeSoftwareSign});
 
   final Ref _ref;
+  int _depositRequestGeneration = 0;
 
   /// Optional authorization and actual proposal fee check for a composed workflow. Ordinary
   /// swaps retain their existing review flow when this callback is absent.
@@ -77,12 +81,24 @@ class RustSwapDepositSender implements SwapDepositSender {
     required String accountUuid,
     required SwapQuote quote,
   }) async {
+    final requestGeneration = ++_depositRequestGeneration;
+    final secretGuard = LinuxSecretOperationGuard(
+      store: _ref.read(linuxSecretOperationStoreProvider),
+      coordinator: _ref.read(linuxKeyringCoordinatorProvider),
+      isRequestCurrent: () =>
+          _ref.mounted && requestGeneration == _depositRequestGeneration,
+      readAccounts: () => _ref.read(accountProvider).value,
+      accountUuid: accountUuid,
+    );
     if (quote.sellAsset != SwapAsset.zec) {
       throw StateError('Only ZEC deposits can be sent by this wallet');
     }
 
     final amountZatoshi = zecDepositAmountZatoshiForQuote(quote);
     final sendFlowId = _newSwapSendFlowId();
+    // Capture the notifier while the provider is alive. Proposal cleanup may
+    // finish after the initiating surface has been disposed.
+    final syncNotifier = _ref.read(syncProvider.notifier);
     BigInt? proposalId;
     var proposalConsumed = false;
 
@@ -98,6 +114,7 @@ class RustSwapDepositSender implements SwapDepositSender {
             accountUuid: accountUuid,
             operation: () async {
               final dbPath = await getWalletDbPath();
+              secretGuard.check();
               final endpoint = _ref.read(rpcEndpointFailoverProvider).current;
               final proposal = await rust_sync.proposeSend(
                 dbPath: dbPath,
@@ -114,6 +131,7 @@ class RustSwapDepositSender implements SwapDepositSender {
       final dbPath = proposalContext.dbPath;
       final endpoint = proposalContext.endpoint;
       proposalId = proposal.proposalId;
+      secretGuard.check();
       log(
         'SwapDepositSender: proposal ready flow=$sendFlowId '
         'proposal=${proposal.proposalId} '
@@ -132,7 +150,7 @@ class RustSwapDepositSender implements SwapDepositSender {
         'proposal=${proposal.proposalId}',
       );
 
-      if (Platform.isMacOS) {
+      if (Platform.isMacOS && !secretGuard.enabled) {
         beforeSoftwareSign?.call(proposal.feeZatoshi);
         final password = _ref
             .read(appSecurityProvider.notifier)
@@ -148,12 +166,21 @@ class RustSwapDepositSender implements SwapDepositSender {
         final mnemonicBytes = await _ref
             .read(accountProvider.notifier)
             .getMnemonicBytesForAccount(accountUuid);
-        if (mnemonicBytes == null || mnemonicBytes.isEmpty) {
-          throw StateError('Mnemonic not found for the active account');
-        }
-
         late final Future<rust_sync.ExecuteProposalResult> resultFuture;
         try {
+          secretGuard.check();
+          if (secretGuard.enabled) {
+            final deadline = quote.actionDeadline;
+            if (deadline != null &&
+                !DateTime.now().toUtc().isBefore(deadline)) {
+              throw StateError(
+                'Swap quote expired. Refresh the quote and try again.',
+              );
+            }
+          }
+          if (mnemonicBytes == null || mnemonicBytes.isEmpty) {
+            throw StateError('Mnemonic not found for the active account');
+          }
           beforeSoftwareSign?.call(proposal.feeZatoshi);
           resultFuture = rust_sync.executeProposal(
             dbPath: dbPath,
@@ -163,16 +190,20 @@ class RustSwapDepositSender implements SwapDepositSender {
             mnemonicBytes: mnemonicBytes,
           );
         } finally {
-          mnemonicBytes.fillRange(0, mnemonicBytes.length, 0);
+          mnemonicBytes?.fillRange(0, mnemonicBytes.length, 0);
         }
         result = await resultFuture;
       }
       proposalConsumed = true;
 
-      try {
-        await _ref.read(syncProvider.notifier).refreshAfterSend();
-      } catch (e) {
-        log('SwapDepositSender: refreshAfterSend failed flow=$sendFlowId: $e');
+      if (!secretGuard.enabled || _ref.mounted) {
+        try {
+          await _ref.read(syncProvider.notifier).refreshAfterSend();
+        } catch (e) {
+          log(
+            'SwapDepositSender: refreshAfterSend failed flow=$sendFlowId: $e',
+          );
+        }
       }
 
       final txid = _firstTxid(result.txids);
@@ -193,19 +224,22 @@ class RustSwapDepositSender implements SwapDepositSender {
       rethrow;
     } finally {
       if (proposalId != null && !proposalConsumed) {
-        try {
-          await rust_sync.discardProposal(
-            proposalId: proposalId,
-            sendFlowId: sendFlowId,
-          );
+        final released = await discardSendProposal(
+          proposalId: proposalId,
+          sendFlowId: sendFlowId,
+          logContext: 'SwapDepositSender',
+          syncNotifier: syncNotifier,
+          accountUuid: accountUuid,
+        );
+        if (released) {
           log(
             'SwapDepositSender: discarded proposal flow=$sendFlowId '
             'proposal=$proposalId',
           );
-        } catch (e) {
+        } else {
           log(
-            'SwapDepositSender: discard proposal failed flow=$sendFlowId '
-            'proposal=$proposalId error=$e',
+            'SwapDepositSender: discard proposal remains pending '
+            'flow=$sendFlowId proposal=$proposalId',
           );
         }
       }

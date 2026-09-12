@@ -267,8 +267,6 @@ class MobileSettingsScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                const MobileNetworkPrivacyCard(),
-                const SizedBox(height: AppSpacing.md),
                 _SettingsGroup(
                   title: 'Network and app',
                   rows: [
@@ -330,6 +328,8 @@ class MobileSettingsScreen extends ConsumerWidget {
                       ),
                   ],
                 ),
+                const SizedBox(height: AppSpacing.md),
+                const MobileNetworkPrivacyCard(),
                 // The About row stays hidden until the legal documents
                 // are ready — the /about screen exists but must not be
                 // user-reachable (product decision, 2026-06).

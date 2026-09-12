@@ -111,6 +111,10 @@ class _AppMainSidebarState extends ConsumerState<AppMainSidebar> {
           _matches('/receive') ||
           _matches('/migration'));
 
+  bool get _settingsShouldBeActive =>
+      !widget.suppressActiveSelection &&
+      (_matches('/settings') || _matches('/payment-links'));
+
   bool get _isAccountMenuOpen => _accountMenuEntry != null;
 
   @override
@@ -505,7 +509,7 @@ class _AppMainSidebarState extends ConsumerState<AppMainSidebar> {
                         label: 'Settings',
                         iconName: AppIcons.cog,
                         active:
-                            _routeShouldBeActive('/settings') ||
+                            _settingsShouldBeActive ||
                             _routeShouldBeActive('/names'),
                         onTap: widget.disabledRoutePaths.contains('/settings')
                             ? null

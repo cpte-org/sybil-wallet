@@ -42,7 +42,7 @@ void main() {
   });
 
   testWidgets(
-    'contact suspended during proposal await releases the new proposal',
+    'contact suspended during proposal await retains proposal ownership',
     (tester) async {
       final h = await _mount(tester);
       final selected = h.contacts.recipientFor('alice');
@@ -50,17 +50,17 @@ void main() {
         rustApi.proposalStarted = Completer<void>();
         rustApi.proposalGate = Completer<ProposalResult>();
         final pending = _propose(h.ref, selected);
-        final rejected = expectLater(pending, throwsA(isA<ContactFailure>()));
         await rustApi.proposalStarted.future.timeout(
           const Duration(seconds: 5),
         );
         await h.contacts.suspendContact('alice');
         rustApi.proposalGate!.complete(_proposal());
-        await rejected;
+        final args = await pending;
+        expect(args.contactRecipient, same(selected));
       });
 
       expect(rustApi.proposeCalls, 1);
-      expect(rustApi.discardCalls, [(BigInt.one, _flowId)]);
+      expect(rustApi.discardCalls, isEmpty);
       expect(rustApi.executeCalls, 0);
     },
   );

@@ -62,8 +62,15 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('introductions preserve the routed sidebar and back navigation', (tester) async {
-    await tester.pumpWidget(_sidebarHarness(_syncedSyncState, initialLocation: '/contacts/introductions'));
+  testWidgets('introductions preserve the routed sidebar and back navigation', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _sidebarHarness(
+        _syncedSyncState,
+        initialLocation: '/contacts/introductions',
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.byType(ContactIntroductionScreen), findsOneWidget);
     expect(find.byType(AppMainSidebar), findsOneWidget);
@@ -473,6 +480,20 @@ void main() {
     }
   });
 
+  testWidgets('sidebar treats Gift Cards as part of Settings', (tester) async {
+    await tester.pumpWidget(
+      _sidebarHarness(_syncedSyncState, initialLocation: '/payment-links'),
+    );
+    await tester.pump();
+
+    final settings = _sidebarItemWithLabel(tester, 'Settings');
+    expect(settings.active, isTrue);
+    expect(
+      find.byKey(const ValueKey('sidebar_payment_links_button')),
+      findsNothing,
+    );
+  });
+
   testWidgets('sidebar accounts popover shows boundaries and click cursors', (
     tester,
   ) async {
@@ -860,6 +881,13 @@ Widget _sidebarHarness(
         builder: (_, _) => const AppDesktopShell(
           sidebar: AppMainSidebar(),
           pane: AppDesktopPane(child: Text('pay')),
+        ),
+      ),
+      GoRoute(
+        path: '/payment-links',
+        builder: (_, _) => const AppDesktopShell(
+          sidebar: AppMainSidebar(),
+          pane: AppDesktopPane(child: Text('payment links')),
         ),
       ),
       GoRoute(

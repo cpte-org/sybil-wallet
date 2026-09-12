@@ -162,6 +162,34 @@ void main() {
     expect(_hasFocusRing(tester), isTrue);
   });
 
+  testWidgets('settings sections are grouped Personal to Danger zone', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_settingsHarness());
+    await tester.pump();
+
+    double sectionTop(String title) =>
+        tester.getTopLeft(find.text(title).last).dy;
+
+    expect(sectionTop('Personal'), lessThan(sectionTop('You and your wallet')));
+    expect(
+      sectionTop('You and your wallet'),
+      lessThan(sectionTop('People and names')),
+    );
+    expect(
+      sectionTop('People and names'),
+      lessThan(sectionTop('Network and app settings')),
+    );
+
+    // People is the public contact surface; gift cards stay out of Settings.
+    expect(find.text('People'), findsAtLeastNWidgets(1));
+    expect(find.text('My gift cards'), findsNothing);
+    expect(find.text('Address book'), findsNothing);
+    expect(find.text('Contacts'), findsNothing);
+    expect(sectionTop('People'), lessThan(sectionTop('Account')));
+    expect(find.text('Public Zcash names'), findsOneWidget);
+  });
+
   testWidgets('uninstall setting is hidden on Windows', (tester) async {
     _overridePlatform(TargetPlatform.windows);
 

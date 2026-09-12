@@ -10,6 +10,20 @@ import '../widgets/app_icon.dart';
 import '../widgets/app_toast.dart';
 import 'content_overlay_inset.dart';
 
+/// Width the desktop shell reserves for its main sidebar.
+///
+/// Named rather than repeated because window-level overlays derive the
+/// content pane's geometry from it — see [contentOverlayInsets].
+const double kAppDesktopSidebarWidth = 256;
+
+/// Margin the shell leaves around the sidebar/pane row: outer padding on both
+/// window edges, and the same gap again between the two columns.
+const double kAppDesktopShellMargin = AppSpacing.xs;
+
+/// Where the trailing pane begins: outer padding + [sidebarWidth] + the gap.
+double appDesktopPaneLeftInset(double sidebarWidth) =>
+    kAppDesktopShellMargin * 2 + sidebarWidth;
+
 class AppDesktopShell extends StatelessWidget {
   const AppDesktopShell({
     required this.sidebar,
@@ -29,8 +43,8 @@ class AppDesktopShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final background = this.background;
-    // Where the trailing pane begins: outer padding + sidebar + the gap.
-    // Window-level overlays clear this so they align with the pane.
+    // Sigil's shell is edge-to-edge: the pane begins immediately after the
+    // sidebar, and window-level overlays clear exactly that sidebar width.
     final paneLeftInset = sidebarWidth;
     return ContentOverlayInset(
       leftInset: paneLeftInset,
@@ -48,7 +62,6 @@ class AppDesktopShell extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     SizedBox(width: sidebarWidth, child: sidebar),
-
                     Expanded(child: pane),
                   ],
                 ),

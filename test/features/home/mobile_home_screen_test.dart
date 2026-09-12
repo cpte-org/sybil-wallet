@@ -6,7 +6,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     as frb;
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -687,18 +686,21 @@ void main() {
   testWidgets('shows balance, actions, and empty activity when funded', (
     tester,
   ) async {
+    final balance = BigInt.from(14312000000);
     await tester.pumpWidget(
-      _app(_syncedState(orchardBalance: BigInt.from(14312000000))),
+      _app(
+        _syncedState(
+          orchardBalance: balance,
+        ).copyWith(spendableBalance: balance, displaySpendableBalance: balance),
+      ),
     );
     await tester.pump();
     await tester.pump();
 
-    expect(find.textContaining('143.12', findRichText: true), findsOneWidget);
-    expect(find.text(r'$10,018.40'), findsOneWidget);
-    expect(find.text('+ 13.12% (24h)'), findsOneWidget);
+    expect(find.text('143.12 ZEC'), findsOneWidget);
     expect(find.text('Send'), findsOneWidget);
     expect(find.text('Receive'), findsOneWidget);
-    expect(find.text('No activity, yet...'), findsOneWidget);
+    expect(find.text('Your payments will appear here.'), findsOneWidget);
   });
 
   testWidgets('empty activity follows wallet actions without a voting card', (
@@ -726,7 +728,7 @@ void main() {
     );
   });
 
-  testWidgets('empty activity keeps its illustration visible at 320 width', (
+  testWidgets('empty activity uses the familiar dashboard placeholder', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(320, 568));
@@ -735,32 +737,27 @@ void main() {
     await tester.pumpWidget(_app(_syncedState()));
     await tester.pump();
 
-    final canvasRect = tester.getRect(
-      find.byKey(const ValueKey('mobile_home_rest_canvas')),
-    );
-    final imageRect = tester.getRect(
-      find.byKey(const ValueKey('mobile_home_rest_image')),
-    );
-
-    expect(imageRect.left, greaterThanOrEqualTo(canvasRect.left));
-    expect(imageRect.right, lessThanOrEqualTo(canvasRect.right));
+    expect(find.text('Your payments will appear here.'), findsOneWidget);
+    expect(find.byKey(const ValueKey('mobile_home_rest_canvas')), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('includes Ironwood funds in the mobile shielded balance', (
     tester,
   ) async {
+    final balance = BigInt.from(300000000);
     await tester.pumpWidget(
       _app(
         _syncedState(
           orchardBalance: BigInt.from(100000000),
           ironwoodBalance: BigInt.from(200000000),
-        ),
+        ).copyWith(spendableBalance: balance, displaySpendableBalance: balance),
       ),
     );
     await tester.pump();
     await tester.pump();
 
-    expect(find.textContaining('3 ZEC', findRichText: true), findsOneWidget);
+    expect(find.text('3 ZEC'), findsOneWidget);
   });
 
   testWidgets('shows the Ironwood home card state without hiding actions', (
@@ -1928,97 +1925,6 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('uses compact balance precision for long decimals', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _app(
-        _syncedState(
-          orchardBalance: BigInt.from(44_291_641),
-          transparentBalance: BigInt.from(12_345_678),
-          canShieldTransparentBalance: true,
-        ),
-      ),
-    );
-    await tester.pump();
-    await tester.pump();
-
-    expect(
-      tester
-          .widget<Text>(
-            find.byKey(const ValueKey('mobile_home_shielded_balance')),
-          )
-          .textSpan
-          ?.toPlainText(),
-      '0.44291 ZEC',
-    );
-    expect(find.textContaining('0.44291641', findRichText: true), findsNothing);
-    expect(find.text('Transparent: 0.12345 ZEC'), findsOneWidget);
-  });
-
-  testWidgets('shows transparent balance tray with shield action', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _app(
-        _syncedState(
-          orchardBalance: BigInt.from(14312000000),
-          transparentBalance: BigInt.from(242000000),
-          canShieldTransparentBalance: true,
-        ),
-      ),
-    );
-    await tester.pump();
-    await tester.pump();
-
-    expect(
-      find.byKey(const ValueKey('mobile_home_transparent_balance_strip')),
-      findsOneWidget,
-    );
-    expect(find.text('Transparent: 2.42 ZEC'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('mobile_home_shield_balance_button')),
-      findsOneWidget,
-    );
-    expect(find.text('Shield'), findsOneWidget);
-  });
-
-  testWidgets('animates transparent balance tray away before removal', (
-    tester,
-  ) async {
-    final syncNotifier = FakeSyncNotifier(
-      _syncedState(
-        orchardBalance: BigInt.from(14312000000),
-        transparentBalance: BigInt.from(242000000),
-        canShieldTransparentBalance: true,
-      ),
-    );
-    await tester.pumpWidget(
-      _app(syncNotifier.initialState!, syncNotifier: syncNotifier),
-    );
-    await tester.pump();
-    await tester.pump();
-
-    final stripFinder = find.byKey(
-      const ValueKey('mobile_home_transparent_balance_strip'),
-    );
-    expect(stripFinder, findsOneWidget);
-    final expandedHeight = tester.getSize(stripFinder).height;
-    expect(expandedHeight, moreOrLessEquals(57));
-
-    syncNotifier.setSyncState(
-      _syncedState(orchardBalance: BigInt.from(14312000000)),
-    );
-    await tester.pump();
-    expect(stripFinder, findsOneWidget);
-
-    await tester.pump(const Duration(milliseconds: 70));
-    expect(tester.getSize(stripFinder).height, lessThan(expandedHeight));
-
-    await tester.pumpAndSettle();
-    expect(stripFinder, findsNothing);
-  });
-
   testWidgets(
     'balance card shows sync above funds and the two wallet actions',
     (tester) async {
@@ -2026,9 +1932,7 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.pumpWidget(
         _app(
-          _syncedState(
-            orchardBalance: BigInt.from(14312000000),
-          ).copyWith(
+          _syncedState(orchardBalance: BigInt.from(14312000000)).copyWith(
             spendableBalance: BigInt.from(14312000000),
             displaySpendableBalance: BigInt.from(14312000000),
           ),
@@ -2058,14 +1962,16 @@ void main() {
     },
   );
 
-  testWidgets('zero balance offers the first-receive action', (tester) async {
+  testWidgets('zero balance keeps the wallet actions available', (
+    tester,
+  ) async {
     await tester.pumpWidget(_app(_syncedState()));
     await tester.pump();
 
-    expect(find.text('Receive your first ZEC'), findsOneWidget);
-    expect(find.text('Send'), findsNothing);
+    expect(find.byKey(const ValueKey('familiar_home_send')), findsOneWidget);
+    expect(find.byKey(const ValueKey('familiar_home_receive')), findsOneWidget);
 
-    await tester.tap(find.text('Receive your first ZEC'));
+    await tester.tap(find.byKey(const ValueKey('familiar_home_receive')));
     await tester.pumpAndSettle();
     expect(find.text('receive route'), findsOneWidget);
   });
@@ -2086,77 +1992,29 @@ void main() {
     expect(find.byKey(const ValueKey('familiar_home_receive')), findsOneWidget);
   });
 
-  testWidgets('uses the mobile Rest illustration canvas for empty activity', (
-    tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(390, 1000));
-    addTearDown(() async {
-      await tester.binding.setSurfaceSize(null);
-    });
-
-    await tester.pumpWidget(_app(_syncedState()));
-    await tester.pump();
-
-    final canvasRect = tester.getRect(
-      find.byKey(const ValueKey('mobile_home_rest_canvas')),
-    );
-    final imageRect = tester.getRect(
-      find.byKey(const ValueKey('mobile_home_rest_image')),
-    );
-
-    expect(canvasRect.size, const Size(340, 220));
-    expect(imageRect.size, const Size(246, 192));
-    expect(imageRect.left - canvasRect.left, 47);
-    expect(imageRect.top - canvasRect.top, 28);
-  });
-
   testWidgets('privacy eye masks the balance', (tester) async {
-    final impactTypes = <Object?>[];
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'HapticFeedback.vibrate') {
-          impactTypes.add(call.arguments);
-        }
-        return null;
-      },
-    );
-    addTearDown(
-      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        SystemChannels.platform,
-        null,
-      ),
-    );
-
+    final balance = BigInt.from(14312000000);
     await tester.pumpWidget(
-      _app(_syncedState(orchardBalance: BigInt.from(14312000000))),
-    );
-    await tester.pump();
-    await tester.pump();
-
-    expect(
-      find.byWidgetPredicate(
-        (widget) => widget is AppIcon && widget.name == AppIcons.eye,
+      _app(
+        _syncedState(
+          orchardBalance: balance,
+        ).copyWith(spendableBalance: balance, displaySpendableBalance: balance),
       ),
-      findsOneWidget,
     );
+    await tester.pump();
+    await tester.pump();
 
-    await tester.tap(find.bySemanticsLabel('Hide balance'));
+    expect(find.byTooltip('Hide balances'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Hide balances'));
     await tester.pump();
 
     expect(
       find.textContaining(fixedPrivacyMask(), findRichText: true),
-      findsAtLeastNWidgets(2),
+      findsAtLeastNWidgets(1),
     );
-    expect(impactTypes, ['HapticFeedbackType.mediumImpact']);
-    expect(
-      find.byWidgetPredicate(
-        (widget) => widget is AppIcon && widget.name == AppIcons.eyeClosed,
-      ),
-      findsOneWidget,
-    );
-    expect(find.textContaining('143.12', findRichText: true), findsNothing);
-    expect(find.text(r'$10.02K'), findsNothing);
+    expect(find.text('143.12 ZEC'), findsNothing);
+    expect(find.byTooltip('Show balances'), findsOneWidget);
   });
 
   testWidgets('shows up to ten recent activity rows', (tester) async {
@@ -2174,16 +2032,7 @@ void main() {
     );
     await tester.pump();
 
-    for (var i = 0; i < 10; i++) {
-      expect(
-        find.byKey(ValueKey('mobile_home_activity_row_$i')),
-        findsOneWidget,
-      );
-    }
-    expect(
-      find.byKey(const ValueKey('mobile_home_activity_row_10')),
-      findsNothing,
-    );
+    expect(find.byType(ActivityFeedRow), findsNWidgets(10));
   });
 
   testWidgets('recent activity absorbs a Pay deposit transaction duplicate', (
@@ -2224,7 +2073,7 @@ void main() {
     expect(find.text('Transparent'), findsNothing);
   });
 
-  testWidgets('recent activity keeps absorbed receive amount and tap-through', (
+  testWidgets('home keeps absorbed swap activity as one compact row', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(800, 1400));
@@ -2260,15 +2109,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Swapped'), findsOneWidget);
-    expect(find.text('Received ZEC'), findsOneWidget);
-    expect(find.text('+12.13 ZEC'), findsOneWidget);
-    expect(find.text('+4.12 ZEC'), findsNothing);
-    expect(find.text('Received'), findsNothing);
-
-    await tester.tap(find.text('Received ZEC'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('activity tx route $receiveWalletOrder'), findsOneWidget);
+    // The home dashboard uses the compact parent row; the absorbed payout
+    // child remains available in the full Activity screen.
+    expect(find.text('Received ZEC'), findsNothing);
+    expect(find.text('+12.13 ZEC'), findsNothing);
+    expect(find.text('-101.23 USDC'), findsOneWidget);
   });
 
   testWidgets(

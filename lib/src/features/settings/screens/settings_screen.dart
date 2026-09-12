@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart' show ExpansionTile, TextButton;
+import 'package:flutter/material.dart' show ExpansionTile;
 import 'dart:async';
-
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart' show ThemeMode;
@@ -15,6 +14,7 @@ import '../../../core/layout/app_pane_scroll_scaffold.dart';
 import '../../../core/profile_pictures.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_profile_picture.dart';
 import '../../../core/widgets/familiar_widgets.dart';
 import '../../../core/widgets/app_pane_modal_overlay.dart';
 import '../../../providers/account_provider.dart';
@@ -56,7 +56,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String? _editDraftName;
   String? _editDraftProfilePictureId;
   bool _pfpPickerFromEdit = false;
-
   void _showModal(_SettingsModalType modal) {
     setState(() {
       _activeModal = modal;
@@ -488,6 +487,122 @@ class _SettingsList extends StatelessWidget {
           label: 'Base / Ethereum private key',
           subtitle: 'Use your Base account in another wallet',
           onTap: onBaseKey,
+          /*
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SettingsBlock(
+          title: 'Personal',
+          rows: [
+            _SettingsRow(
+              iconName: AppIcons.users,
+              label: 'Address book',
+              onTap: onAddressBook,
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _SettingsBlock(
+          title: 'Account',
+          rows: [
+            _SettingsRow(
+              iconName: AppIcons.key,
+              label: 'Secret passphrase',
+              onTap: activeAccountIsHardware ? null : onSeedPhrase,
+            ),
+            _SettingsRow(
+              iconName: AppIcons.eye,
+              label: 'Viewing key',
+              onTap: onViewingKey,
+            ),
+            _SettingsRow(
+              iconName: AppIcons.lock,
+              label: 'Password',
+              onTap: onChangePassword,
+            ),
+            _SettingsRow(
+              iconName: AppIcons.user,
+              label: 'Profile picture',
+              value: profilePictureLabel,
+              valueLeading: AppProfilePicture(
+                profilePictureId: profilePictureId,
+                size: AppProfilePictureSize.medium,
+              ),
+              onTap: onProfilePicture,
+            ),
+            _SettingsRow(
+              iconName: AppIcons.scroll,
+              label: 'Account name',
+              value: accountName,
+              onTap: onAccountName,
+            ),
+            _SettingsRow(
+              iconName: AppIcons.link,
+              label: 'Link Vizor mobile',
+              onTap: onLinkMobile,
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _SettingsBlock(
+          title: 'System',
+          rows: [
+            _SettingsRow(
+              iconName: AppIcons.endpoint,
+              label: 'Endpoint',
+              value: endpointLabel,
+              onTap: onEndpoint,
+            ),
+            _SettingsRow(
+              iconName: AppIcons.globe,
+              label: 'Explorer',
+              value: explorerLabel,
+              onTap: onExplorer,
+            ),
+            _SettingsRow(
+              iconName: AppIcons.theme,
+              label: 'Theme',
+              value: themeLabel,
+              onTap: onTheme,
+            ),
+            if (updateLabel != null && onUpdates != null)
+              _SettingsRow(
+                iconName: AppIcons.sync,
+                label: 'Updates',
+                value: updateLabel,
+                onTap: onUpdates,
+              ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _SettingsBlock(
+          title: 'Privacy',
+          rows: const [
+            NetworkPrivacyControl(
+              key: ValueKey('settings_tor_control'),
+              showSurface: false,
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _SettingsBlock(
+          title: 'Misc',
+          rows: [
+            _SettingsRow(
+              iconName: AppIcons.vizor,
+              iconGlyphSize: 16.5,
+              label: 'About Vizor',
+              onTap: onAbout,
+            ),
+            if (onDonation != null)
+              _SettingsRow(
+                iconName: AppIcons.donation,
+                iconGlyphSize: 16.5,
+                label: 'Support Vizor',
+                onTap: onDonation!,
+              ),
+          ],
+*/
         ),
         _SettingsRow(
           iconName: AppIcons.eye,
@@ -567,6 +682,17 @@ class _SettingsList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _SettingsBlock(
+          title: 'Personal',
+          rows: [
+            _SettingsRow(
+              iconName: AppIcons.users,
+              label: 'People',
+              onTap: onAddressBook,
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        _SettingsBlock(
           title: 'You and your wallet',
           rows: [
             _SettingsRow(
@@ -574,6 +700,16 @@ class _SettingsList extends StatelessWidget {
               label: 'Account',
               value: accountName,
               onTap: onAccountName,
+            ),
+            _SettingsRow(
+              iconName: AppIcons.user,
+              label: 'Profile picture',
+              value: profilePictureLabel,
+              valueLeading: AppProfilePicture(
+                profilePictureId: profilePictureId,
+                size: AppProfilePictureSize.medium,
+              ),
+              onTap: onProfilePicture,
             ),
             _SettingsRow(
               iconName: AppIcons.lock,
@@ -617,10 +753,6 @@ class _SettingsList extends StatelessWidget {
             networkSection,
             ?removalSection,
           ],
-        ),
-        TextButton(
-          onPressed: onProfilePicture,
-          child: const Text('Change profile picture'),
         ),
       ],
     );
@@ -1088,6 +1220,7 @@ class _SettingsRow extends StatefulWidget {
     this.iconGlyphSize = 20,
     this.subtitle,
     this.value,
+    this.valueLeading,
     this.destructive = false,
     this.onTap,
   });
@@ -1097,6 +1230,7 @@ class _SettingsRow extends StatefulWidget {
   final String? subtitle;
   final double iconGlyphSize;
   final String? value;
+  final Widget? valueLeading;
   final bool destructive;
   final VoidCallback? onTap;
 
@@ -1167,12 +1301,19 @@ class _SettingsRowState extends State<_SettingsRow> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                widget.label,
-                style: AppTypography.bodyMedium.copyWith(
-                  color: contentColor,
-                  fontWeight: FontWeight.w500,
-                ),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      widget.label,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: contentColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               if (widget.subtitle != null) ...[
                 const SizedBox(height: 3),
@@ -1187,6 +1328,11 @@ class _SettingsRowState extends State<_SettingsRow> {
           ),
         ),
         const SizedBox(width: AppSpacing.xs),
+
+        if (widget.valueLeading != null) ...[
+          widget.valueLeading!,
+          const SizedBox(width: AppSpacing.xxs),
+        ],
 
         if (widget.value != null) ...[
           ConstrainedBox(

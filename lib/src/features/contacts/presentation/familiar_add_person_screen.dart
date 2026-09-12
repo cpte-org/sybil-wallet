@@ -1,3 +1,4 @@
+import '../../../providers/rpc_endpoint_failover_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,9 +17,11 @@ import '../application/contact_exchange_controller.dart';
 
 final familiarAddressValidatorProvider =
     Provider<Future<bool> Function(String)>(
-      (_) =>
-          (address) async =>
-              (await rust_sync.validateAddress(address: address)).isValid,
+      (ref) =>
+          (address) async => (await rust_sync.validateAddress(
+            address: address,
+            network: ref.read(rpcEndpointFailoverProvider).current.networkName,
+          )).isValid,
     );
 
 /// A reusable focused page, with the prototype's compact header and open paper.
