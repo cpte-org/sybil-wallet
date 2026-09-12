@@ -24,13 +24,11 @@ export 'app_surface_colors.dart';
 export 'app_sync_colors.dart';
 export 'app_text_colors.dart';
 
-/// Aggregated semantic color palette for the app. Sourced from the Zcash
-/// design system Figma spec; organized into semantic categories that mirror
-/// the Figma sheet structure (Background / Surface / Border / Text /
-/// Icon / Button / State / Fade / Nav Panel / Shadows / Sync).
+/// Semantic Familiar palette for the wallet, organized by component role.
 ///
-/// Do not read [AppColors] directly from widgets — it will be surfaced via an
-/// [AppTheme] InheritedWidget wired up in a later step.
+/// Existing token names remain compatible with wallet screens. Brand-crimson
+/// slots now carry Familiar's forest accent; utility slots retain distinct
+/// success, warning, and destructive meanings. Read through `context.colors`.
 class AppColors {
   const AppColors({
     required this.background,

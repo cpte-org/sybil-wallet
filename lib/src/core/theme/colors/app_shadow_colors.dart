@@ -19,18 +19,18 @@ class AppShadowColors {
   final Color regular;
 
   static const dark = AppShadowColors(
-    shadow1: Primitives.p0Alpha0Dark,
-    shadow2: Primitives.p0Alpha0Dark,
-    shadow3: Primitives.p0Alpha0Dark,
-    subtle: Primitives.p0Alpha0Dark,
-    regular: Primitives.p0Alpha0Dark,
+    shadow1: Color(0x00000000),
+    shadow2: Color(0x00000000),
+    shadow3: Color(0x33122119),
+    subtle: Color(0x00000000),
+    regular: Color(0x00000000),
   );
 
   static const light = AppShadowColors(
-    shadow1: Primitives.p150Light,
-    shadow2: Primitives.p300Light,
-    shadow3: Primitives.p900Alpha20Light,
-    subtle: Primitives.p900Alpha5Light,
-    regular: Primitives.p900Alpha10Light,
+    shadow1: FamiliarPrimitives.shadow,
+    shadow2: FamiliarPrimitives.shadow,
+    shadow3: Color(0x33122119),
+    subtle: Color(0x0D1F3622),
+    regular: FamiliarPrimitives.shadow,
   );
 }

@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zcash_wallet/src/core/layout/app_form_factor.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
+import 'package:zcash_wallet/src/core/theme/legacy_material_theme.dart';
 import 'package:zcash_wallet/src/core/widgets/app_button.dart';
 import 'package:zcash_wallet/src/features/contacts/presentation/contact_introduction_screen.dart';
+import 'package:zcash_wallet/src/features/contacts/presentation/contact_code_widgets.dart';
 import '../contact_introduction_test_fixtures.dart';
 import '../contact_test_fakes.dart';
 import '../../../figma_compare/figma_compare_font_loader.dart';
@@ -14,6 +16,7 @@ void introductionWidgetTests(AppFormFactor formFactor) {
     WidgetTester tester,
     IntroductionTestActor actor, {
     GlobalKey? capture,
+    bool advanced = true,
     List<String>? copies,
     double height = 1500,
     Future<void> Function()? onAccepted,
@@ -31,7 +34,7 @@ void introductionWidgetTests(AppFormFactor formFactor) {
     await loadFigmaCompareFonts();
     await tester.pumpWidget(
       MaterialApp(
-        theme: ThemeData.dark(),
+        theme: buildLegacyDarkTheme(),
         builder: (_, child) => AppTheme(data: AppThemeData.dark, child: child!),
         home: RepaintBoundary(
           key: capture,
@@ -39,6 +42,9 @@ void introductionWidgetTests(AppFormFactor formFactor) {
             body: SafeArea(
               child: ContactIntroductionView(
                 coordinator: actor.coordinator,
+                advanced: advanced,
+                onConnect: () {},
+                onSettings: () {},
                 inboxBuilder: inboxBuilder,
                 onAccepted: onAccepted,
                 onCopy: (packet) async {
@@ -102,6 +108,89 @@ void introductionWidgetTests(AppFormFactor formFactor) {
       );
     }
   }
+
+  testWidgets(
+    'normal introductions hide technical pairing and explain the prerequisite',
+    (tester) async {
+      final actor = IntroductionTestActor('guided-empty');
+      await actor.peer('Alice', 11, 12, paired: false);
+      final key = GlobalKey();
+      await pump(tester, actor, advanced: false, capture: key, height: 844);
+      await capture(tester, key, 'guided-overview');
+      expect(find.text('Connect before introducing'), findsOneWidget);
+      expect(
+        find.byType(DropdownButtonFormField<IntroductionTask>),
+        findsNothing,
+      );
+      expect(
+        find.text('Your outgoing key accepted by this peer'),
+        findsNothing,
+      );
+      expect(find.widgetWithText(ListTile, 'Ask someone I know'), findsNothing);
+      expect(
+        find.widgetWithText(ListTile, 'Introduce two people'),
+        findsNothing,
+      );
+      await tap(tester, 'Open an invitation');
+      expect(find.byType(ContactCodeInput), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets(
+    'normal invitation import chooses its stage without accepting or signing',
+    (tester) async {
+      final ceremony = IntroductionTestCeremony();
+      await ceremony.throughOffer();
+      await pump(tester, ceremony.bob, advanced: false);
+      await tap(tester, 'Open an invitation');
+      await tester
+          .widget<ContactCodeInput>(find.byType(ContactCodeInput))
+          .onRead('["zcash-contact/intro-offer-package",null,null]');
+      await tester.pumpAndSettle();
+      expect(find.text('Review your introduction'), findsOneWidget);
+      expect(find.text('Invitation ready to review'), findsOneWidget);
+      expect(
+        find.byType(DropdownButtonFormField<IntroductionTask>),
+        findsNothing,
+      );
+      expect(find.text('Approve and continue'), findsNothing);
+      await peer(tester, 'Alice');
+      await tap(tester, 'Review details');
+      expect(find.text('Approve and continue'), findsNothing);
+      expect(
+        find.text(
+          'Could not complete this introduction. Review the details and try again.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('New recipient identity'), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets('guided request shows a share code only after approval', (
+    tester,
+  ) async {
+    final ceremony = IntroductionTestCeremony();
+    await ceremony.setup();
+    await pump(tester, ceremony.carol, advanced: false);
+    await tap(tester, 'Ask someone I know');
+    await peer(tester, 'Alice');
+    expect(enabled(tester, 'Approve and continue'), isFalse);
+    expect(find.byType(ContactCodeOutput), findsNothing);
+    await tap(tester, 'I authorize Alice to arrange this introduction.');
+    await tap(tester, 'Approve and continue');
+    expect(find.byType(ContactCodeOutput), findsOneWidget);
+    expect(find.text('Copy packet'), findsNothing);
+    expect(
+      find.byType(DropdownButtonFormField<IntroductionTask>),
+      findsNothing,
+    );
+    expect(ceremony.carol.wire.signatures, 1);
+    await tester.pumpWidget(const SizedBox());
+  });
 
   testWidgets(
     'inbox response fills the pending introduction without accepting it',

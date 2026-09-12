@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart'
     show CircularProgressIndicator, Colors, ScaffoldMessenger, SnackBar;
@@ -16,6 +15,7 @@ import '../../../core/widgets/app_copy_feedback.dart';
 import '../../../core/widgets/app_back_link.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/familiar_widgets.dart';
 import '../../../core/widgets/app_pane_modal_overlay.dart';
 import '../../../providers/account_provider.dart';
 import '../../../providers/receive_address_provider.dart';
@@ -413,10 +413,6 @@ class _ReceiveContentLayout extends StatelessWidget {
     required this.onShowHelp,
   });
 
-  static const _contentWidth = 420.0;
-  static const _contentHeight = 656.0;
-  static const _contentHeightWithError = 724.0;
-
   final ReceiveAddressType selectedType;
   final String address;
   final String? errorText;
@@ -431,119 +427,114 @@ class _ReceiveContentLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    final contentHeight = errorText == null
-        ? _contentHeight
-        : _contentHeightWithError;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final viewportHeight = constraints.maxHeight.isFinite
-            ? constraints.maxHeight
-            : contentHeight;
-
-        return SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: math.max(viewportHeight, contentHeight),
+    final palette = FamiliarPalette.of(context);
+    final qr = AnimatedSwitcher(
+      duration: const Duration(milliseconds: 160),
+      child: isLoading
+          ? const SizedBox(
+              key: ValueKey('loading'),
+              width: 262,
+              height: 414,
+              child: Center(child: CircularProgressIndicator()),
+            )
+          : _ReceiveQrBlock(
+              key: ValueKey(selectedType),
+              type: selectedType,
+              address: address,
+              renewing: isRenewingShielded,
+              onTypeChanged: onTypeChanged,
+              onRenew: onRenewShielded,
+              onShowHelp: onShowHelp,
             ),
-            child: Center(
-              child: SizedBox(
-                width: _contentWidth,
-                height: contentHeight,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned(
-                      left: 12,
-                      top: 16,
-                      width: 396,
-                      height: 556,
-                      child: Stack(
+    );
+    final details = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Your receiving address',
+          style: AppTypography.headlineSmall.copyWith(color: palette.ink),
+        ),
+        const SizedBox(height: AppSpacing.s),
+        Text(
+          _isShielded
+              ? 'Share this address to receive ZEC privately. '
+                    'You don’t need to stay online.'
+              : 'Payments to this address are public. '
+                    'Use shielded for private payments.',
+          style: AppTypography.bodyMedium.copyWith(
+            color: _isShielded ? palette.muted : context.colors.text.warning,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        SizedBox(
+          width: 230,
+          height: 44,
+          child: ReceiveCopyAddressButton(
+            key: ValueKey(
+              _isShielded
+                  ? 'receive_copy_shielded_address_button'
+                  : 'receive_copy_transparent_address_button',
+            ),
+            label: _isShielded
+                ? 'Copy shielded address'
+                : 'Copy transparent address',
+            type: selectedType,
+            enabled: address.isNotEmpty && !isLoading,
+            onTap: onCopy,
+          ),
+        ),
+      ],
+    );
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 680),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FamiliarPageHeader(
+                title: 'Receive $kZcashDefaultCurrencyTicker',
+                eyebrow: 'Let it come to you',
+              ),
+              const SizedBox(height: AppSpacing.md),
+              FamiliarCard(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    if (constraints.maxWidth < 560) {
+                      return Column(
                         children: [
-                          Positioned(
-                            left: 70,
-                            top: 38.5,
-                            width: 256,
-                            height: 33,
-                            child: Text(
-                              'Receive $kZcashDefaultCurrencyTicker',
-                              maxLines: 1,
-                              style: AppTypography.headlineLarge.copyWith(
-                                color: colors.text.accent,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          Positioned(
-                            left: 67,
-                            top: 103.5,
-                            width: 262,
-                            height: 414,
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 160),
-                              child: isLoading
-                                  ? const SizedBox(
-                                      key: ValueKey('loading'),
-                                      width: 262,
-                                      height: 414,
-                                      child: Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                    )
-                                  : _ReceiveQrBlock(
-                                      key: ValueKey(selectedType),
-                                      type: selectedType,
-                                      address: address,
-                                      renewing: isRenewingShielded,
-                                      onTypeChanged: onTypeChanged,
-                                      onRenew: onRenewShielded,
-                                      onShowHelp: onShowHelp,
-                                    ),
-                            ),
-                          ),
+                          qr,
+                          const SizedBox(height: AppSpacing.md),
+                          details,
                         ],
-                      ),
-                    ),
-                    Positioned(
-                      left: 95,
-                      top: 596,
-                      width: 230,
-                      height: 44,
-                      child: ReceiveCopyAddressButton(
-                        key: ValueKey(
-                          _isShielded
-                              ? 'receive_copy_shielded_address_button'
-                              : 'receive_copy_transparent_address_button',
-                        ),
-                        label: _isShielded
-                            ? 'Copy shielded address'
-                            : 'Copy transparent address',
-                        type: selectedType,
-                        enabled: address.isNotEmpty && !isLoading,
-                        onTap: onCopy,
-                      ),
-                    ),
-                    if (errorText != null)
-                      Positioned(
-                        left: 12,
-                        top: 656,
-                        width: 396,
-                        child: Text(
-                          errorText!,
-                          textAlign: TextAlign.center,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: colors.text.warning,
-                          ),
-                        ),
-                      ),
-                  ],
+                      );
+                    }
+                    return Row(
+                      children: [
+                        qr,
+                        const SizedBox(width: AppSpacing.base),
+                        Expanded(child: details),
+                      ],
+                    );
+                  },
                 ),
               ),
-            ),
+              if (errorText != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  errorText!,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: context.colors.text.warning,
+                  ),
+                ),
+              ],
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

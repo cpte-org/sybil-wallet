@@ -6,6 +6,16 @@ import 'package:zcash_wallet/src/features/contacts/presentation/contact_exchange
 import 'contact_exchange_fixtures.dart';
 import 'contact_exchange_test_support.dart';
 
+Future<void> _openConnectedPeople(WidgetTester tester) async {
+  // A rebuilt exchange may retain this expansion's state between fixtures.
+  if (find.byKey(const Key('contacts-send-alice')).evaluate().isEmpty) {
+    final heading = find.text('Your connected people');
+    await tester.ensureVisible(heading);
+    await tester.tap(heading);
+    await tester.pumpAndSettle();
+  }
+}
+
 void runContactExchangeBehaviorTests() {
   _runContactReviewSafetyTests();
   testWidgets('accessibility tap grants explicit acceptance consent', (
@@ -182,6 +192,7 @@ void runContactExchangeBehaviorTests() {
             },
           ),
         );
+        await _openConnectedPeople(tester);
         expect(contactButtonEnabled(tester, 'contacts-send-alice'), isFalse);
         expect(
           contactButtonEnabled(tester, 'contacts-update-alice'),
@@ -215,6 +226,7 @@ void runContactExchangeBehaviorTests() {
           },
         ),
       );
+      await _openConnectedPeople(tester);
       await tapContactControl(tester, 'contacts-send-alice');
       expect(sent, 'alice');
       await tapContactControl(tester, 'contacts-update-alice');
@@ -460,6 +472,7 @@ void _runContactReviewSafetyTests() {
           ContactExchangeFixtures.responseJson,
         );
         await tester.pump();
+        await _openConnectedPeople(tester);
         expect(contactButtonEnabled(tester, 'contacts-send-alice'), isTrue);
 
         // Keep the request and contacts present in the supplied state to prove

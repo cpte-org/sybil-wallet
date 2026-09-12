@@ -1,3 +1,5 @@
+import 'src/features/contacts/presentation/familiar_add_person_screen.dart';
+import 'src/features/contacts/presentation/familiar_choose_recipient_screen.dart';
 import 'dart:async';
 import 'dart:io' show Platform;
 
@@ -7,6 +9,7 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:go_router/go_router.dart';
 import 'src/features/zns/presentation/zns_wallet_screen.dart';
 import 'src/features/contacts/presentation/contact_exchange_screen.dart';
+import 'src/features/contacts/presentation/familiar_people_screen.dart';
 import 'src/features/contacts/presentation/contact_introduction_screen.dart';
 import 'src/features/contacts/presentation/contact_delivery_screen.dart';
 import 'src/features/contacts/presentation/contact_backup_screen.dart';
@@ -81,6 +84,7 @@ import 'src/features/settings/screens/settings_screen.dart';
 import 'src/features/settings/screens/settings_change_password_screen.dart';
 import 'src/features/settings/screens/settings_endpoint_screen.dart';
 import 'src/features/settings/names_settings.dart';
+import 'src/features/settings/contact_settings.dart';
 import 'src/features/settings/screens/settings_explorer_screen.dart';
 import 'src/features/settings/screens/settings_seed_phrase_screen.dart';
 import 'src/features/settings/screens/settings_uninstall_screen.dart';
@@ -783,6 +787,7 @@ List<RouteBase> appDesktopOnboardingRoutes(Ref ref) => [
 /// Main application routes for the desktop (large-form-factor) tree.
 List<RouteBase> _desktopRoutes(Ref ref) => [
   GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
+  GoRoute(path: '/people', builder: (_, _) => const FamiliarPeopleScreen()),
   GoRoute(
     path: '/migration',
     builder: (_, _) => const IronwoodMigrationEntryScreen(),
@@ -947,10 +952,18 @@ List<RouteBase> _desktopRoutes(Ref ref) => [
     },
   ),
   GoRoute(
+    path: '/people/add',
+    builder: (_, state) => FamiliarAddPersonScreen(
+      savedId: state.extra is String ? state.extra as String : null,
+    ),
+  ),
+  GoRoute(
     path: '/send',
     builder: (_, state) {
       final extra = state.extra;
-      return SendScreen(prefill: extra is SendPrefillArgs ? extra : null);
+      return extra is SendPrefillArgs
+          ? SendScreen(prefill: extra)
+          : const FamiliarChooseRecipientScreen();
     },
   ),
   GoRoute(
@@ -1020,6 +1033,10 @@ List<RouteBase> _desktopRoutes(Ref ref) => [
   GoRoute(path: '/accounts', builder: (_, _) => const AccountsScreen()),
   GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
   GoRoute(
+    path: '/settings/security',
+    builder: (_, _) => const SettingsScreen(),
+  ),
+  GoRoute(
     path: '/settings/secret-passphrase',
     builder: (_, state) => SettingsSeedPhraseScreen(
       accountUuid: state.extra is String ? state.extra as String : null,
@@ -1038,6 +1055,10 @@ List<RouteBase> _desktopRoutes(Ref ref) => [
   GoRoute(
     path: '/settings/change-password',
     builder: (_, _) => const SettingsChangePasswordScreen(),
+  ),
+  GoRoute(
+    path: '/settings/contacts',
+    builder: (_, _) => const ContactSettingsScreen(),
   ),
   GoRoute(
     path: '/settings/names',

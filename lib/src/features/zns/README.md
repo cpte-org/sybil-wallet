@@ -1,8 +1,9 @@
 # Public Zcash names in Vizor
 
-The wallet uses a single `.zec` namespace. Public name ownership proves control
-of a registration, not a person's identity. Registration economics are separate
-from the wallet's local contact and discovery features.
+The wallet uses a single `.zec` namespace. Public lookup says that identity has
+not been checked. Saving a public result stores its reviewed Zcash address as an
+ordinary local contact; it does not subscribe the contact to a transferable NFT.
+Before saving, the wallet rechecks the label, address, Base owner and position ID.
 
 Registration uses the deployed registry's `quoteRegistration(name)` at a canonical
 block. Targets are whole USD dollars and cbZEC amounts use 8 decimal places:

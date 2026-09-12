@@ -2613,6 +2613,19 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
                     onMemoTap: () => unawaited(_editMemo()),
                     onFeeInfoTap: () => unawaited(_showFeeInfo()),
                   ),
+                  if (amountZatoshi != null && _feeZatoshi != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.s,
+                      ),
+                      child: Text(
+                        'Total from your wallet: ${ZecAmount.fromZatoshi(amountZatoshi + _feeZatoshi!).activityDetail}',
+                        key: const ValueKey('mobile_send_review_total'),
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: context.colors.text.primary,
+                        ),
+                      ),
+                    ),
                   if (_reviewFeeNotice != null) ...[
                     const SizedBox(height: AppSpacing.s),
                     Text(

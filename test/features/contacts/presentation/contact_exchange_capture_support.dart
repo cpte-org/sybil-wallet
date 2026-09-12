@@ -37,6 +37,7 @@ void runContactExchangeLayoutTests({
           scenario.value,
           size: Size(width, 2200),
           captureKey: capture,
+          advanced: false,
         );
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);

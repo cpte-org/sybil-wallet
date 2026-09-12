@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:zcash_wallet/src/core/formatting/address_display.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
 import 'package:zcash_wallet/src/core/widgets/app_icon.dart';
-import 'package:zcash_wallet/src/core/widgets/app_profile_picture.dart';
+import 'package:zcash_wallet/src/core/widgets/familiar_widgets.dart';
 import 'package:zcash_wallet/src/core/widgets/review_buttons_stack.dart';
 import 'package:zcash_wallet/src/core/widgets/review_info_row.dart';
 import 'package:zcash_wallet/src/core/widgets/review_wrap_card.dart';
@@ -34,13 +34,14 @@ void main() {
         recipient: const SendReviewAddressRecipient(address: _address),
         memoText: _memo,
         feeText: '0.012 ZEC',
+        totalText: '123.132 ZEC',
         onConfirm: () => confirms++,
         onCancel: () => cancels++,
         onShowFullAddress: () => reveals++,
       ),
     );
 
-    expect(find.text('Review send'), findsOneWidget);
+    expect(find.text('Review payment'), findsOneWidget);
     expect(find.text('Amount'), findsOneWidget);
     expect(find.text('123.12 ZEC'), findsOneWidget);
     expect(find.text(r'$250.12'), findsOneWidget);
@@ -49,12 +50,16 @@ void main() {
     expect(find.text('Shielded'), findsOneWidget);
     expect(find.text('Message'), findsOneWidget);
     expect(find.text(_memo), findsOneWidget);
-    expect(find.text('Tx fee'), findsOneWidget);
+    expect(find.text('Network fee'), findsOneWidget);
     expect(find.text('0.012 ZEC'), findsOneWidget);
+    expect(find.text('Total from your wallet'), findsOneWidget);
+    expect(find.text('123.132 ZEC'), findsOneWidget);
     expect(find.byType(ReviewWrapDivider), findsOneWidget);
 
     await tester.tap(find.text('Show full address'));
+    await tester.ensureVisible(find.text('Confirm & send'));
     await tester.tap(find.text('Confirm & send'));
+    await tester.ensureVisible(find.text('Cancel'));
     await tester.tap(find.text('Cancel'));
     await tester.pump();
     expect(reveals, 1);
@@ -117,7 +122,7 @@ void main() {
     );
 
     expect(
-      tester.getTopLeft(find.text('Review send')).dy,
+      tester.getTopLeft(find.text('Review payment')).dy,
       moreOrLessEquals(AppSpacing.sm),
     );
   });
@@ -147,10 +152,10 @@ void main() {
     );
 
     expect(
-      tester.getTopLeft(find.text('Review send')).dy,
+      tester.getTopLeft(find.text('Review payment')).dy,
       moreOrLessEquals(AppSpacing.sm),
     );
-    expect(find.byType(SingleChildScrollView), findsOneWidget);
+    expect(find.byType(SingleChildScrollView), findsNWidgets(2));
   });
 
   testWidgets('contact variant swaps the recipient row presentation', (
@@ -172,7 +177,7 @@ void main() {
     );
 
     expect(find.text('Mike'), findsOneWidget);
-    expect(find.byType(AppProfilePicture), findsOneWidget);
+    expect(find.byType(FamiliarAvatar), findsOneWidget);
     // The truncated address moves to the sub-line; the Shielded badge and
     // the wallet icon circle are replaced.
     expect(find.text(truncatedAddress(_address)), findsOneWidget);
@@ -200,7 +205,7 @@ void main() {
     );
 
     expect(find.text('Mike'), findsOneWidget);
-    expect(find.byType(AppProfilePicture), findsOneWidget);
+    expect(find.byType(FamiliarAvatar), findsOneWidget);
     expect(find.text('TEX - ${truncatedAddress(_texAddress)}'), findsOneWidget);
     expect(find.text('Transparent'), findsNothing);
     expect(find.text('Shielded'), findsNothing);
@@ -224,7 +229,7 @@ void main() {
     expect(find.text(r'$250.12'), findsNothing);
     expect(find.text('Message'), findsNothing);
     expect(find.byType(ReviewWrapDivider), findsNothing);
-    expect(find.text('Tx fee'), findsOneWidget);
+    expect(find.text('Network fee'), findsOneWidget);
   });
 
   testWidgets('memo expand affordance fires its callback', (tester) async {
@@ -324,7 +329,10 @@ Future<void> _pump(WidgetTester tester, Widget child) async {
 
   await tester.pumpWidget(
     MaterialApp(
-      home: AppTheme(data: AppThemeData.light, child: child),
+      home: AppTheme(
+        data: AppThemeData.light,
+        child: SingleChildScrollView(child: child),
+      ),
     ),
   );
   await tester.pump();

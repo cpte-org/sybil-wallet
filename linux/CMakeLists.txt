@@ -112,8 +112,14 @@ add_executable(simplex-host "${CMAKE_CURRENT_SOURCE_DIR}/../tools/simplex/native
 target_link_libraries(simplex-host PRIVATE ${CMAKE_DL_LIBS})
 install(TARGETS simplex-host RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}"
   COMPONENT Runtime)
-if(DEFINED ENV{SIMPLEX_LIBS_DIR})
-  install(DIRECTORY "$ENV{SIMPLEX_LIBS_DIR}/"
+set(SIMPLEX_LIBS_DIR "$ENV{SIMPLEX_LIBS_DIR}" CACHE PATH
+  "Optional directory containing the pinned SimpleX runtime and sibling libraries")
+if(SIMPLEX_LIBS_DIR)
+  if(NOT EXISTS "${SIMPLEX_LIBS_DIR}/libsimplex.so")
+    message(FATAL_ERROR
+      "SIMPLEX_LIBS_DIR must contain libsimplex.so and its sibling libraries. See tools/simplex/README.md.")
+  endif()
+  install(DIRECTORY "${SIMPLEX_LIBS_DIR}/"
     DESTINATION "${INSTALL_BUNDLE_LIB_DIR}/simplex" COMPONENT Runtime)
 endif()
 

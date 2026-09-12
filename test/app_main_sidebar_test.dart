@@ -1,5 +1,3 @@
-import 'dart:ui' show PointerDeviceKind;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,19 +15,16 @@ import 'package:zcash_wallet/src/features/zns/presentation/zns_wallet_screen.dar
 import 'package:zcash_wallet/src/features/zns/presentation/zns_view_data.dart';
 import 'package:zcash_wallet/src/core/config/rpc_endpoint_config.dart';
 import 'package:zcash_wallet/src/core/config/swap_feature_config.dart';
-import 'package:zcash_wallet/src/core/formatting/sync_status_label.dart';
 import 'package:zcash_wallet/src/core/layout/app_desktop_shell.dart';
 import 'package:zcash_wallet/src/core/layout/app_main_sidebar.dart';
 import 'package:zcash_wallet/src/core/profile_pictures.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
-import 'package:zcash_wallet/src/core/widgets/app_icon.dart';
 import 'package:zcash_wallet/src/features/migration/providers/ironwood_migration_announcement_provider.dart';
 import 'package:zcash_wallet/src/features/migration/providers/ironwood_migration_coordinator_provider.dart';
 import 'package:zcash_wallet/src/features/swap/models/swap_models.dart';
 import 'package:zcash_wallet/src/features/swap/providers/pay_selected_asset_store.dart';
 import 'package:zcash_wallet/src/providers/network_privacy_provider.dart';
 import 'package:zcash_wallet/src/providers/account_provider.dart';
-import 'package:zcash_wallet/src/providers/sync_failure.dart';
 import 'package:zcash_wallet/src/providers/sync_provider.dart';
 import 'package:zcash_wallet/src/rust/api/sync.dart' as rust_sync;
 
@@ -42,21 +37,12 @@ void main() {
     await loader.load();
   });
 
-  const failureLabels = {
-    SyncFailureKind.endpoint: 'Syncing failed. Endpoint error...',
-    SyncFailureKind.databaseBusy: 'Syncing failed. Wallet data busy...',
-    SyncFailureKind.databaseFatal: 'Syncing failed. Wallet data error...',
-    SyncFailureKind.chainRecovery: 'Syncing failed. Chain recovery...',
-    SyncFailureKind.parseFatal: 'Syncing failed. Data error...',
-    SyncFailureKind.unknown: 'Syncing failed. Unknown error...',
-  };
-
   testWidgets('Names keeps desktop navigation visible and returns to Home', (
     tester,
   ) async {
-    await tester.pumpWidget(_sidebarHarness(_syncedSyncState));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('sidebar_names_button')));
+    await tester.pumpWidget(
+      _sidebarHarness(_syncedSyncState, initialLocation: '/names'),
+    );
     await tester.pumpAndSettle();
     expect(find.byType(ZnsWalletScreen), findsOneWidget);
     expect(find.byType(AppMainSidebar), findsOneWidget);
@@ -64,7 +50,7 @@ void main() {
     expect(
       tester
           .widget<AppSidebarItem>(
-            find.byKey(const ValueKey('sidebar_names_button')),
+            find.byKey(const ValueKey('sidebar_settings_button')),
           )
           .active,
       isTrue,
@@ -76,93 +62,56 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('introductions preserve the routed sidebar and back navigation', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _sidebarHarness(_syncedSyncState, initialLocation: '/contacts/exchange'),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Introductions and reciprocal setup'));
+  testWidgets('introductions preserve the routed sidebar and back navigation', (tester) async {
+    await tester.pumpWidget(_sidebarHarness(_syncedSyncState, initialLocation: '/contacts/introductions'));
     await tester.pumpAndSettle();
     expect(find.byType(ContactIntroductionScreen), findsOneWidget);
     expect(find.byType(AppMainSidebar), findsOneWidget);
     expect(tester.takeException(), isNull);
-    await tester.tap(find.text('Back to contact exchange'));
+    await tester.tap(find.text('Back to People'));
     await tester.pumpAndSettle();
-    expect(find.byType(ContactExchangeScreen), findsOneWidget);
+    expect(find.text('people route'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('sidebar_home_button')));
     await tester.pumpAndSettle();
     expect(find.text('home route'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('sidebar shows in-progress sync percentage', (tester) async {
-    await tester.pumpWidget(
-      _sidebarHarness(SyncState(isSyncing: true, percentage: 1)),
-    );
-    await tester.pump();
-
-    expect(find.text('99% Syncing...'), findsOneWidget);
-    expect(find.text('Synced'), findsNothing);
-    expect(find.byKey(const ValueKey('sidebar_sync_height')), findsNothing);
-  });
-
-  testWidgets('shows the Tor connecting label while the route bootstraps', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _sidebarHarness(
-        SyncState(percentage: 1.0, isSyncing: false),
-        networkPrivacyState: const NetworkPrivacyState(
-          torEnabled: true,
-          status: NetworkPrivacyConnectionStatus.connecting,
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text(kSyncStatusConnectingToTorLabel), findsOneWidget);
-    expect(find.text('Vizor is synced'), findsNothing);
-  });
-
-  testWidgets('sidebar shows primary navigation', (tester) async {
+  testWidgets('sidebar keeps the primary navigation simple', (tester) async {
     await tester.pumpWidget(_sidebarHarness(_syncedSyncState));
     await tester.pump();
 
-    expect(
-      find.byKey(const ValueKey('sidebar_accounts_button')),
-      findsOneWidget,
-    );
-    expect(find.byKey(const ValueKey('sidebar_home_button')), findsOneWidget);
-    expect(find.byKey(const ValueKey('sidebar_swap_button')), findsOneWidget);
-    expect(find.byKey(const ValueKey('sidebar_pay_button')), findsOneWidget);
-    expect(find.byKey(const ValueKey('sidebar_names_button')), findsOneWidget);
-    expect(find.byKey(const ValueKey('sidebar_voting_button')), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('sidebar_activity_button')),
-      findsOneWidget,
-    );
-    expect(find.text('Home'), findsOneWidget);
-    expect(find.text('Swap'), findsOneWidget);
-    expect(find.text('Pay'), findsOneWidget);
-    expect(find.text('Vote'), findsOneWidget);
-    expect(find.text('Activity'), findsOneWidget);
-    expect(find.text('Settings'), findsOneWidget);
-    expect(find.text('Sign out'), findsOneWidget);
-    final payItem = tester.widget<AppSidebarItem>(
-      find.byKey(const ValueKey('sidebar_pay_button')),
-    );
-    expect(payItem.iconName, AppIcons.paid);
-    final voteItem = tester.widget<AppSidebarItem>(
-      find.byKey(const ValueKey('sidebar_voting_button')),
-    );
-    expect(voteItem.iconName, AppIcons.vote);
-    expect(find.text('Wallet'), findsNothing);
-    expect(find.text('Send'), findsNothing);
-    expect(find.text('Receive'), findsNothing);
-    expect(find.text('Address book'), findsNothing);
-    expect(find.text('About Vizor'), findsNothing);
+    for (final key in [
+      'sidebar_home_button',
+      'sidebar_people_button',
+      'sidebar_activity_button',
+      'sidebar_settings_button',
+      'sidebar_accounts_button',
+    ]) {
+      expect(find.byKey(ValueKey(key)), findsOneWidget);
+    }
+    for (final label in [
+      'More',
+      'Swap',
+      'Pay',
+      'Vote',
+      'Public discovery',
+      'Public Zcash names',
+      'Sign out',
+      'Synced',
+    ]) {
+      expect(find.text(label), findsNothing);
+    }
+    expect(find.byKey(const ValueKey('sidebar_sync_text')), findsNothing);
+    final settingsTop = tester
+        .getTopLeft(find.byKey(const ValueKey('sidebar_settings_button')))
+        .dy;
+    final accountBottom = tester
+        .getBottomLeft(find.byKey(const ValueKey('sidebar_accounts_button')))
+        .dy;
+    expect(settingsTop, greaterThan(accountBottom));
+    expect(find.text('Wallet'), findsOneWidget);
+    expect(find.text('People'), findsOneWidget);
   });
 
   testWidgets('sidebar preserves completed holdings while sync reads zero', (
@@ -300,7 +249,9 @@ void main() {
       '1.234M ZEC',
     );
     expect(
-      tester.renderObject<RenderParagraph>(find.text('Home')).didExceedMaxLines,
+      tester
+          .renderObject<RenderParagraph>(find.text('Wallet'))
+          .didExceedMaxLines,
       isFalse,
     );
     expect(
@@ -499,10 +450,8 @@ void main() {
     tester,
   ) async {
     final cases = [
-      (route: '/home', label: 'Home'),
-      (route: '/swap', label: 'Swap'),
-      (route: '/pay', label: 'Pay'),
-      (route: '/voting', label: 'Vote'),
+      (route: '/home', label: 'Wallet'),
+      (route: '/people', label: 'People'),
       (route: '/activity', label: 'Activity'),
       (route: '/settings', label: 'Settings'),
     ];
@@ -656,32 +605,12 @@ void main() {
     expect(find.text('Swap'), findsNothing);
     expect(find.text('Pay'), findsNothing);
     expect(find.byKey(const ValueKey('sidebar_home_button')), findsOneWidget);
-    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Wallet'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('sidebar_activity_button')),
       findsOneWidget,
     );
     expect(find.text('Activity'), findsOneWidget);
-  });
-
-  testWidgets('sidebar Swap item opens the swap route', (tester) async {
-    await tester.pumpWidget(_sidebarHarness(_syncedSyncState));
-    await tester.pump();
-
-    await tester.tap(find.text('Swap'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('swap'), findsOneWidget);
-  });
-
-  testWidgets('sidebar Pay item opens the pay route', (tester) async {
-    await tester.pumpWidget(_sidebarHarness(_syncedSyncState));
-    await tester.pump();
-
-    await tester.tap(find.text('Pay'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('pay'), findsOneWidget);
   });
 
   testWidgets('sidebar Activity item opens the activity route', (tester) async {
@@ -753,11 +682,8 @@ void main() {
     await tester.pump();
 
     final positions = [
-      tester.getTopLeft(find.text('Home')).dy,
-      tester.getTopLeft(find.text('Swap')).dy,
-      tester.getTopLeft(find.text('Pay')).dy,
-      tester.getTopLeft(find.text('Names')).dy,
-      tester.getTopLeft(find.text('Vote')).dy,
+      tester.getTopLeft(find.text('Wallet')).dy,
+      tester.getTopLeft(find.text('People')).dy,
       tester.getTopLeft(find.text('Activity')).dy,
     ];
     final gaps = [
@@ -787,18 +713,6 @@ void main() {
 
     expect(find.text('Importing...'), findsOneWidget);
 
-    await tester.tap(find.text('Swap'));
-    await tester.pump(const Duration(milliseconds: 50));
-    expect(find.text('swap'), findsNothing);
-
-    await tester.tap(find.text('Pay'));
-    await tester.pump(const Duration(milliseconds: 50));
-    expect(find.text('pay'), findsNothing);
-
-    await tester.tap(find.text('Vote'));
-    await tester.pump(const Duration(milliseconds: 50));
-    expect(find.text('voting'), findsNothing);
-
     await tester.tap(find.text('Activity'));
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.text('activity'), findsNothing);
@@ -818,394 +732,19 @@ void main() {
     expect(find.text('settings'), findsOneWidget);
   });
 
-  testWidgets(
-    'sidebar enables Swap and Pay but keeps Vote disabled while Ironwood migration is required',
-    (tester) async {
-      await tester.pumpWidget(
-        _sidebarHarness(
-          _syncedSyncState,
-          ironwoodHomeMigrationCtaState:
-              const IronwoodHomeMigrationCtaState.start(
-                network: 'main',
-                accountUuid: 'account-1',
-              ),
-          ironwoodPostMigrationState: const IronwoodPostMigrationState.required(
-            network: 'main',
-            accountUuid: 'account-1',
-          ),
-        ),
-      );
-      await tester.pump();
-
-      final swap = _sidebarItemWithLabel(tester, 'Swap');
-      final pay = _sidebarItemWithLabel(tester, 'Pay');
-      final vote = _sidebarItemWithLabel(tester, 'Vote');
-      final activity = _sidebarItemWithLabel(tester, 'Activity');
-      final settings = _sidebarItemWithLabel(tester, 'Settings');
-
-      expect(swap.onTap, isNotNull);
-      expect(pay.onTap, isNotNull);
-      expect(vote.onTap, isNull);
-      expect(activity.onTap, isNotNull);
-      expect(settings.onTap, isNotNull);
-      expect(_opacityForText(tester, 'Vote'), 0.5);
-
-      await tester.tap(find.text('Swap'));
-      await tester.pumpAndSettle();
-      expect(find.text('swap'), findsOneWidget);
-
-      await tester.tap(find.text('Pay'));
-      await tester.pumpAndSettle();
-      expect(find.text('pay'), findsOneWidget);
-
-      await tester.tap(find.text('Vote'));
-      await tester.pump(const Duration(milliseconds: 50));
-      expect(find.text('voting'), findsNothing);
-
-      await tester.tap(find.text('Activity'));
-      await tester.pumpAndSettle();
-      expect(find.text('activity'), findsOneWidget);
-
-      await tester.tap(find.text('Settings'));
-      await tester.pumpAndSettle();
-      expect(find.text('settings'), findsOneWidget);
-    },
-  );
-
-  testWidgets('sidebar restores Pay once Ironwood funds are spendable', (
-    tester,
-  ) async {
-    Widget migrationHarness(BigInt ironwoodBalance) {
-      return _sidebarHarness(
-        _syncedSyncState.copyWith(ironwoodBalance: ironwoodBalance),
-        ironwoodHomeMigrationCtaState: IronwoodHomeMigrationCtaState.resume(
-          network: 'main',
-          accountUuid: 'account-1',
-          status: _mixedMigrationStatus,
-        ),
-        ironwoodPostMigrationState: IronwoodPostMigrationState.inProgress(
-          network: 'main',
-          accountUuid: 'account-1',
-          status: _mixedMigrationStatus,
-        ),
-        migrationCoordinatorState: IronwoodMigrationCoordinatorState(
-          statuses: {'account-1': _mixedMigrationStatus},
-        ),
-      );
+  testWidgets('sidebar respects disabled navigation routes', (tester) async {
+    await tester.pumpWidget(
+      _sidebarHarness(
+        _syncedSyncState,
+        disabledRoutePaths: {'/people', '/activity', '/settings'},
+      ),
+    );
+    await tester.pump();
+    for (final label in ['People', 'Activity', 'Settings']) {
+      expect(_sidebarItemWithLabel(tester, label).onTap, isNull);
     }
-
-    await tester.pumpWidget(migrationHarness(BigInt.zero));
-    await tester.pump();
-
-    expect(_sidebarItemWithLabel(tester, 'Swap').onTap, isNotNull);
-    expect(_sidebarItemWithLabel(tester, 'Pay').onTap, isNull);
-    expect(_sidebarItemWithLabel(tester, 'Vote').onTap, isNotNull);
-
-    await tester.pumpWidget(const SizedBox());
-    await tester.pump();
-    await tester.pumpWidget(migrationHarness(BigInt.one));
-    await tester.pump();
-
-    expect(_sidebarItemWithLabel(tester, 'Pay').onTap, isNotNull);
+    expect(_sidebarItemWithLabel(tester, 'Wallet').onTap, isNotNull);
   });
-
-  testWidgets('sidebar sync indicator is pinned to the sidebar edge', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _sidebarHarness(SyncState(isSyncing: true, percentage: 0.34)),
-    );
-    await tester.pump();
-
-    final indicatorLeft = tester
-        .getTopLeft(find.byKey(const ValueKey('sidebar_sync_indicator')))
-        .dx;
-    final textLeft = tester
-        .getTopLeft(find.byKey(const ValueKey('sidebar_sync_text')))
-        .dx;
-
-    expect(indicatorLeft, moreOrLessEquals(AppSpacing.xs, epsilon: 0.1));
-    expect(
-      textLeft - indicatorLeft,
-      moreOrLessEquals(AppSpacing.sm + AppSpacing.xs, epsilon: 0.1),
-    );
-    expect(_syncIndicatorColor(tester), AppThemeData.light.colors.text.muted);
-    _expectSyncIndicatorGlow(tester, blurRadius: 12);
-  });
-
-  testWidgets('sidebar shimmers the syncing label with animations on', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _sidebarHarness(
-        SyncState(isSyncing: true, percentage: 0.34),
-        disableAnimations: false,
-      ),
-    );
-    // The syncing animation repeats forever, so advance frames manually rather
-    // than using pumpAndSettle.
-    await tester.pump(const Duration(milliseconds: 200));
-    await tester.pump(const Duration(milliseconds: 200));
-
-    expect(tester.takeException(), isNull);
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('sidebar_sync_text')),
-        matching: find.byType(ShaderMask),
-      ),
-      findsOneWidget,
-    );
-    expect(_syncIndicatorColor(tester), AppThemeData.light.colors.text.muted);
-    _expectSyncIndicatorGlow(tester);
-
-    await tester.pumpWidget(const SizedBox());
-  });
-
-  testWidgets('sidebar shows synced state after sync completes', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _sidebarHarness(
-        SyncState(
-          isSyncComplete: true,
-          percentage: 1,
-          scannedHeight: 3_428_143,
-          chainTipHeight: 3_428_143,
-        ),
-      ),
-    );
-    await tester.pump();
-
-    expect(find.text('Synced'), findsOneWidget);
-    expect(find.text('3,428,143'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('sidebar_sync_block_icon')),
-      findsOneWidget,
-    );
-    expect(find.textContaining('Syncing'), findsNothing);
-    final text = tester.widget<Text>(
-      find.byKey(const ValueKey('sidebar_sync_text')),
-    );
-    expect(text.style?.color, AppThemeData.light.colors.sync.text);
-    expect(
-      _syncIndicatorColor(tester),
-      AppThemeData.light.colors.sync.lightSuccess,
-    );
-    _expectSyncIndicatorGlow(tester, blurRadius: 12);
-  });
-
-  testWidgets('sidebar omits block height until sync completion is confirmed', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _sidebarHarness(
-        SyncState(
-          percentage: 1,
-          scannedHeight: 3_428_143,
-          chainTipHeight: 3_428_143,
-        ),
-      ),
-    );
-    await tester.pump();
-
-    expect(find.text('Synced'), findsOneWidget);
-    expect(find.text('3,428,143'), findsNothing);
-    expect(find.byKey(const ValueKey('sidebar_sync_block_icon')), findsNothing);
-  });
-
-  testWidgets('sidebar treats complete background progress as synced', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _sidebarHarness(
-        SyncState(
-          isBackgroundMode: true,
-          percentage: 1,
-          scannedHeight: 100,
-          chainTipHeight: 100,
-        ),
-      ),
-    );
-    await tester.pump();
-
-    expect(find.text('Synced'), findsOneWidget);
-    expect(find.text('99% Syncing...'), findsNothing);
-    expect(find.byKey(const ValueKey('sidebar_sync_height')), findsNothing);
-  });
-
-  testWidgets('sidebar keeps network sync failures visible', (tester) async {
-    await tester.pumpWidget(
-      _sidebarHarness(
-        SyncState(
-          failure: const SyncFailure(
-            kind: SyncFailureKind.network,
-            rawMessage: 'network failed',
-            userMessage: 'Network connection lost.',
-            showSettingsAction: false,
-          ),
-        ),
-      ),
-    );
-    await tester.pump();
-
-    expect(find.text('Syncing failed. Network error...'), findsOneWidget);
-    expect(find.text('Synced'), findsNothing);
-    expect(find.byKey(const ValueKey('sidebar_sync_height')), findsNothing);
-    final text = tester.widget<Text>(
-      find.byKey(const ValueKey('sidebar_sync_text')),
-    );
-    expect(text.style?.color, AppThemeData.light.colors.sync.textError);
-    expect(
-      _syncIndicatorColor(tester),
-      AppThemeData.light.colors.sync.lightError,
-    );
-    _expectSyncIndicatorGlow(tester, blurRadius: 12);
-  });
-
-  testWidgets('sidebar omits the error tooltip when the label fits', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_sidebarHarness(_networkFailureSyncState()));
-    await tester.pump();
-
-    expect(_syncTextTooltip(), findsNothing);
-  });
-
-  testWidgets('sidebar adds the error tooltip only after actual overflow', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _sidebarHarness(_networkFailureSyncState(), sidebarWidth: 180),
-    );
-    await tester.pump();
-
-    final tooltip = tester.widget<Tooltip>(_syncTextTooltip());
-    expect(tooltip.message, 'Syncing failed. Network error');
-    expect(tooltip.excludeFromSemantics, isTrue);
-  });
-
-  testWidgets('overflow error tooltip is excluded from row semantics', (
-    tester,
-  ) async {
-    final semantics = tester.ensureSemantics();
-    await tester.pumpWidget(
-      _sidebarHarness(_networkFailureSyncState(), sidebarWidth: 180),
-    );
-    await tester.pump();
-
-    final syncSemantics = tester.getSemantics(
-      find.byKey(const ValueKey('sidebar_sync_text')),
-    );
-    expect(syncSemantics.label, contains('Syncing failed. Network error'));
-    expect(syncSemantics.tooltip, isEmpty);
-    semantics.dispose();
-  });
-
-  testWidgets('sidebar shows the full overflowed error label on hover', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _sidebarHarness(_networkFailureSyncState(), sidebarWidth: 180),
-    );
-    await tester.pump();
-
-    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
-    addTearDown(gesture.removePointer);
-    await gesture.addPointer();
-    await gesture.moveTo(
-      tester.getCenter(find.byKey(const ValueKey('sidebar_sync_text'))),
-    );
-    await tester.pump(const Duration(milliseconds: 400));
-
-    expect(find.text('Syncing failed. Network error'), findsOneWidget);
-  });
-
-  testWidgets('sidebar does not add an overflow tooltip for syncing status', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _sidebarHarness(
-        SyncState(isSyncing: true, percentage: 0.34),
-        sidebarWidth: 180,
-      ),
-    );
-    await tester.pump();
-
-    expect(_syncTextTooltip(), findsNothing);
-  });
-
-  testWidgets('sidebar uses dark success sync indicator color from Figma', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _sidebarHarness(SyncState(), themeData: AppThemeData.dark),
-    );
-    await tester.pump();
-
-    expect(_syncIndicatorColor(tester), const Color(0xFF0DC87D));
-  });
-
-  testWidgets('sidebar uses dark failure sync indicator color from Figma', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _sidebarHarness(
-        SyncState(
-          failure: const SyncFailure(
-            kind: SyncFailureKind.network,
-            rawMessage: 'network failed',
-            userMessage: 'Network connection lost.',
-            showSettingsAction: false,
-          ),
-        ),
-        themeData: AppThemeData.dark,
-      ),
-    );
-    await tester.pump();
-
-    expect(_syncIndicatorColor(tester), const Color(0xFFA3A4A4));
-  });
-
-  for (final entry in failureLabels.entries) {
-    testWidgets('sidebar maps ${entry.key} sync failures', (tester) async {
-      await tester.pumpWidget(
-        _sidebarHarness(
-          SyncState(
-            failure: SyncFailure(
-              kind: entry.key,
-              rawMessage: 'failure',
-              userMessage: 'Sync failed.',
-              showSettingsAction: false,
-            ),
-          ),
-        ),
-      );
-      await tester.pump();
-
-      expect(find.text(entry.value), findsOneWidget);
-    });
-  }
-}
-
-Color? _syncIndicatorColor(WidgetTester tester) {
-  return _syncIndicatorDecoration(tester).color;
-}
-
-BoxDecoration _syncIndicatorDecoration(WidgetTester tester) {
-  final indicator = find.byKey(const ValueKey('sidebar_sync_indicator'));
-  final decoratedBox = tester.widget<DecoratedBox>(
-    find.ancestor(of: indicator, matching: find.byType(DecoratedBox)).first,
-  );
-  return decoratedBox.decoration as BoxDecoration;
-}
-
-void _expectSyncIndicatorGlow(WidgetTester tester, {double? blurRadius}) {
-  final shadows = _syncIndicatorDecoration(tester).boxShadow;
-  expect(shadows, isNotNull);
-  expect(shadows, hasLength(1));
-  if (blurRadius != null) {
-    expect(shadows!.single.blurRadius, blurRadius);
-  }
 }
 
 BoxDecoration _boxDecorationByKey(WidgetTester tester, Key key) {
@@ -1237,13 +776,6 @@ MouseCursor _cursorForKey(WidgetTester tester, Key key) {
   return mouseRegion.cursor;
 }
 
-double _opacityForText(WidgetTester tester, String text) {
-  final opacity = tester.widget<Opacity>(
-    find.ancestor(of: find.text(text), matching: find.byType(Opacity)).first,
-  );
-  return opacity.opacity;
-}
-
 final _syncedSyncState = SyncState(
   accountUuid: 'account-1',
   hasAccountScopedData: true,
@@ -1269,6 +801,7 @@ Widget _sidebarHarness(
       const IronwoodMigrationCoordinatorState(),
   NetworkPrivacyState networkPrivacyState = const NetworkPrivacyState.off(),
   bool suppressActiveSelection = false,
+  Set<String> disabledRoutePaths = const {},
 }) {
   final bootstrap = _bootstrapFor(accountState ?? _singleAccountState);
   final router = GoRouter(
@@ -1278,8 +811,15 @@ Widget _sidebarHarness(
         path: '/home',
         builder: (_, _) => AppDesktopShell(
           sidebarWidth: sidebarWidth,
-          sidebar: const AppMainSidebar(),
+          sidebar: AppMainSidebar(disabledRoutePaths: disabledRoutePaths),
           pane: const AppDesktopPane(child: Text('home route')),
+        ),
+      ),
+      GoRoute(
+        path: '/people',
+        builder: (_, _) => const AppDesktopShell(
+          sidebar: AppMainSidebar(),
+          pane: AppDesktopPane(child: Text('people route')),
         ),
       ),
       GoRoute(path: '/names', builder: (_, _) => const ZnsWalletScreen()),
@@ -1399,9 +939,6 @@ Widget _sidebarHarness(
     child: MaterialApp.router(
       routerConfig: router,
       builder: (context, child) => MediaQuery(
-        // The syncing sidebar's shimmer and glow animate forever. Tests default
-        // to reduced motion so pumpAndSettle can settle; animation-specific
-        // tests opt back in with disableAnimations: false.
         data: MediaQuery.of(
           context,
         ).copyWith(disableAnimations: disableAnimations),
@@ -1432,24 +969,6 @@ class _FakePaySelectedAssetStore implements PaySelectedAssetStore {
     required String accountUuid,
     required SwapAsset asset,
   }) async {}
-}
-
-SyncState _networkFailureSyncState() {
-  return SyncState(
-    failure: const SyncFailure(
-      kind: SyncFailureKind.network,
-      rawMessage: 'network failed',
-      userMessage: 'Network connection lost.',
-      showSettingsAction: false,
-    ),
-  );
-}
-
-Finder _syncTextTooltip() {
-  return find.ancestor(
-    of: find.byKey(const ValueKey('sidebar_sync_text')),
-    matching: find.byType(Tooltip),
-  );
 }
 
 const _singleAccountState = AccountState(

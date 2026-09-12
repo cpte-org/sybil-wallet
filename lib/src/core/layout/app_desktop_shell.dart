@@ -16,7 +16,7 @@ class AppDesktopShell extends StatelessWidget {
     required this.pane,
     this.background,
     this.backgroundColor,
-    this.sidebarWidth = 256,
+    this.sidebarWidth = 220,
     super.key,
   });
 
@@ -31,7 +31,7 @@ class AppDesktopShell extends StatelessWidget {
     final background = this.background;
     // Where the trailing pane begins: outer padding + sidebar + the gap.
     // Window-level overlays clear this so they align with the pane.
-    final paneLeftInset = AppSpacing.xs + sidebarWidth + AppSpacing.xs;
+    final paneLeftInset = sidebarWidth;
     return ContentOverlayInset(
       leftInset: paneLeftInset,
       child: Scaffold(
@@ -43,12 +43,12 @@ class AppDesktopShell extends StatelessWidget {
               if (background != null)
                 Positioned.fill(child: IgnorePointer(child: background)),
               Padding(
-                padding: const EdgeInsets.all(AppSpacing.xs),
+                padding: EdgeInsets.zero,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     SizedBox(width: sidebarWidth, child: sidebar),
-                    const SizedBox(width: AppSpacing.xs),
+
                     Expanded(child: pane),
                   ],
                 ),
@@ -128,7 +128,7 @@ class AppDesktopSidebarSurface extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: backgroundColor ?? Colors.transparent,
-        borderRadius: BorderRadius.circular(AppRadii.xSmall),
+        borderRadius: BorderRadius.zero,
       ),
       clipBehavior: clipBehavior,
       child: child,
@@ -155,7 +155,7 @@ class AppDesktopPane extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: paintBackground ? backgroundColor ?? Colors.transparent : null,
-        borderRadius: BorderRadius.circular(AppWindowSizing.paneRadius),
+        borderRadius: BorderRadius.zero,
       ),
       clipBehavior: Clip.antiAlias,
       child: AppToastHost(
@@ -258,11 +258,11 @@ class AppSidebarItem extends StatelessWidget {
     final row = AnimatedContainer(
       duration: const Duration(milliseconds: 160),
       curve: Curves.easeOut,
-      height: 40,
+      height: 52,
       padding: const EdgeInsets.only(left: AppSpacing.sm, right: AppSpacing.xs),
       decoration: BoxDecoration(
         color: active ? colors.navPanel.activeBg : null,
-        borderRadius: BorderRadius.circular(AppRadii.small),
+        borderRadius: BorderRadius.circular(15),
       ),
       child: Row(
         children: [

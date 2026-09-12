@@ -3,11 +3,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zcash_wallet/src/core/formatting/address_display.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
-import 'package:zcash_wallet/src/core/theme/primitives.dart';
 import 'package:zcash_wallet/src/core/widgets/app_icon.dart';
-import 'package:zcash_wallet/src/core/widgets/app_profile_picture.dart';
+import 'package:zcash_wallet/src/core/widgets/familiar_widgets.dart';
 import 'package:zcash_wallet/src/core/widgets/review_buttons_stack.dart';
-import 'package:zcash_wallet/src/core/widgets/review_wrap_card.dart';
 import 'package:zcash_wallet/src/features/send/widgets/send_review_layout.dart';
 import 'package:zcash_wallet/src/features/send/widgets/send_status_content_view.dart';
 
@@ -39,11 +37,12 @@ void main() {
 
     // Detail rows present in every phase.
     expect(find.text('Message'), findsOneWidget);
+    await _expandDetails(tester);
     expect(find.text('Timestamp'), findsOneWidget);
     expect(find.text('25 May, 13:30'), findsOneWidget);
     expect(find.text('Tx ID'), findsOneWidget);
     expect(find.text('0123123124512512'), findsOneWidget);
-    expect(find.text('Tx fee'), findsOneWidget);
+    expect(find.text('Network fee'), findsOneWidget);
 
     // Read-only screen: no confirm/cancel stack.
     expect(find.byType(ReviewButtonsStack), findsNothing);
@@ -65,8 +64,7 @@ void main() {
       AppThemeData.light.colors.text.positiveStrong,
     );
 
-    final card = tester.widget<ReviewWrapCard>(find.byType(ReviewWrapCard));
-    expect(card.surfaceColor, isNull);
+    expect(find.byType(FamiliarCard), findsNWidgets(2));
   });
 
   testWidgets('transparent raw recipient keeps a transparent badge', (
@@ -133,15 +131,14 @@ void main() {
     );
 
     expect(find.text('Mike'), findsOneWidget);
-    expect(find.byType(AppProfilePicture), findsOneWidget);
+    expect(find.byType(FamiliarAvatar), findsOneWidget);
     expect(find.text('TEX - ${truncatedAddress(_texAddress)}'), findsOneWidget);
     expect(find.text('Transparent'), findsNothing);
     expect(find.text('Shielded'), findsNothing);
   });
 
   testWidgets(
-    'failed phase strikes the recipient, swaps the connector, and pins the '
-    'card dark in the light theme',
+    'failed phase strikes the recipient and keeps explicit failure styling',
     (tester) async {
       await _pump(tester, _statusView(SendStatusPhase.failed));
 
@@ -159,19 +156,12 @@ void main() {
       final amountText = tester.widget<Text>(find.text('123.12 ZEC'));
       expect(amountText.style?.decoration, isNull);
 
-      // Fixed dark surface in BOTH themes (pumped with the light theme here).
-      final card = tester.widget<ReviewWrapCard>(find.byType(ReviewWrapCard));
-      expect(card.surfaceColor, Primitives.p50Dark);
-      expect(card.surfaceColor, const Color(0xFF1B1F1F));
-
-      // Rows on the dark card resolve dark-theme tokens.
-      final darkColors = AppThemeData.dark.colors;
+      expect(find.byType(FamiliarCard), findsNWidgets(2));
+      final colors = AppThemeData.light.colors;
       final statusText = tester.widget<Text>(find.text('Failed'));
-      expect(statusText.style?.color, darkColors.text.destructive);
+      expect(statusText.style?.color, colors.text.destructive);
       final statusLabel = tester.widget<Text>(find.text('Status'));
-      expect(statusLabel.style?.color, darkColors.text.destructive);
-      final timestampLabel = tester.widget<Text>(find.text('Timestamp'));
-      expect(timestampLabel.style?.color, darkColors.text.secondary);
+      expect(statusLabel.style?.color, colors.text.destructive);
 
       // No in-content CTA on failed — toolbar back only.
       expect(find.byType(ReviewButtonsStack), findsNothing);
@@ -192,6 +182,7 @@ void main() {
     );
 
     expect(find.text('Message'), findsNothing);
+    await _expandDetails(tester);
     expect(find.text('Timestamp'), findsOneWidget);
   });
 
@@ -202,6 +193,8 @@ void main() {
       _statusView(SendStatusPhase.completed, onOpenExplorer: () => opens++),
     );
 
+    await _expandDetails(tester);
+    await tester.ensureVisible(find.text('0123123124512512'));
     await tester.tap(find.text('0123123124512512'));
     await tester.pump();
     expect(opens, 1);
@@ -221,6 +214,7 @@ void main() {
     );
 
     expect(find.text('Tx ID'), findsNothing);
+    await _expandDetails(tester);
     expect(find.text('Timestamp'), findsOneWidget);
   });
 
@@ -300,8 +294,19 @@ Future<void> _pump(WidgetTester tester, Widget child) async {
 
   await tester.pumpWidget(
     MaterialApp(
-      home: AppTheme(data: AppThemeData.light, child: child),
+      home: AppTheme(
+        data: AppThemeData.light,
+        child: SingleChildScrollView(child: child),
+      ),
     ),
   );
   await tester.pump();
+}
+
+Future<void> _expandDetails(WidgetTester tester) async {
+  expect(find.text('Timestamp'), findsNothing);
+  await tester.ensureVisible(find.text('Payment details'));
+  await tester.tap(find.text('Payment details'));
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 300));
 }

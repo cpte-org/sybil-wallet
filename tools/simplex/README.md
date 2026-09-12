@@ -32,15 +32,33 @@ SIMPLEX_LIBS_DIR=/absolute/path/to/extracted/libs fvm flutter build linux \
 ```
 
 CMake builds `simplex-host` from `native_host.c` and installs the optional library
-directory at `bundle/lib/simplex`. Without the optional runtime, manual contact
-exchange still works; opening private delivery reports that the component is
-unavailable. Developer-only absolute overrides are `SIMPLEX_NATIVE_HOST` and
-`SIMPLEX_NATIVE_LIBRARY` Dart defines.
+directory at `bundle/lib/simplex`. The first CMake configuration initializes
+`SIMPLEX_LIBS_DIR` from the environment and stores it as a cached path. Later
+builds retain that choice when the environment variable is absent. A selected
+directory must contain `libsimplex.so`; configure fails clearly if it is missing.
+The complete directory is installed together, including any runtime notices it
+contains.
 
-Open Contacts → contact exchange → Private delivery. Create/copy a connection
-link, connect from a second disposable wallet, and refresh the delivery inbox.
-Paste a packet produced by the existing contact workflow and approve sending it.
-The recipient copies the received packet into that existing workflow for review.
+To change or clear a previously configured runtime, update the CMake cache
+explicitly before the next FVM build (use the matching build-mode directory):
+
+```sh
+cmake -S linux -B build/linux/x64/debug \
+  -DSIMPLEX_LIBS_DIR=/absolute/path/to/extracted/libs
+# Opt out again:
+cmake -S linux -B build/linux/x64/debug -DSIMPLEX_LIBS_DIR=
+```
+
+Without the optional runtime, contact code exchange still works. Private delivery
+shows an unavailable state with a path back to code exchange. Developer-only
+absolute overrides are `SIMPLEX_NATIVE_HOST` and `SIMPLEX_NATIVE_LIBRARY` Dart
+defines.
+
+Turn on advanced contact tools in Contact settings, then open Private delivery.
+Create or open a connection code with a second disposable wallet, then refresh
+connections and the inbox. Open a contact code produced by the existing contact
+workflow and approve sending it. The recipient opens the received code in that
+existing workflow for review.
 This temporary manual handoff deliberately does not grant trust to a transport
 profile name. Submitted means accepted by the local SimpleX core, not accepted
 as a contact by the other person.

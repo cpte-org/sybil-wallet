@@ -5,6 +5,7 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart' show CupertinoRouteTransitionMixin;
 import 'package:flutter/material.dart';
+import 'package:zcash_wallet/src/features/address_book/providers/address_book_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -13,14 +14,21 @@ import 'package:zcash_wallet/src/app_bootstrap.dart';
 import 'package:zcash_wallet/src/core/config/rpc_endpoint_config.dart';
 import 'package:zcash_wallet/src/core/config/swap_feature_config.dart';
 import 'package:zcash_wallet/src/core/layout/mobile/app_mobile_shell.dart';
+import 'package:zcash_wallet/src/core/layout/mobile/app_mobile_tab_bar.dart';
 import 'package:zcash_wallet/src/core/navigation/mobile_routes.dart';
 import 'package:zcash_wallet/src/core/profile_pictures.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
 import 'package:zcash_wallet/src/features/activity/screens/mobile/mobile_activity_screen.dart';
 import 'package:zcash_wallet/src/features/home/screens/mobile/mobile_home_screen.dart';
+import 'package:zcash_wallet/src/features/contacts/application/contact_exchange_controller.dart';
+import 'package:zcash_wallet/src/features/contacts/application/contact_delivery_providers.dart';
+import 'package:zcash_wallet/src/features/contacts/presentation/contact_backup_screen.dart';
+import 'package:zcash_wallet/src/features/contacts/presentation/contact_delivery_screen.dart';
+import 'package:zcash_wallet/src/features/contacts/presentation/familiar_people_screen.dart';
 import 'package:zcash_wallet/src/features/pay/screens/mobile/mobile_pay_screen.dart';
 import 'package:zcash_wallet/src/features/pay/screens/mobile/mobile_pay_submitted_screen.dart';
 import 'package:zcash_wallet/src/features/receive/screens/mobile/mobile_receive_screen.dart';
+import 'package:zcash_wallet/src/features/contacts/presentation/familiar_choose_recipient_screen.dart';
 import 'package:zcash_wallet/src/features/send/screens/mobile/mobile_send_screen.dart';
 import 'package:zcash_wallet/src/features/swap/models/swap_activity_navigation.dart';
 import 'package:zcash_wallet/src/features/swap/models/swap_models.dart';
@@ -35,6 +43,11 @@ import 'package:zcash_wallet/src/rust/api/sync.dart' as rust_sync;
 
 import '../../fakes/fake_sync_notifier.dart';
 import '../../features/swap/support/static_near_intents_swap_provider.dart';
+
+class _EmptyAddressBook extends AddressBookNotifier {
+  @override
+  FutureOr<AddressBookState> build() => const AddressBookState();
+}
 
 const _accountState = AccountState(
   accounts: [
@@ -74,6 +87,7 @@ Widget _app(
 }) => ProviderScope(
   overrides: [
     appBootstrapProvider.overrideWithValue(_bootstrap()),
+    addressBookProvider.overrideWith(_EmptyAddressBook.new),
     swapFeatureEnabledProvider.overrideWithValue(swapFeatureEnabled),
     // The coin bob loops forever, which would break pumpAndSettle here;
     // Funded so the home tab shows the Send action used by the push
@@ -148,31 +162,108 @@ void main() {
       tester.element(find.byType(AppMobileShell)),
     );
     expect(shellRoute, isA<CupertinoRouteTransitionMixin<dynamic>>());
-    for (final label in ['Home', 'Swap', 'Activity', 'Settings']) {
-      expect(find.bySemanticsLabel(label), findsWidgets);
-    }
+    expect(
+      tester
+          .widget<AppMobileTabBar>(find.byType(AppMobileTabBar))
+          .items
+          .map((item) => item.label),
+      ['Wallet', 'People', 'Activity', 'Settings'],
+    );
 
     await tester.tap(find.bySemanticsLabel('Activity').last);
     await tester.pumpAndSettle();
     expect(find.byType(MobileActivityScreen), findsOneWidget);
     expect(find.byType(MobileHomeScreen), findsNothing);
 
-    await tester.tap(find.bySemanticsLabel('Swap').last);
+    await tester.tap(find.bySemanticsLabel('People').last);
     await tester.pumpAndSettle();
-    expect(find.byType(MobileSwapScreen), findsOneWidget);
+    expect(find.byType(FamiliarPeopleScreen), findsOneWidget);
   });
 
-  testWidgets('swap tab is hidden when the swap feature is disabled', (
+  testWidgets('Familiar tabs stay stable when the swap feature is disabled', (
     tester,
   ) async {
     await tester.pumpWidget(_app(_router(), swapFeatureEnabled: false));
     await tester.pumpAndSettle();
 
-    expect(find.bySemanticsLabel('Swap'), findsNothing);
-    for (final label in ['Home', 'Activity', 'Settings']) {
-      expect(find.bySemanticsLabel(label), findsWidgets);
-    }
+    expect(
+      tester
+          .widget<AppMobileTabBar>(find.byType(AppMobileTabBar))
+          .items
+          .map((item) => item.label),
+      ['Wallet', 'People', 'Activity', 'Settings'],
+    );
+    expect(find.text('Swap and Pay'), findsNothing);
+    expect(find.text('Swap'), findsNothing);
+    await tester.tap(find.bySemanticsLabel('People').last);
+    await tester.pumpAndSettle();
+    expect(find.byType(FamiliarPeopleScreen), findsOneWidget);
   });
+
+  testWidgets(
+    'standalone Swap pushes over the shell and returns to its opener',
+    (tester) async {
+      final router = _router();
+      await tester.pumpWidget(_app(router));
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('People').last);
+      await tester.pumpAndSettle();
+
+      unawaited(router.push<void>('/swap'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MobileSwapScreen), findsOneWidget);
+      expect(find.byType(AppMobileTabBar), findsNothing);
+      final route = ModalRoute.of(
+        tester.element(find.byType(MobileSwapScreen)),
+      );
+      expect(route, isA<CupertinoRouteTransitionMixin<dynamic>>());
+      expect(route?.opaque, isTrue);
+
+      await tester.tap(find.bySemanticsLabel('Back'));
+      await tester.pumpAndSettle();
+      expect(find.byType(MobileSwapScreen), findsNothing);
+      expect(find.byType(FamiliarPeopleScreen), findsOneWidget);
+      expect(router.routerDelegate.currentConfiguration.uri.path, '/people');
+    },
+  );
+
+  for (final contactRoute in [
+    (path: '/contacts/backup', screen: ContactBackupScreen),
+    (path: '/contacts/delivery', screen: ContactDeliveryScreen),
+  ]) {
+    testWidgets('${contactRoute.path} is reachable as a Cupertino push', (
+      tester,
+    ) async {
+      final router = _router();
+      await tester.pumpWidget(
+        _app(
+          router,
+          overrides: [
+            contactScopeProvider.overrideWithValue(null),
+            contactDeliveryScopeProvider.overrideWithValue(null),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('People').last);
+      await tester.pumpAndSettle();
+
+      unawaited(router.push<void>(contactRoute.path));
+      await tester.pumpAndSettle();
+      final screen = find.byType(contactRoute.screen);
+      expect(screen, findsOneWidget);
+      expect(find.byType(AppMobileTabBar), findsNothing);
+      final route = ModalRoute.of(tester.element(screen));
+      expect(route, isA<CupertinoRouteTransitionMixin<dynamic>>());
+      expect(route?.opaque, isTrue);
+
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(screen, findsNothing);
+      expect(find.byType(FamiliarPeopleScreen), findsOneWidget);
+    });
+  }
 
   testWidgets('send pushes over the shell with a swipe-back capable page', (
     tester,
@@ -183,13 +274,15 @@ void main() {
     await tester.tap(find.text('Send'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(MobileSendScreen), findsOneWidget);
-    final route = ModalRoute.of(tester.element(find.byType(MobileSendScreen)));
+    expect(find.byType(FamiliarChooseRecipientScreen), findsOneWidget);
+    final route = ModalRoute.of(
+      tester.element(find.byType(FamiliarChooseRecipientScreen)),
+    );
     expect(route, isA<CupertinoRouteTransitionMixin<dynamic>>());
 
-    await tester.tap(find.bySemanticsLabel('Back'));
+    await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
-    expect(find.byType(MobileSendScreen), findsNothing);
+    expect(find.byType(FamiliarChooseRecipientScreen), findsNothing);
     expect(find.byType(MobileHomeScreen), findsOneWidget);
   });
 
@@ -355,7 +448,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('mobile_home_pay')));
+    await tester.ensureVisible(find.text('Swap and Pay'));
+    await tester.pump();
+    await tester.tap(find.text('Swap and Pay'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -430,7 +525,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const ValueKey('mobile_home_pay')));
+      await tester.ensureVisible(find.text('Swap and Pay'));
+      await tester.pump();
+      await tester.tap(find.text('Swap and Pay'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
       expect(swapProvider.loadCount, 1);
@@ -483,15 +580,17 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('mobile_home_pay')));
+    await tester.ensureVisible(find.text('Swap and Pay'));
+    await tester.pump();
+    await tester.tap(find.text('Swap and Pay'));
     await tester.pump();
     expect(payAssetStore.loadStarted, isTrue);
 
-    await tester.tap(find.bySemanticsLabel('Swap').last);
+    await tester.tap(find.bySemanticsLabel('People').last);
     await tester.pumpAndSettle();
-    expect(find.byType(MobileSwapScreen), findsOneWidget);
+    expect(find.byType(FamiliarPeopleScreen), findsOneWidget);
 
-    await tester.tap(find.bySemanticsLabel('Home').last);
+    await tester.tap(find.bySemanticsLabel('Wallet').last);
     await tester.pumpAndSettle();
     expect(find.byType(MobileHomeScreen), findsOneWidget);
 

@@ -1,5 +1,7 @@
 import 'package:flutter/painting.dart';
 
+import '../primitives.dart';
+
 /// macOS utility colors from the Desktop color-token export.
 class AppMacosUtilityColors {
   const AppMacosUtilityColors({
@@ -19,22 +21,22 @@ class AppMacosUtilityColors {
   final Color innerBorder;
 
   static const dark = AppMacosUtilityColors(
-    window: Color(0xFF0F0F0F),
-    windowTransparent: Color(0x000F0F0F),
-    navPanel: Color(0x4D1A1A1A),
-    font: Color(0xCCFFFFFF),
-    thinBorder: Color(0x3B1A1A1A),
+    window: FamiliarPrimitives.paperDark,
+    windowTransparent: Color(0x0019261F),
+    navPanel: Color(0x4D13251C),
+    font: FamiliarPrimitives.inkDark,
+    thinBorder: FamiliarPrimitives.lineDark,
     // The glass panel's inner ring is a white highlight in both Figma
     // modes (inner shadow #FFFFFF @ 15%), not a dark outline.
     innerBorder: Color(0x26FFFFFF),
   );
 
   static const light = AppMacosUtilityColors(
-    window: Color(0xFFF7F7F7),
-    windowTransparent: Color(0x00F5F5F5),
-    navPanel: Color(0x4DFFFFFF),
-    font: Color(0xD91A1A1A),
-    thinBorder: Color(0x8CFFFFFF),
+    window: FamiliarPrimitives.paperLight,
+    windowTransparent: Color(0x00F7F6EF),
+    navPanel: Color(0x4DFFFEF9),
+    font: FamiliarPrimitives.inkLight,
+    thinBorder: FamiliarPrimitives.lineLight,
     innerBorder: Color(0x26FFFFFF),
   );
 }

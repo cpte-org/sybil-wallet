@@ -73,6 +73,7 @@ void main() {
 
     expect(find.text('Sent successfully'), findsOneWidget);
     expect(find.text('Completed'), findsOneWidget);
+    await _expandPaymentDetails(tester);
     expect(find.text('Tx ID'), findsOneWidget);
     expect(find.text(truncatedTxid(_txid)), findsOneWidget);
     expect(find.text('Timestamp'), findsOneWidget);
@@ -96,7 +97,7 @@ void main() {
     );
     await tester.pump();
 
-    expect(_sidebarItem(tester, 'Home').active, isFalse);
+    expect(_sidebarItem(tester, 'Wallet').active, isFalse);
     expect(_sidebarItem(tester, 'Settings').active, isFalse);
     expect(find.text('Donation in progress...'), findsOneWidget);
     expect(find.text('Send in progress...'), findsNothing);
@@ -110,7 +111,7 @@ void main() {
     await _flushBroadcast(tester);
 
     expect(find.text('Thank you for supporting Vizor'), findsOneWidget);
-    expect(_sidebarItem(tester, 'Home').active, isFalse);
+    expect(_sidebarItem(tester, 'Wallet').active, isFalse);
     expect(_sidebarItem(tester, 'Settings').active, isFalse);
   });
 
@@ -147,6 +148,8 @@ void main() {
     await tester.pump();
     await _flushBroadcast(tester);
 
+    await _expandPaymentDetails(tester);
+    await tester.ensureVisible(find.text(truncatedTxid(_txid)));
     await tester.tap(find.text(truncatedTxid(_txid)));
     await tester.pump(const Duration(milliseconds: 100));
 
@@ -191,7 +194,8 @@ void main() {
 
     expect(find.text('Send in progress...'), findsOneWidget);
     expect(find.text('In progress'), findsOneWidget);
-    // Explorer affordance stays available like the legacy pending receipt.
+    // Explorer affordance stays available in payment details.
+    await _expandPaymentDetails(tester);
     expect(find.text(truncatedTxid(_txid)), findsOneWidget);
     expect(find.textContaining("didn't reach the network"), findsOneWidget);
     expect(rustApi.discardCalls, isEmpty);
@@ -406,6 +410,7 @@ void main() {
       [3],
       [4],
     ]);
+    await _expandPaymentDetails(tester);
     expect(find.text(truncatedTxid(_secondTxid)), findsOneWidget);
     expect(find.text(truncatedTxid(_txid)), findsNothing);
   });
@@ -1032,4 +1037,12 @@ class _RustApiFake implements RustLibApi {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => Future<void>.value();
+}
+
+Future<void> _expandPaymentDetails(WidgetTester tester) async {
+  await tester.ensureVisible(find.text('Payment details'));
+  await tester.tap(find.text('Payment details'));
+  // The in-progress indicator may still animate; this expansion is bounded.
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 300));
 }

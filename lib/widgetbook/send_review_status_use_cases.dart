@@ -100,8 +100,7 @@ Widget buildSendStatusCompletedUseCase(BuildContext context) {
   );
 }
 
-/// Send status — failed: uturn-up connector, struck-through recipient, and
-/// the wrap card pinned dark in both themes.
+/// Send status — failed: uturn-up connector and struck-through recipient.
 Widget buildSendStatusFailedUseCase(BuildContext context) {
   return _SendReviewStatusFrame(
     child: SendStatusContentView(
@@ -121,9 +120,7 @@ Widget buildSendStatusFailedUseCase(BuildContext context) {
   );
 }
 
-/// Window-colored backdrop standing in for the trailing pane; the content
-/// views center their own 420px column, mirroring how `SendComposeView`
-/// fills the pane on the live screen.
+/// Window-colored backdrop with the same scrolling behavior as the live pane.
 class _SendReviewStatusFrame extends StatelessWidget {
   const _SendReviewStatusFrame({required this.child});
 
@@ -131,6 +128,9 @@ class _SendReviewStatusFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(color: context.colors.background.window, child: child);
+    return ColoredBox(
+      color: context.colors.background.window,
+      child: SingleChildScrollView(child: child),
+    );
   }
 }

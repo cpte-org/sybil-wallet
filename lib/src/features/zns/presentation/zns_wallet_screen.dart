@@ -7,7 +7,6 @@ import '../../../core/layout/app_desktop_shell.dart';
 import '../../../core/layout/app_main_sidebar.dart';
 import '../../../core/layout/mobile/mobile_top_nav.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../send/models/send_prefill_args.dart';
 import '../application/zns_controller.dart';
 import 'zns_screen.dart';
 
@@ -20,60 +19,6 @@ class ZnsWalletScreen extends ConsumerWidget {
       data: ref.watch(znsControllerProvider),
       callbacks: controller.callbacks(
         onShowRecovery: () => _recovery(context, controller),
-        onSendToName: (lookup) async {
-          try {
-            late final String address;
-            try {
-              address = await controller.resolvedAddressForSend();
-            } on ZnsRecipientChanged catch (changed) {
-              if (!context.mounted) return;
-              final accepted = await showDialog<bool>(
-                context: context,
-                builder: (dialog) => AlertDialog(
-                  title: const Text('Name registration changed'),
-                  content: SingleChildScrollView(
-                    child: Text(
-                      '${changed.name} now has a different registration. Verify that this is the person you intend to pay.\n\nCurrent Zcash address:\n${changed.address}',
-                    ),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(dialog, false),
-                      child: const Text('Cancel'),
-                    ),
-                    FilledButton(
-                      onPressed: () => Navigator.pop(dialog, true),
-                      child: const Text('Use this recipient'),
-                    ),
-                  ],
-                ),
-              );
-              if (accepted != true || !context.mounted) return;
-              address = await controller.resolvedAddressForSend(
-                acceptedRecipient: changed.fingerprint,
-              );
-            }
-            if (context.mounted) {
-              context.push(
-                '/send',
-                extra: kAppFormFactor == AppFormFactor.mobile
-                    ? address
-                    : SendPrefillArgs(
-                        id: 'zns-${DateTime.now().microsecondsSinceEpoch}',
-                        source: 'zns',
-                        address: address,
-                        label: lookup.name,
-                      ),
-              );
-            }
-          } catch (e) {
-            if (context.mounted) {
-              ScaffoldMessenger.maybeOf(
-                context,
-              )?.showSnackBar(SnackBar(content: Text(znsFriendlyError(e))));
-            }
-          }
-        },
       ),
     );
     if (kAppFormFactor == AppFormFactor.mobile) {
@@ -82,7 +27,10 @@ class ZnsWalletScreen extends ConsumerWidget {
         body: SafeArea(
           child: Column(
             children: [
-              MobileTopNav.back(title: 'Names', onBack: () => context.pop()),
+              MobileTopNav.back(
+                title: 'Manage my names',
+                onBack: () => context.pop(),
+              ),
               Expanded(child: content),
             ],
           ),
@@ -91,7 +39,24 @@ class ZnsWalletScreen extends ConsumerWidget {
     }
     return AppDesktopShell(
       sidebar: const AppMainSidebar(),
-      pane: AppDesktopPane(padding: EdgeInsets.zero, child: content),
+      pane: AppDesktopPane(
+        padding: EdgeInsets.zero,
+        child: Column(
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => context.canPop()
+                    ? context.pop()
+                    : context.go('/settings/names'),
+                icon: const Icon(Icons.arrow_back, size: 18),
+                label: const Text('Public Zcash names'),
+              ),
+            ),
+            Expanded(child: content),
+          ],
+        ),
+      ),
     );
   }
 

@@ -16,6 +16,7 @@ import 'package:zcash_wallet/src/core/profile_pictures.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
 import 'package:zcash_wallet/src/core/widgets/app_icon.dart';
 import 'package:zcash_wallet/src/core/widgets/app_profile_picture.dart';
+import 'package:zcash_wallet/src/core/widgets/familiar_widgets.dart';
 import 'package:zcash_wallet/src/core/widgets/mobile/mobile_list_row.dart';
 import 'package:zcash_wallet/src/core/widgets/mobile/mobile_surface_card.dart';
 import 'package:zcash_wallet/src/features/onboarding/shared/onboarding_welcome_art.dart';
@@ -265,7 +266,7 @@ void main() {
             );
             expect(
               tester.getTopLeft(footer).dy,
-              greaterThan(tester.getBottomLeft(find.text('Theme')).dy),
+              greaterThan(tester.getBottomLeft(find.text('Appearance')).dy),
             );
             expect(
               tester.getBottomLeft(footer).dy,
@@ -279,8 +280,8 @@ void main() {
                   tester
                       .getBottomLeft(
                         find.ancestor(
-                          of: find.text('Theme'),
-                          matching: find.byType(MobileSurfaceCard),
+                          of: find.text('Appearance'),
+                          matching: find.byType(FamiliarCard),
                         ),
                       )
                       .dy,
@@ -574,6 +575,8 @@ void main() {
     );
     expect(find.text('Try again'), findsOneWidget);
 
+    await Scrollable.ensureVisible(tester.element(retry), alignment: 0.5);
+    await tester.pumpAndSettle();
     await tester.tap(retry);
     await tester.pumpAndSettle();
 
@@ -609,6 +612,8 @@ void main() {
     expect(description, isNot(contains('Requests stay blocked')));
     expect(find.text('Try direct connection'), findsOneWidget);
 
+    await Scrollable.ensureVisible(tester.element(retry), alignment: 0.5);
+    await tester.pumpAndSettle();
     await tester.tap(retry);
     await tester.pumpAndSettle();
 
@@ -737,8 +742,8 @@ void main() {
     await tester.pump();
 
     expect(find.text('Settings'), findsOneWidget);
-    expect(find.text('Account'), findsOneWidget);
-    expect(find.text('System'), findsOneWidget);
+    expect(find.text('You and your wallet'), findsOneWidget);
+    expect(find.text('Security and recovery'), findsOneWidget);
     expect(find.text('John'), findsOneWidget);
     expect(find.text('Knight'), findsOneWidget);
     final pfpRow = find.byKey(const ValueKey('mobile_settings_pfp_row'));
@@ -758,7 +763,9 @@ void main() {
       _chevronIn(tester, const ValueKey('mobile_settings_pfp_row')).color,
       AppThemeData.dark.colors.icon.accent,
     );
-    expect(find.text('Theme'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Appearance'), 200);
+    expect(find.text('Network and app'), findsOneWidget);
+    expect(find.text('Appearance'), findsOneWidget);
     expect(find.text('Dark'), findsOneWidget);
     expect(find.text('Syncing'), findsOneWidget);
     final keepAwakeRow = find.byKey(
@@ -796,9 +803,9 @@ void main() {
     await tester.pumpWidget(_app());
     await tester.pump();
 
-    await tester.ensureVisible(find.text('Theme'));
+    await tester.scrollUntilVisible(find.text('Appearance'), 200);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Theme'));
+    await tester.tap(find.text('Appearance'));
     await tester.pumpAndSettle();
 
     expect(find.text('System (Auto)'), findsOneWidget);
@@ -935,10 +942,10 @@ void main() {
     await tester.pump();
 
     for (final label in [
-      'Contacts',
-      'Secret Passphrase',
-      'Viewing Key',
-      'Base account private key',
+      'People',
+      'Wallet recovery phrase',
+      'Viewing key',
+      'Base / Ethereum private key',
       'Keep screen awake',
     ]) {
       final row = tester.widget<Text>(find.text(label));
@@ -958,7 +965,7 @@ void main() {
 
     final rowFinder = find.byKey(const ValueKey('mobile_settings_seed_row'));
     final row = tester.widget<MobileListRow>(rowFinder);
-    final label = tester.widget<Text>(find.text('Secret Passphrase'));
+    final label = tester.widget<Text>(find.text('Wallet recovery phrase'));
     final chevron = _chevronIn(
       tester,
       const ValueKey('mobile_settings_seed_row'),
@@ -982,7 +989,7 @@ void main() {
       const ValueKey('mobile_settings_viewing_key_row'),
     );
     final row = tester.widget<MobileListRow>(rowFinder);
-    final label = tester.widget<Text>(find.text('Viewing Key'));
+    final label = tester.widget<Text>(find.text('Viewing key'));
 
     expect(row.enabled, isTrue);
     expect(row.onTap, isNotNull);
@@ -1005,6 +1012,7 @@ void main() {
     await tester.pump();
 
     final row = find.byKey(const ValueKey('mobile_settings_biometric_row'));
+    await tester.scrollUntilVisible(row, 200);
     expect(row, findsOneWidget);
     expect(
       find.descendant(of: row, matching: find.text('Face ID')),
@@ -1032,8 +1040,9 @@ void main() {
     await tester.pumpWidget(_app(biometricNotifier: () => biometricNotifier));
     await tester.pump();
 
-    await tester.ensureVisible(
+    await tester.scrollUntilVisible(
       find.byKey(const ValueKey('mobile_settings_biometric_row')),
+      200,
     );
     await tester.pumpAndSettle();
     await tester.tap(
@@ -1076,8 +1085,9 @@ void main() {
     await tester.pumpWidget(_app(biometricNotifier: () => biometricNotifier));
     await tester.pump();
 
-    await tester.ensureVisible(
+    await tester.scrollUntilVisible(
       find.byKey(const ValueKey('mobile_settings_biometric_row')),
+      200,
     );
     await tester.pumpAndSettle();
     await tester.tap(
@@ -1116,8 +1126,9 @@ void main() {
     await tester.pumpWidget(_app(biometricNotifier: () => biometricNotifier));
     await tester.pump();
 
-    await tester.ensureVisible(
+    await tester.scrollUntilVisible(
       find.byKey(const ValueKey('mobile_settings_biometric_row')),
+      200,
     );
     await tester.pumpAndSettle();
     await tester.tap(
@@ -1157,6 +1168,7 @@ void main() {
     await tester.pump();
 
     final row = find.byKey(const ValueKey('mobile_settings_biometric_row'));
+    await tester.scrollUntilVisible(row, 200);
     expect(row, findsOneWidget);
     expect(
       find.descendant(of: row, matching: find.text('Fingerprint')),

@@ -89,7 +89,7 @@ class _ContactBackupScreenState extends ConsumerState<ContactBackupScreen>
     ref.watch(contactBackupCoordinatorProvider);
     ref.listen(contactScopeProvider, (_, _) => _clear());
     return Scaffold(
-      appBar: AppBar(title: const Text('Contact backup')),
+      appBar: AppBar(title: const Text('Connection backup')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(24),
@@ -99,7 +99,7 @@ class _ContactBackupScreenState extends ConsumerState<ContactBackupScreen>
             ),
             const SizedBox(height: 16),
             const Text(
-              'This saves contacts and relationship keys. It does not save SimpleX connections, queued sends or pending introductions. Restored contacts need a fresh address check. Restored signing keys stay inactive until recovery reconciliation is implemented.',
+              'This saves connected contacts and relationship keys. Manually saved addresses, notes, pins, SimpleX connections and pending exchanges are not included. Restored contacts need a fresh address check. Restored signing keys stay inactive until recovery reconciliation is implemented.',
             ),
             const SizedBox(height: 16),
             AppButton(

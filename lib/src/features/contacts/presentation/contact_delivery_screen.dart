@@ -6,25 +6,47 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/clipboard/sensitive_clipboard.dart';
 import '../../../core/layout/app_desktop_shell.dart';
+import '../../../core/layout/app_form_factor.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/layout/app_main_sidebar.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/familiar_widgets.dart';
 import '../application/contact_delivery_providers.dart';
+import '../application/contact_ui_preferences.dart';
 import '../domain/contact_delivery.dart';
 import '../domain/contact_models.dart';
 import 'contact_connection_binding_panel.dart';
+import 'contact_code_widgets.dart';
 
 class ContactDeliveryScreen extends ConsumerWidget {
   const ContactDeliveryScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scope = ref.watch(contactDeliveryScopeProvider);
-    final content = scope == null
-        ? const Center(
-            child: Text(
-              'Private delivery currently supports unlocked Linux test accounts using a direct wallet route. Manual exchange remains available.',
-            ),
+    final advanced =
+        ref.watch(contactAdvancedToolsProvider).asData?.value == true;
+    final scope = advanced ? ref.watch(contactDeliveryScopeProvider) : null;
+    final content = !advanced
+        ? const _DeliveryUnavailable(
+            title: 'Connection tools',
+            message:
+                'Advanced contact tools are off. You can still connect '
+                'with someone by exchanging a contact code.',
+          )
+        : scope == null
+        ? const _DeliveryUnavailable(
+            title: 'Private delivery is paused',
+            message:
+                'This feature needs an unlocked Linux test account and '
+                'a direct network connection.',
           )
         : _DeliveryView(key: ValueKey(scope));
+    if (kAppFormFactor == AppFormFactor.mobile) {
+      return Scaffold(
+        backgroundColor: context.colors.background.window,
+        appBar: AppBar(title: const Text('Private delivery')),
+        body: SafeArea(child: content),
+      );
+    }
     return AppDesktopShell(
       sidebar: const AppMainSidebar(),
       pane: AppDesktopPane(
@@ -35,11 +57,102 @@ class ContactDeliveryScreen extends ConsumerWidget {
                 onPressed: () => context.canPop()
                     ? context.pop()
                     : context.go('/contacts/exchange'),
-                child: const Text('Back to contacts'),
+                child: const Text('Back'),
               ),
             ),
             Expanded(child: content),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DeliveryUnavailable extends StatelessWidget {
+  const _DeliveryUnavailable({
+    required this.title,
+    required this.message,
+    this.onRetry,
+    this.loading = false,
+  });
+
+  final String title;
+  final String message;
+  final VoidCallback? onRetry;
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) {
+    return _DeliveryLayout(
+      children: [
+        FamiliarPageHeader(title: title),
+        FamiliarCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (loading) ...[
+                const SizedBox.square(
+                  dimension: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+              ],
+              Text(
+                message,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: FamiliarPalette.of(context).muted,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Wrap(
+                spacing: AppSpacing.s,
+                runSpacing: AppSpacing.s,
+                children: [
+                  AppButton(
+                    onPressed: () => context.push('/contacts/exchange'),
+                    child: const Text('Exchange a contact code'),
+                  ),
+                  if (onRetry != null)
+                    AppButton(
+                      variant: AppButtonVariant.secondary,
+                      onPressed: onRetry,
+                      child: const Text('Try again'),
+                    ),
+                  AppButton(
+                    variant: AppButtonVariant.ghost,
+                    onPressed: () => context.push('/settings/contacts'),
+                    child: const Text('Contact settings'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DeliveryLayout extends StatelessWidget {
+  const _DeliveryLayout({required this.children});
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < children.length; i++) ...[
+                if (i > 0) const SizedBox(height: AppSpacing.md),
+                children[i],
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -141,180 +254,317 @@ class _DeliveryViewState extends ConsumerState<_DeliveryView>
     if (!peers.any((p) => p.id == _peer)) _peer = null;
   }
 
+  Future<void> _copyCode(String value) async {
+    final epoch = _epoch;
+    _check(epoch);
+    await SensitiveClipboard.copyText(value);
+    _check(epoch);
+  }
+
+  Future<void> _connect(int epoch) async {
+    final invitation = _link.text;
+    final transport = await ref.read(simplexNativeTransportProvider.future);
+    _check(epoch);
+    await transport.connect(invitation);
+    _check(epoch);
+    _link.clear();
+    _notice = 'Connection requested. Refresh after the other person connects.';
+  }
+
+  Future<void> _send(int epoch) async {
+    final peer = _peer!, packet = _packet.text;
+    final transport = await ref.read(simplexNativeTransportProvider.future);
+    _check(epoch);
+    final coordinator = ref.read(contactDeliveryCoordinatorProvider);
+    final id = await coordinator.enqueue(peer, packet);
+    _check(epoch);
+    _packet.clear();
+    await coordinator.submit(id, transport);
+    _check(epoch);
+    await _refresh(epoch);
+    _notice =
+        'Submitted to private delivery. The recipient still needs to '
+        'review it.';
+  }
+
+  String _peerLabel(String id) {
+    for (final peer in _peers) {
+      if (peer.id == id) return peer.label;
+    }
+    return 'Connection $id';
+  }
+
   @override
   Widget build(BuildContext context) {
     final native = ref.watch(simplexNativeTransportProvider);
     ref.watch(contactDeliveryCoordinatorProvider);
-    return ListView(
-      padding: const EdgeInsets.all(24),
+    if (native.hasError) {
+      return _DeliveryUnavailable(
+        title: 'Private delivery isn’t available',
+        message:
+            'You can still exchange contact codes. Try private delivery '
+            'again when the connection is ready.',
+        onRetry: _busy
+            ? null
+            : () => ref.invalidate(simplexNativeTransportProvider),
+      );
+    }
+    if (!native.hasValue) {
+      return const _DeliveryUnavailable(
+        title: 'Opening private delivery',
+        message: 'Getting this connection ready.',
+        loading: true,
+      );
+    }
+    final palette = FamiliarPalette.of(context);
+    return _DeliveryLayout(
       children: [
-        Text(
-          'Private contact delivery',
-          style: Theme.of(context).textTheme.headlineSmall,
+        const FamiliarPageHeader(
+          title: 'Private delivery',
+          eyebrow: 'Advanced contact tools',
+          subtitle: 'Set up a connection, then choose what to share.',
         ),
-        const Text(
-          'SimpleX carries contact packets. Receiving a packet does not accept a contact or approve a payment. This is the Linux transport experiment.',
-        ),
-        if (native.hasError)
-          const Text(
-            'The native delivery component could not open. Manual packet exchange remains available.',
-          ),
-        const SizedBox(height: 16),
-        const ContactConnectionBindingPanel(),
-        AppButton(
-          onPressed: _busy
-              ? null
-              : () => unawaited(
-                  _run((epoch) async {
-                    final transport = await ref.read(
-                      simplexNativeTransportProvider.future,
-                    );
-                    _check(epoch);
-                    final link = await transport.createInvitation();
-                    _check(epoch);
-                    _invitation = link;
-                  }),
-                ),
-          child: const Text('Create a private connection link'),
-        ),
-        if (_invitation != null)
-          AppButton(
-            onPressed: _busy
-                ? null
-                : () => unawaited(
-                    _run((epoch) async {
-                      _check(epoch);
-                      await SensitiveClipboard.copyText(_invitation!);
-                    }),
-                  ),
-            child: const Text('Copy connection link'),
-          ),
-        TextField(
-          controller: _link,
-          decoration: const InputDecoration(
-            labelText: 'One-time connection link from the other person',
-          ),
-        ),
-        AppButton(
-          onPressed: _busy
-              ? null
-              : () => unawaited(
-                  _run((epoch) async {
-                    final invitation = _link.text;
-                    final transport = await ref.read(
-                      simplexNativeTransportProvider.future,
-                    );
-                    _check(epoch);
-                    await transport.connect(invitation);
-                    _check(epoch);
-                    _link.clear();
-                    _notice =
-                        'Connection requested. Refresh after the other person connects.';
-                  }),
-                ),
-          child: const Text('Connect'),
-        ),
-        AppButton(
-          onPressed: _busy ? null : () => unawaited(_run(_refresh)),
-          child: const Text('Refresh delivery inbox'),
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          'Connection names below are supplied by the transport, not independently verified contact identities. Check the connection with the intended recipient before sharing.',
-        ),
-        DropdownButton<String>(
-          value: _peer,
-          isExpanded: true,
-          hint: const Text('Choose a delivery connection'),
-          items: [
-            for (final peer in _peers)
-              DropdownMenuItem(
-                value: peer.id,
-                child: Text('${peer.label} · ${peer.id}'),
+        FamiliarCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Connect with someone',
+                style: AppTypography.headlineSmall.copyWith(color: palette.ink),
               ),
-          ],
-          onChanged: _busy ? null : (v) => setState(() => _peer = v),
-        ),
-        TextField(
-          controller: _packet,
-          maxLines: 3,
-          maxLength: contactDeliveryMaxPacketBytes,
-          decoration: const InputDecoration(
-            labelText: 'Approved contact packet',
+              const SizedBox(height: AppSpacing.s),
+              Text(
+                'Share a connection code or open one they sent you.',
+                style: AppTypography.bodyMedium.copyWith(color: palette.muted),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: AppButton(
+                  onPressed: _busy
+                      ? null
+                      : () => unawaited(
+                          _run((epoch) async {
+                            final transport = await ref.read(
+                              simplexNativeTransportProvider.future,
+                            );
+                            _check(epoch);
+                            final link = await transport.createInvitation();
+                            _check(epoch);
+                            _invitation = link;
+                          }),
+                        ),
+                  child: const Text('Create a connection code'),
+                ),
+              ),
+              if (_invitation != null) ...[
+                const SizedBox(height: AppSpacing.md),
+                ContactCodeOutput(
+                  data: _invitation!,
+                  title: 'Your connection code',
+                  enabled: !_busy,
+                  advanced: true,
+                  onCopy: _copyCode,
+                ),
+              ],
+              const SizedBox(height: AppSpacing.md),
+              ContactCodeInput(
+                title: 'Open their connection code',
+                enabled: !_busy,
+                advanced: true,
+                onRead: (value) async {
+                  _check(_epoch);
+                  setState(() => _link.text = value);
+                },
+              ),
+              if (_link.text.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.s),
+                Text(
+                  'Connection code ready.',
+                  style: AppTypography.bodySmall.copyWith(color: palette.muted),
+                ),
+                const SizedBox(height: AppSpacing.s),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: AppButton(
+                    onPressed: _busy ? null : () => unawaited(_run(_connect)),
+                    child: const Text('Connect'),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
-        AppButton(
-          onPressed: _busy || _peer == null
-              ? null
-              : () => unawaited(
-                  _run((epoch) async {
-                    final peer = _peer!, packet = _packet.text;
-                    final transport = await ref.read(
-                      simplexNativeTransportProvider.future,
-                    );
-                    _check(epoch);
-                    final coordinator = ref.read(
-                      contactDeliveryCoordinatorProvider,
-                    );
-                    final id = await coordinator.enqueue(peer, packet);
-                    _check(epoch);
-                    _packet.clear();
-                    await coordinator.submit(id, transport);
-                    _check(epoch);
-                    await _refresh(epoch);
-                    _notice =
-                        'Submitted to SimpleX. This does not confirm recipient acceptance.';
-                  }),
-                ),
-          child: const Text('Approve and send packet'),
+        const FamiliarCard(
+          child: Material(
+            type: MaterialType.transparency,
+            child: ContactConnectionBindingPanel(),
+          ),
         ),
-        if (_notice != null) Text(_notice!),
-        for (final record in _records)
-          ListTile(
-            title: Text(
-              record.incoming
-                  ? 'Received packet · connection ${record.peer}'
-                  : 'Outgoing packet · connection ${record.peer}',
+        FamiliarCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Send a contact code',
+                style: AppTypography.headlineSmall.copyWith(color: palette.ink),
+              ),
+              const SizedBox(height: AppSpacing.s),
+              Text(
+                'Connection labels do not verify a person. Check the '
+                'connection with your recipient before sharing.',
+                style: AppTypography.bodyMedium.copyWith(color: palette.muted),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: AppButton(
+                  variant: AppButtonVariant.secondary,
+                  onPressed: _busy ? null : () => unawaited(_run(_refresh)),
+                  child: const Text('Refresh connections and inbox'),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              DropdownButton<String>(
+                value: _peer,
+                isExpanded: true,
+                hint: Text(
+                  _peers.isEmpty
+                      ? 'No connections loaded'
+                      : 'Choose a connection',
+                ),
+                items: [
+                  for (final peer in _peers)
+                    DropdownMenuItem(
+                      value: peer.id,
+                      child: Text('${peer.label} · ${peer.id}'),
+                    ),
+                ],
+                onChanged: _busy || _peers.isEmpty
+                    ? null
+                    : (value) => setState(() => _peer = value),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              ContactCodeInput(
+                title: 'Open the approved contact code',
+                enabled: !_busy,
+                advanced: true,
+                onRead: (value) async {
+                  _check(_epoch);
+                  if (value.length > contactDeliveryMaxPacketBytes) {
+                    throw const ContactFailure(
+                      'This contact code is too large.',
+                    );
+                  }
+                  setState(() => _packet.text = value);
+                },
+              ),
+              if (_packet.text.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.s),
+                Text(
+                  'Contact code ready. Sending shares it with the '
+                  'selected connection; it does not accept a contact or '
+                  'approve a payment.',
+                  style: AppTypography.bodySmall.copyWith(color: palette.muted),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: AppButton(
+                    onPressed: _busy || _peer == null
+                        ? null
+                        : () => unawaited(_run(_send)),
+                    child: const Text('Approve and send code'),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (_notice != null)
+          FamiliarCard(
+            color: palette.lilac,
+            child: Text(
+              _notice!,
+              style: AppTypography.bodyMedium.copyWith(color: palette.ink),
             ),
-            subtitle: Text(switch (record.state) {
-              ContactDeliveryState.queued => 'Queued — retry available',
-              ContactDeliveryState.submitted => 'Submitted to SimpleX',
-              ContactDeliveryState.received =>
-                'Awaiting your review in contact exchange',
-              ContactDeliveryState.dismissed => 'Dismissed',
-            }),
-            trailing: record.state == ContactDeliveryState.queued
-                ? TextButton(
-                    onPressed: _busy
-                        ? null
-                        : () => unawaited(
-                            _run((epoch) async {
-                              final transport = await ref.read(
-                                simplexNativeTransportProvider.future,
-                              );
-                              _check(epoch);
-                              await ref
-                                  .read(contactDeliveryCoordinatorProvider)
-                                  .submit(record.id, transport);
-                              _check(epoch);
-                              await _refresh(epoch);
-                            }),
-                          ),
-                    child: const Text('Retry'),
-                  )
-                : record.state == ContactDeliveryState.received
-                ? TextButton(
-                    onPressed: _busy
-                        ? null
-                        : () => unawaited(
-                            _run((epoch) async {
-                              _check(epoch);
-                              await SensitiveClipboard.copyText(record.packet);
-                            }),
-                          ),
-                    child: const Text('Copy for review'),
-                  )
-                : null,
+          ),
+        if (_records.isNotEmpty)
+          FamiliarCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Delivery activity',
+                  style: AppTypography.headlineSmall.copyWith(
+                    color: palette.ink,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                for (final record in _records) ...[
+                  Text(
+                    '${record.incoming ? 'From' : 'To'} ${_peerLabel(record.peer)}',
+                    style: AppTypography.bodyMediumStrong.copyWith(
+                      color: palette.ink,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    switch (record.state) {
+                      ContactDeliveryState.queued =>
+                        'Queued. You can retry this delivery.',
+                      ContactDeliveryState.submitted =>
+                        'Submitted to private delivery.',
+                      ContactDeliveryState.received => 'Ready for your review.',
+                      ContactDeliveryState.dismissed => 'Dismissed',
+                    },
+                    style: AppTypography.bodySmall.copyWith(
+                      color: palette.muted,
+                    ),
+                  ),
+                  if (record.state == ContactDeliveryState.queued)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: AppButton(
+                        variant: AppButtonVariant.secondary,
+                        onPressed: _busy
+                            ? null
+                            : () => unawaited(
+                                _run((epoch) async {
+                                  final transport = await ref.read(
+                                    simplexNativeTransportProvider.future,
+                                  );
+                                  _check(epoch);
+                                  await ref
+                                      .read(contactDeliveryCoordinatorProvider)
+                                      .submit(record.id, transport);
+                                  _check(epoch);
+                                  await _refresh(epoch);
+                                }),
+                              ),
+                        child: const Text('Retry delivery'),
+                      ),
+                    ),
+                  if (record.state == ContactDeliveryState.received)
+                    ContactCodeOutput(
+                      data: record.packet,
+                      title: 'Received contact code',
+                      enabled: !_busy,
+                      advanced: true,
+                      onCopy: _copyCode,
+                    ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: AppButton(
+                    variant: AppButtonVariant.secondary,
+                    onPressed: () => context.push('/contacts/exchange'),
+                    child: const Text('Review a contact code'),
+                  ),
+                ),
+              ],
+            ),
           ),
       ],
     );

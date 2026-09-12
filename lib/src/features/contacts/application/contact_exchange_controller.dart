@@ -511,6 +511,39 @@ class ContactExchangeController extends Notifier<ContactExchangeState> {
     _clearTransient(); // Consumes the locally pending challenge only after persistence.
   }, mutation: true);
 
+  /// A private label changes presentation only. Invalidate selected recipients
+  /// so review always displays the name from the current authenticated record.
+  Future<void> renameContact(String id, String label) => _run((
+    scope,
+    epoch,
+    task,
+  ) async {
+    final name = contactLabel(label);
+    final latest = await _repository.load(scope);
+    _check(epoch, scope, task);
+    _contacts = List.unmodifiable(latest);
+    final contact = _contact(id);
+    if (_contacts.any(
+      (other) =>
+          other.id != id && other.label.toLowerCase() == name.toLowerCase(),
+    )) {
+      throw const ContactFailure(
+        'Choose a label that distinguishes this contact.',
+      );
+    }
+    _clearTransient();
+    final renamed = contact.copyWith(
+      label: name,
+      revision: contact.revision + 1,
+    );
+    await _save(
+      scope,
+      [for (final current in _contacts) current.id == id ? renamed : current],
+      epoch,
+      task,
+    );
+  }, mutation: true);
+
   Future<void> suspendContact(String id) => _run((scope, epoch, task) async {
     // A queued suspension applies to the latest book, including a contact
     // accepted by another coordinator before this mutation acquired the gate.

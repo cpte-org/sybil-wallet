@@ -361,3 +361,53 @@ abstract final class GreenPrimitives {
   static const p900Alpha65Dark = Color(0xA6D3FFE4);
   static const p900Alpha65Light = Color(0xA6001E0A);
 }
+
+/// Familiar's warm paper and forest palette, shared by semantic tokens.
+/// The light and dark faces match sigil-24-big-2's authored colour roles.
+abstract final class FamiliarPrimitives {
+  static const paperLight = Color(0xFFF7F6EF);
+  static const surfaceLight = Color(0xFFFFFEF9);
+  static const softLight = Color(0xFFEEEEE4);
+  static const inkLight = Color(0xFF243B30);
+  static const textLight = Color(0xFF35483D);
+  static const mutedLight = Color(0xFF627065);
+  static const lineLight = Color(0xFFD9DFD3);
+  static const accentLight = Color(0xFF294A35);
+  static const onAccentLight = Color(0xFFFFFEF9);
+  static const limeLight = Color(0xFFE0EBAF);
+  static const peachLight = Color(0xFFF7DECD);
+  static const lilacLight = Color(0xFFE6E1F2);
+  static const sageLight = Color(0xFFDCE8D9);
+  static const skyLight = Color(0xFFDAE7ED);
+  static const warningLight = Color(0xFF8A4A13);
+  static const warningSurfaceLight = Color(0xFFFFF0D9);
+  static const errorLight = Color(0xFFAC352C);
+  static const errorSurfaceLight = Color(0xFFFFF0ED);
+
+  static const paperDark = Color(0xFF19261F);
+  static const surfaceDark = Color(0xFF22352A);
+  static const softDark = Color(0xFF2C3D31);
+  static const inkDark = Color(0xFFEDF1DE);
+  static const textDark = Color(0xFFE0E8D9);
+  static const mutedDark = Color(0xFFB0C1B1);
+  static const lineDark = Color(0xFF415345);
+  static const accentDark = Color(0xFFDDEAAA);
+  static const onAccentDark = Color(0xFF233A2E);
+  static const limeDark = Color(0xFF3C4B29);
+  static const peachDark = Color(0xFF513C30);
+  static const lilacDark = Color(0xFF3E384E);
+  static const sageDark = Color(0xFF304B38);
+  static const skyDark = Color(0xFF2D4350);
+  static const warningDark = Color(0xFFF0BF7F);
+  static const warningSurfaceDark = Color(0xFF493923);
+  static const errorDark = Color(0xFFF8AAA0);
+  static const errorSurfaceDark = Color(0xFF4B302A);
+
+  static const navLight = Color(0xFF233A2E);
+  static const navDark = Color(0xFF13251C);
+  static const navInk = Color(0xFFE7EDDC);
+  static const navMuted = Color(0xFFB9CBBD);
+  static const navActive = Color(0xFFE1EDB6);
+  static const scrim = Color(0x80122119);
+  static const shadow = Color(0x171F3622);
+}

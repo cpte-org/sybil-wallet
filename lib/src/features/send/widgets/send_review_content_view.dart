@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/familiar_widgets.dart';
 import '../../../core/widgets/review_buttons_stack.dart';
 import '../../../core/widgets/review_list_row.dart';
 import '../../../core/widgets/review_wrap_card.dart';
@@ -26,6 +27,7 @@ class SendReviewContentView extends StatelessWidget {
     this.isShieldedRecipient = true,
     this.recipientAddressType,
     this.fiatText,
+    this.totalText,
     this.memoText,
     this.memoExpanded = false,
     this.confirmLabel = 'Confirm & send',
@@ -51,6 +53,9 @@ class SendReviewContentView extends StatelessWidget {
 
   /// Formatted fee ("0.012 ZEC").
   final String feeText;
+
+  /// Total debited from the wallet, calculated by the owning review flow.
+  final String? totalText;
 
   /// Optional fiat sub-label under the amount; the row is hidden when null.
   final String? fiatText;
@@ -81,7 +86,7 @@ class SendReviewContentView extends StatelessWidget {
     final colors = context.colors;
 
     return SendReviewContentColumn(
-      title: 'Review send',
+      title: 'Review payment',
       children: [
         SendReviewInfoSection(
           amountText: amountText,
@@ -102,15 +107,33 @@ class SendReviewContentView extends StatelessWidget {
               const ReviewWrapDivider(),
             ],
             ReviewListRow(
-              label: 'Tx fee',
+              label: 'Network fee',
               value: feeText,
               trailingIconName: AppIcons.help,
               trailingIconColor: colors.text.secondary,
               trailingIconTooltip: kTxFeeHelpTooltip,
               onPressed: onFeeHelp,
             ),
+            if (totalText != null)
+              ReviewListRow(label: 'Total from your wallet', value: totalText!),
           ],
         ),
+        if (!isShieldedRecipient ||
+            const [
+              'transparent',
+              'tex',
+            ].contains(recipientAddressType?.toLowerCase()))
+          FamiliarCard(
+            color: FamiliarPalette.of(context).peach,
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            child: Text(
+              'Public payment destination. The recipient and amount may be '
+              'visible on-chain. A private memo is unavailable.',
+              style: AppTypography.bodyMedium.copyWith(
+                color: FamiliarPalette.of(context).ink,
+              ),
+            ),
+          ),
         ReviewButtonsStack(
           primaryKey: const ValueKey('send_confirm_button'),
           primaryLabel: confirmLabel,

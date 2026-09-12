@@ -1,7 +1,9 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart'
+    show ExpansionTile, Material, MaterialType;
 
 import '../../../core/theme/app_theme.dart';
-import '../../../core/theme/primitives.dart';
+import '../../../core/widgets/familiar_widgets.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/review_list_row.dart';
 import '../../../core/widgets/review_wrap_card.dart';
@@ -16,8 +18,8 @@ enum SendStatusPhase { inProgress, completed, failed }
 /// Shares the review layout shell and swaps the phase-dependent pieces:
 /// * title and Status row (loader / check-circle / cancel icon + color),
 /// * connector glyph — arrow-down normally, uturn-up on failed,
-/// * failed extras — strikethrough on the recipient headline and the wrap
-///   card pinned to the dark `#1b1f1f` surface in BOTH themes.
+/// * failed extras — strikethrough on the recipient headline and explicit
+///   failure styling. Transaction identifiers expand under Payment details.
 ///
 /// No in-content CTA exists on any phase per the specs — navigation is the
 /// page-toolbar back button only.
@@ -134,7 +136,7 @@ class SendStatusContentView extends StatelessWidget {
   }
 
   Widget _statusCard() {
-    final card = Builder(
+    return Builder(
       builder: (context) {
         final colors = context.colors;
         final (statusValue, statusIconName, statusColor) = switch (phase) {
@@ -155,57 +157,60 @@ class SendStatusContentView extends StatelessWidget {
           ),
         };
 
-        return ReviewWrapCard(
-          surfaceColor: _failed ? Primitives.p50Dark : null,
-          children: [
-            ReviewListRow(
-              label: 'Status',
-              value: statusValue,
-              labelColor: _failed ? colors.text.destructive : null,
-              valueColor: statusColor,
-              leadingIconName: statusIconName,
-            ),
-            // Detail rows stack with no gap (one group); the card's 16px gap
-            // applies between groups only.
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (memoText != null)
-                  ReviewMemoRows(
-                    memoText: memoText!,
-                    expanded: memoExpanded,
-                    onToggle: onExpandMemo,
+        return FamiliarCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ReviewListRow(
+                label: 'Status',
+                value: statusValue,
+                labelColor: _failed ? colors.text.destructive : null,
+                valueColor: statusColor,
+                leadingIconName: statusIconName,
+              ),
+              if (memoText != null)
+                ReviewMemoRows(
+                  memoText: memoText!,
+                  expanded: memoExpanded,
+                  onToggle: onExpandMemo,
+                ),
+              const SizedBox(height: AppSpacing.s),
+              const ReviewWrapDivider(),
+              const SizedBox(height: AppSpacing.s),
+              ReviewListRow(
+                label: 'Network fee',
+                value: feeText,
+                trailingIconName: AppIcons.help,
+                trailingIconColor: colors.text.secondary,
+                trailingIconTooltip: kTxFeeHelpTooltip,
+                onPressed: onFeeHelp,
+              ),
+              Material(
+                type: MaterialType.transparency,
+                child: ExpansionTile(
+                  title: Text(
+                    'Payment details',
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: FamiliarPalette.of(context).muted,
+                    ),
                   ),
-                ReviewListRow(label: 'Timestamp', value: timestampText),
-                if (txIdText != null)
-                  ReviewListRow(
-                    label: 'Tx ID',
-                    value: txIdText!,
-                    trailingIconName: AppIcons.arrowTopRight,
-                    onPressed: onOpenExplorer,
-                  ),
-              ],
-            ),
-            const ReviewWrapDivider(),
-            ReviewListRow(
-              label: 'Tx fee',
-              value: feeText,
-              trailingIconName: AppIcons.help,
-              trailingIconColor: colors.text.secondary,
-              trailingIconTooltip: kTxFeeHelpTooltip,
-              onPressed: onFeeHelp,
-            ),
-          ],
+                  tilePadding: EdgeInsets.zero,
+                  children: [
+                    ReviewListRow(label: 'Timestamp', value: timestampText),
+                    if (txIdText != null)
+                      ReviewListRow(
+                        label: 'Tx ID',
+                        value: txIdText!,
+                        trailingIconName: AppIcons.arrowTopRight,
+                        onPressed: onOpenExplorer,
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
-
-    if (!_failed) return card;
-    // The failed card keeps the dark #1b1f1f surface in BOTH themes (Figma
-    // resolves foreground/neutral/ground to the dark value on this screen).
-    // Scoping the dark theme over the card resolves every row, icon, and
-    // divider token to its dark value — including the #4d5252 divider that
-    // explicit per-row color props could not reach.
-    return AppTheme(data: AppThemeData.dark, child: card);
   }
 }

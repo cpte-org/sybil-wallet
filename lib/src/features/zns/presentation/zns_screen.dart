@@ -198,7 +198,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Names',
+                        'Manage my names',
                         style: AppTypography.headlineLarge.copyWith(
                           color: context.colors.text.accent,
                         ),
@@ -218,7 +218,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
                 const SizedBox(height: AppSpacing.s),
               ],
               Text(
-                'A familiar name for your Zcash address.',
+                'Register a name or manage the ones you own.',
                 style: AppTypography.bodyLarge.copyWith(
                   color: context.colors.text.secondary,
                 ),
@@ -245,7 +245,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
                   icon: AppIcons.endpoint,
                   title: 'Name service is not configured',
                   text:
-                      'Add a verified registry in wallet Settings → Names to look up or register names. Registration stays unavailable until the connection is verified.',
+                      'Add a verified registry in Settings → Public Zcash names before registering a name.',
                 ),
                 const SizedBox(height: AppSpacing.md),
               ],
@@ -254,7 +254,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
                   icon: AppIcons.keystone,
                   title: 'Choose a software account to register',
                   text:
-                      'Keystone registration will be supported separately. You can still look up names.',
+                      'Keystone registration will be supported separately. Public name lookups are available in Settings.',
                 ),
                 const SizedBox(height: AppSpacing.md),
               ],
@@ -502,10 +502,12 @@ class _ZnsScreenState extends State<ZnsScreen> {
               (available
                   ? 'Availability can change. A commitment does not reserve the name.'
                   : registered
-                  ? 'This is the public address currently recorded for this name.'
+                  ? 'Someone has already registered this name.'
                   : 'Try another name or check again.'),
         ),
-        if (registered && lookup.unifiedAddress.isNotEmpty) ...[
+        if (registered &&
+            actions.onSendToName != null &&
+            lookup.unifiedAddress.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.sm),
           _Address(label: 'Registered address', address: lookup.unifiedAddress),
           if (actions.onSendToName != null &&

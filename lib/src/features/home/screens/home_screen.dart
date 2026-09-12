@@ -46,9 +46,9 @@ import '../../migration/widgets/ironwood_migration_announcement_modal.dart';
 import '../../swap/models/swap_activity_navigation.dart';
 import '../../swap/models/swap_fiat_value_formatting.dart';
 import '../../swap/providers/swap_activity_tracker.dart';
-import '../../swap/providers/swap_state_provider.dart';
 import '../services/transparent_shielding_service.dart';
 import '../widgets/keystone_shield_signing_overlay.dart';
+import '../widgets/familiar_home_dashboard.dart';
 
 const _shieldErrorTooltipIconSize = 14.0;
 const _shieldErrorTooltipGap = AppSpacing.xxs;
@@ -313,15 +313,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         sync.transparentBalance + sync.transparentPendingBalance;
     final canShieldTransparentBalance =
         sync.canShieldTransparentBalance && !isMigrationRequired;
-    final isImportingForBackground =
-        activeAccountUuid != null &&
-        !sync.hasAccountScopedData &&
-        sync.failure == null;
-    final isDark = context.appTheme == AppThemeData.dark;
-    final backgroundVariant = isImportingForBackground
-        ? 'importing'
-        : 'default';
-    final backgroundTheme = isDark ? 'dark' : 'light';
     final ironwoodAnnouncementAsync = ref.watch(
       ironwoodMigrationAnnouncementProvider,
     );
@@ -357,10 +348,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
     final visibleIronwoodAnnouncement = _visibleIronwoodAnnouncement;
     return AppDesktopBackdropShell(
-      background: _HomeFullPageBackground(
-        assetName:
-            'assets/illustrations/home_${backgroundVariant}_background_$backgroundTheme.png',
-      ),
+      background: ColoredBox(color: context.colors.background.window),
       sidebar: const AppMainSidebar(),
       pane: Stack(
         fit: StackFit.expand,
@@ -551,36 +539,6 @@ class _HomePaneState extends ConsumerState<_HomePane> {
         .refreshOpenActivities(accountUuid: accountUuid, force: force);
   }
 
-  Future<void> _openPay() async {
-    final accountUuid = ref
-        .read(accountProvider)
-        .value
-        ?.activeAccountUuid
-        ?.trim();
-    if (accountUuid == null || accountUuid.isEmpty) return;
-
-    final router = GoRouter.of(context);
-    final swapNotifier = ref.read(swapStateProvider.notifier);
-    final selectedAssetFuture = swapNotifier.resolvePaySelectedAssetForEntry(
-      accountUuid: accountUuid,
-    );
-    final selectedAsset = await selectedAssetFuture;
-    if (!mounted ||
-        selectedAsset == null ||
-        router.routerDelegate.currentConfiguration.uri.path != '/home') {
-      return;
-    }
-    final prepared = swapNotifier.preparePayFromShieldedZec(
-      preferredAsset: selectedAsset,
-      expectedAccountUuid: accountUuid,
-    );
-    if (!prepared) return;
-    router.push(
-      '/pay',
-      extra: const PayComposerNavigationArgs(preservePreparedComposer: true),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     ref.listen<AsyncValue<AccountState>>(accountProvider, (previous, next) {
@@ -609,16 +567,30 @@ class _HomePaneState extends ConsumerState<_HomePane> {
                   widget.sync.displayIronwoodPendingBalance >
               BigInt.zero
         : widget.sync.displayTotalBalance > BigInt.zero;
-    final swapFeatureEnabled = ref.watch(swapFeatureEnabledProvider);
-    final migrationInProgress =
-        widget.ironwoodMigrationCta.mode == IronwoodHomeMigrationCtaMode.resume;
-    final payAvailable =
-        swapFeatureEnabled &&
-        (!migrationInProgress || widget.sync.ironwoodBalance > BigInt.zero);
     final animateMigrationCta = ref.watch(
       homeMigrationCtaPulseMotionEnabledProvider,
     );
 
+    // Preserve the existing import/migration guidance and its ownership gates.
+    // The normal wallet uses the shared desktop/mobile Familiar surface.
+    if (!isImporting && !widget.ironwoodMigrationCta.visible) {
+      return FamiliarHomeDashboard(
+        sync: widget.sync,
+        networkPrivacy: ref.watch(networkPrivacyProvider),
+        ironwoodOnly: widget.showsIronwoodOnlyBalance,
+        privacyModeEnabled: widget.privacyModeEnabled,
+        activityRows: rows,
+        isActivityLoading: widget.isActivityLoading,
+        onSend: () => context.push('/send'),
+        onReceive: () => context.push('/receive'),
+        onActivity: () => context.go('/activity'),
+        onTogglePrivacyMode: widget.onTogglePrivacyMode,
+        onShield: widget.canShieldBalance && !widget.isShieldingBalance
+            ? widget.onShieldBalancePressed
+            : null,
+        notice: notice == null ? null : _HomeNoticeCard(data: notice),
+      );
+    }
     return _HomeDesktopPane(
       isImporting: isImporting,
       importingAccountName: activeAccountName,
@@ -641,7 +613,7 @@ class _HomePaneState extends ConsumerState<_HomePane> {
       onShieldBalancePressed: widget.onShieldBalancePressed,
       onSend: () => context.push('/send'),
       onReceive: () => context.push('/receive'),
-      onPay: payAvailable ? _openPay : null,
+      onPay: null,
       onActivity: () => context.push('/activity'),
       ironwoodMigrationCta: widget.ironwoodMigrationCta,
       animateMigrationCta: animateMigrationCta,

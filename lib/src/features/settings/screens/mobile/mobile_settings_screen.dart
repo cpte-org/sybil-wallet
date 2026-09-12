@@ -15,6 +15,7 @@ import '../../../../core/profile_pictures.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_icon.dart';
+import '../../../../core/widgets/familiar_widgets.dart';
 import '../../../../core/widgets/app_profile_picture.dart';
 import '../../../../core/widgets/app_toast.dart';
 import '../../../../core/widgets/mobile/mobile_list_row.dart';
@@ -87,13 +88,15 @@ class MobileSettingsScreen extends ConsumerWidget {
                 ),
               ),
               children: [
+                const FamiliarPageHeader(title: 'Your wallet, your way.'),
+                const SizedBox(height: AppSpacing.md),
                 _SettingsGroup(
-                  title: 'Account',
+                  title: 'Security and recovery',
                   rows: [
                     MobileListRow(
                       key: const ValueKey('mobile_settings_seed_row'),
                       leading: _RowIcon(AppIcons.key),
-                      label: 'Secret Passphrase',
+                      label: 'Wallet recovery phrase',
                       minRowHeight: _settingsRowHeight,
                       textStyle: settingsRowStyle,
                       chevronColor: settingsChevronColor,
@@ -106,7 +109,7 @@ class MobileSettingsScreen extends ConsumerWidget {
                     MobileListRow(
                       key: const ValueKey('mobile_settings_viewing_key_row'),
                       leading: _RowIcon(AppIcons.eye),
-                      label: 'Viewing Key',
+                      label: 'Viewing key',
                       minRowHeight: _settingsRowHeight,
                       textStyle: settingsRowStyle,
                       chevronColor: settingsChevronColor,
@@ -119,7 +122,7 @@ class MobileSettingsScreen extends ConsumerWidget {
                     MobileListRow(
                       key: const ValueKey('mobile_settings_base_key_row'),
                       leading: _RowIcon(AppIcons.key),
-                      label: 'Base account private key',
+                      label: 'Base / Ethereum private key',
                       minRowHeight: _settingsRowHeight,
                       textStyle: settingsRowStyle,
                       chevronColor: settingsChevronColor,
@@ -130,6 +133,16 @@ class MobileSettingsScreen extends ConsumerWidget {
                           : null,
                     ),
                     MobileListRow(
+                      key: const ValueKey('mobile_settings_people_backup_row'),
+                      leading: _RowIcon(AppIcons.users),
+                      label: 'Connection backup',
+                      minRowHeight: _settingsRowHeight,
+                      textStyle: settingsRowStyle,
+                      chevronColor: settingsChevronColor,
+                      showChevron: true,
+                      onTap: () => context.push('/contacts/backup'),
+                    ),
+                    MobileListRow(
                       leading: _RowIcon(AppIcons.lock),
                       label: 'Password',
                       minRowHeight: _settingsRowHeight,
@@ -138,10 +151,16 @@ class MobileSettingsScreen extends ConsumerWidget {
                       showChevron: true,
                       onTap: () => _openChangePasscode(context),
                     ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _SettingsGroup(
+                  title: 'You and your wallet',
+                  rows: [
                     MobileListRow(
                       key: const ValueKey('mobile_settings_pfp_row'),
                       leading: _RowIcon(AppIcons.user),
-                      label: 'Profile Picture',
+                      label: 'Profile picture',
                       minRowHeight: _settingsRowHeight,
                       textStyle: settingsRowStyle,
                       trailing: Row(
@@ -183,7 +202,7 @@ class MobileSettingsScreen extends ConsumerWidget {
                     MobileListRow(
                       key: const ValueKey('mobile_settings_account_name_row'),
                       leading: _RowIcon(AppIcons.scroll),
-                      label: 'Account Name',
+                      label: 'Account name',
                       value: account?.name ?? '',
                       minRowHeight: _settingsRowHeight,
                       textStyle: settingsRowStyle,
@@ -199,24 +218,40 @@ class MobileSettingsScreen extends ConsumerWidget {
                           : () => _editAccount(context, ref, account),
                     ),
                     MobileListRow(
-                      key: const ValueKey('mobile_settings_names_row'),
-                      leading: _RowIcon(AppIcons.users),
-                      label: 'Zcash names',
-                      minRowHeight: _settingsRowHeight,
-                      textStyle: settingsRowStyle,
-                      chevronColor: settingsChevronColor,
-                      showChevron: true,
-                      onTap: () => context.push('/names'),
-                    ),
-                    MobileListRow(
                       key: const ValueKey('mobile_settings_address_book_row'),
                       leading: _RowIcon(AppIcons.users),
-                      label: 'Contacts',
+                      label: 'People',
                       minRowHeight: _settingsRowHeight,
                       textStyle: settingsRowStyle,
                       chevronColor: settingsChevronColor,
                       showChevron: true,
-                      onTap: () => context.push('/settings/address-book'),
+                      onTap: () => context.push('/people'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _SettingsGroup(
+                  title: 'People and names',
+                  rows: [
+                    MobileListRow(
+                      key: const ValueKey('mobile_settings_delivery_row'),
+                      leading: _RowIcon(AppIcons.link),
+                      label: 'Contact options',
+                      minRowHeight: _settingsRowHeight,
+                      textStyle: settingsRowStyle,
+                      chevronColor: settingsChevronColor,
+                      showChevron: true,
+                      onTap: () => context.push('/settings/contacts'),
+                    ),
+                    MobileListRow(
+                      key: const ValueKey('mobile_settings_names_row'),
+                      leading: _RowIcon(AppIcons.globe),
+                      label: 'Public Zcash names',
+                      minRowHeight: _settingsRowHeight,
+                      textStyle: settingsRowStyle,
+                      chevronColor: settingsChevronColor,
+                      showChevron: true,
+                      onTap: () => context.push('/settings/names'),
                     ),
                   ],
                 ),
@@ -235,18 +270,8 @@ class MobileSettingsScreen extends ConsumerWidget {
                 const MobileNetworkPrivacyCard(),
                 const SizedBox(height: AppSpacing.md),
                 _SettingsGroup(
-                  title: 'System',
+                  title: 'Network and app',
                   rows: [
-                    MobileListRow(
-                      key: const ValueKey('mobile_settings_names_row'),
-                      leading: _RowIcon(AppIcons.users),
-                      label: 'Names',
-                      minRowHeight: _settingsRowHeight,
-                      textStyle: settingsRowStyle,
-                      chevronColor: settingsChevronColor,
-                      showChevron: true,
-                      onTap: () => context.push('/settings/names'),
-                    ),
                     MobileListRow(
                       key: const ValueKey('mobile_settings_endpoint_row'),
                       leading: _RowIcon(AppIcons.endpoint),
@@ -276,7 +301,7 @@ class MobileSettingsScreen extends ConsumerWidget {
                     MobileListRow(
                       key: const ValueKey('mobile_settings_theme_row'),
                       leading: _RowIcon(AppIcons.theme),
-                      label: 'Theme',
+                      label: 'Appearance',
                       value: _themeLabel(themeMode),
                       minRowHeight: _settingsRowHeight,
                       textStyle: settingsRowStyle,
@@ -585,8 +610,7 @@ class _SettingsGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MobileSurfaceCard(
-      cornerRadius: AppRadii.large,
+    return FamiliarCard(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.sm,
         AppSpacing.base,

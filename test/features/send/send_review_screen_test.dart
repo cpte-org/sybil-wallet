@@ -17,7 +17,7 @@ import 'package:zcash_wallet/src/core/config/rpc_endpoint_config.dart';
 import 'package:zcash_wallet/src/core/formatting/address_display.dart';
 import 'package:zcash_wallet/src/core/layout/app_desktop_shell.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
-import 'package:zcash_wallet/src/core/widgets/app_profile_picture.dart';
+import 'package:zcash_wallet/src/core/widgets/familiar_widgets.dart';
 import 'package:zcash_wallet/src/features/address_book/models/address_book_contact.dart';
 import 'package:zcash_wallet/src/features/address_book/providers/address_book_provider.dart';
 import 'package:zcash_wallet/src/features/keystone/widgets/keystone_signing_modal.dart';
@@ -75,7 +75,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Review send'), findsOneWidget);
+    expect(find.text('Review payment'), findsOneWidget);
     expect(find.text('Amount'), findsOneWidget);
     expect(find.text('15.12 ZEC'), findsOneWidget);
     expect(find.text(r'$1.06K'), findsOneWidget);
@@ -85,9 +85,9 @@ void main() {
     expect(find.text('Show full address'), findsOneWidget);
     expect(find.text('Message'), findsOneWidget);
     expect(find.text(_longMemo), findsOneWidget);
-    expect(find.text('Tx fee'), findsOneWidget);
+    expect(find.text('Network fee'), findsOneWidget);
     expect(find.text('0.00012 ZEC'), findsOneWidget);
-    expect(find.text('Confirm & send'), findsOneWidget);
+    expect(find.text('Send 15.12 ZEC'), findsOneWidget);
     expect(find.text('Cancel'), findsOneWidget);
   });
 
@@ -104,7 +104,7 @@ void main() {
     expect(find.text('Support Vizor'), findsOneWidget);
     expect(find.text('Send'), findsNothing);
     expect(find.text('Donation'), findsNothing);
-    expect(_sidebarItem(tester, 'Home').active, isFalse);
+    expect(_sidebarItem(tester, 'Wallet').active, isFalse);
     expect(_sidebarItem(tester, 'Settings').active, isFalse);
 
     await tester.tap(find.text('Support Vizor'));
@@ -132,7 +132,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byType(SendReviewContentView),
-        matching: find.byType(AppProfilePicture),
+        matching: find.byType(FamiliarAvatar),
       ),
       findsOneWidget,
     );
@@ -179,7 +179,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Confirm & send'));
+    await tester.ensureVisible(find.text('Send 15.12 ZEC'));
+    await tester.tap(find.text('Send 15.12 ZEC'));
     await tester.pumpAndSettle();
 
     expect(find.text('status-route'), findsOneWidget);
@@ -194,6 +195,7 @@ void main() {
     await tester.pumpWidget(_harness(_reviewArgs(addressType: 'unified')));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Cancel'));
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
 
@@ -412,8 +414,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Confirm with Keystone'), findsOneWidget);
-    expect(find.text('Confirm & send'), findsNothing);
+    expect(find.text('Send 15.12 ZEC'), findsNothing);
 
+    await tester.ensureVisible(find.text('Confirm with Keystone'));
     await tester.tap(find.text('Confirm with Keystone'));
     await _flushRealAsync(tester);
 
@@ -453,6 +456,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Confirm with Keystone'));
     await tester.tap(find.text('Confirm with Keystone'));
     await _flushRealAsync(tester);
 
@@ -484,6 +488,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Confirm with Keystone'));
     await tester.tap(find.text('Confirm with Keystone'));
     await _flushRealAsync(tester);
     await tester.tap(find.text('Get signature'));
@@ -527,6 +532,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Confirm with Keystone'));
     await tester.tap(find.text('Confirm with Keystone'));
     await _flushRealAsync(tester);
     await tester.tap(find.text('Get signature'));
@@ -551,6 +557,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Confirm with Keystone'));
     await tester.tap(find.text('Confirm with Keystone'));
     await _flushRealAsync(tester);
     expect(find.text('Transaction 1 of 2'), findsOneWidget);
@@ -592,6 +599,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Confirm with Keystone'));
     await tester.tap(find.text('Confirm with Keystone'));
     await _flushRealAsync(tester);
     await tester.tap(find.text('Get signature'));
@@ -750,6 +758,7 @@ void main() {
     // Cancel before the PCZT preparation consumed the proposal (real-IO
     // futures are still pending at this point). The review screen behind the
     // scrim has its own Cancel, so scope the tap to the modal.
+    await tester.ensureVisible(find.text('Confirm with Keystone'));
     await tester.tap(find.text('Confirm with Keystone'));
     await tester.pump();
     await tester.tap(
@@ -777,6 +786,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await tester.ensureVisible(find.text('Confirm with Keystone'));
       await tester.tap(find.text('Confirm with Keystone'));
       await _flushRealAsync(tester);
       expect(rustApi.createPcztCalls, 1);

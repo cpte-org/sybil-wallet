@@ -1,3 +1,4 @@
+import 'package:zcash_wallet/src/features/contacts/presentation/familiar_choose_recipient_screen.dart';
 import 'dart:ui' show PointerDeviceKind;
 
 import 'package:flutter/material.dart';
@@ -13,16 +14,16 @@ import 'package:zcash_wallet/src/app_bootstrap.dart';
 import 'package:zcash_wallet/src/core/config/rpc_endpoint_config.dart';
 import 'package:zcash_wallet/src/core/config/swap_feature_config.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
-import 'package:zcash_wallet/src/core/widgets/app_icon.dart';
+import 'package:zcash_wallet/src/core/widgets/app_button.dart';
 import 'package:zcash_wallet/src/core/widgets/app_pane_modal_overlay.dart';
 import 'package:zcash_wallet/src/features/activity/screens/activity_screen.dart';
 import 'package:zcash_wallet/src/features/home/screens/home_screen.dart';
+import 'package:zcash_wallet/src/features/home/widgets/familiar_home_dashboard.dart';
+import 'package:zcash_wallet/src/features/activity/widgets/activity_feed.dart';
 import 'package:zcash_wallet/src/features/migration/providers/ironwood_migration_announcement_provider.dart';
 import 'package:zcash_wallet/src/features/migration/providers/ironwood_migration_coordinator_provider.dart';
 import 'package:zcash_wallet/src/features/migration/screens/ironwood_migration_flow_screen.dart';
-import 'package:zcash_wallet/src/features/pay/screens/pay_screen.dart';
 import 'package:zcash_wallet/src/features/receive/screens/receive_screen.dart';
-import 'package:zcash_wallet/src/features/send/screens/send_screen.dart';
 import 'package:zcash_wallet/src/features/swap/models/swap_models.dart';
 import 'package:zcash_wallet/src/features/swap/providers/pay_selected_asset_store.dart';
 import 'package:zcash_wallet/src/features/swap/providers/swap_state_provider.dart';
@@ -77,17 +78,20 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('******'), findsNWidgets(2));
       expect(
-        find.byKey(const ValueKey('home_desktop_balance_fiat_text')),
-        findsOneWidget,
+        tester
+            .widget<Text>(
+              find.byKey(const ValueKey('familiar_available_balance')),
+            )
+            .data,
+        '****** ZEC',
       );
-      expect(find.text('ZEC'), findsOneWidget);
+      expect(find.text('143.12 ZEC'), findsNothing);
       expect(find.text('****** ZEC ZEC'), findsNothing);
     },
   );
 
-  testWidgets('home desktop shows fiat balance when pricing is available', (
+  testWidgets('Familiar home shows wallet funds without fiat market badges', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -104,127 +108,17 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.text('143.12 ZEC'), findsWidgets);
+    expect(find.text('Yours to spend'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('home_desktop_balance_fiat_text')),
-      findsOneWidget,
+      findsNothing,
     );
-    expect(find.text(r'$10.02K'), findsOneWidget);
-
-    final colors = AppThemeData.light.colors;
-    final fiatText = tester.widget<Text>(
-      find.byKey(const ValueKey('home_desktop_balance_fiat_text')),
-    );
-    expect(fiatText.style?.color, colors.text.homeCard);
-    expect(fiatText.style?.fontSize, 14);
-
-    final shieldIcon = tester.widget<AppIcon>(
-      find.byKey(const ValueKey('home_desktop_shielded_balance_icon')),
-    );
-    expect(shieldIcon.color, colors.text.homeCard);
-
     expect(
       find.byKey(const ValueKey('home_desktop_balance_price_change_text')),
       findsNothing,
     );
-  });
-
-  testWidgets('home desktop shows a green positive 24h price change', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _appHarness(
-        '/home',
-        priceChange24hPct: 1.253,
-        syncState: SyncState(
-          accountUuid: 'account-1',
-          hasAccountScopedData: true,
-          orchardBalance: BigInt.from(14_312_000_000),
-          spendableBalance: BigInt.from(14_312_000_000),
-          totalBalance: BigInt.from(14_312_000_000),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('+ 1.25% (24h)'), findsOneWidget);
-    final changeText = tester.widget<Text>(
-      find.byKey(const ValueKey('home_desktop_balance_price_change_text')),
-    );
-    expect(
-      changeText.style?.color,
-      AppThemeData.light.colors.text.positiveStrong,
-    );
-  });
-
-  testWidgets('home desktop shows a destructive negative 24h price change', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _appHarness(
-        '/home',
-        priceChange24hPct: -0.25852,
-        syncState: SyncState(
-          accountUuid: 'account-1',
-          hasAccountScopedData: true,
-          orchardBalance: BigInt.from(14_312_000_000),
-          spendableBalance: BigInt.from(14_312_000_000),
-          totalBalance: BigInt.from(14_312_000_000),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('- 0.26% (24h)'), findsOneWidget);
-    final changeText = tester.widget<Text>(
-      find.byKey(const ValueKey('home_desktop_balance_price_change_text')),
-    );
-    expect(changeText.style?.color, AppThemeData.light.colors.text.destructive);
-  });
-
-  testWidgets('home desktop content tracks pane center on scaled screens', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1400, 864);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    await tester.pumpWidget(
-      _appHarness(
-        '/home',
-        syncState: SyncState(
-          accountUuid: 'account-1',
-          hasAccountScopedData: true,
-          orchardBalance: BigInt.from(14_312_000_000),
-          spendableBalance: BigInt.from(14_312_000_000),
-          totalBalance: BigInt.from(14_312_000_000),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    final contentFinder = find.byKey(const ValueKey('home_desktop_content'));
-    final contentCenter = tester.getCenter(contentFinder).dx;
-    final contentTop = tester.getTopLeft(contentFinder).dy;
-    const shellPadding = 8.0;
-    const sidebarWidth = 256.0;
-    const sidebarGap = 8.0;
-    const viewportWidth = 1400.0;
-    const viewportHeight = 864.0;
-    const paneLeft = shellPadding + sidebarWidth + sidebarGap;
-    const paneWidth =
-        viewportWidth - (shellPadding * 2) - sidebarWidth - sidebarGap;
-    const paneCenter = paneLeft + (paneWidth / 2);
-    const paneHeight = viewportHeight - (shellPadding * 2);
-    const referencePaneHeight = 704.0;
-    const referenceContentTop = 48.0;
-    const expectedContentTop =
-        shellPadding +
-        referenceContentTop +
-        ((paneHeight - referencePaneHeight) / 2);
-
-    expect(contentCenter, moreOrLessEquals(paneCenter, epsilon: 0.1));
-    expect(contentTop, moreOrLessEquals(expectedContentTop, epsilon: 0.1));
+    expect(find.text(r'$10.02K'), findsNothing);
   });
 
   testWidgets('home desktop send action opens send screen', (tester) async {
@@ -242,10 +136,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('home_desktop_send_button')));
-    await _pumpUntilPresent(tester, find.byType(SendScreen));
+    await tester.tap(find.byKey(const ValueKey('familiar_home_send')));
+    await _pumpUntilPresent(tester, find.byType(FamiliarChooseRecipientScreen));
 
-    expect(find.byType(SendScreen), findsOneWidget);
+    expect(find.byType(FamiliarChooseRecipientScreen), findsOneWidget);
   });
 
   testWidgets('home desktop send hover uses dark primary label hover color', (
@@ -266,7 +160,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final sendButton = find.byKey(const ValueKey('home_desktop_send_button'));
+    final sendButton = find.byKey(const ValueKey('familiar_home_send'));
     final sendText = find.descendant(
       of: sendButton,
       matching: find.text('Send'),
@@ -278,11 +172,8 @@ void main() {
     await mouse.moveTo(tester.getCenter(sendButton));
     await tester.pump();
 
-    final textWidget = tester.widget<Text>(sendText);
-    expect(
-      textWidget.style?.color,
-      AppThemeData.dark.colors.button.primary.labelHover,
-    );
+    final textStyle = DefaultTextStyle.of(tester.element(sendText)).style;
+    expect(textStyle.color, AppThemeData.dark.colors.button.primary.labelHover);
   });
 
   testWidgets('home desktop receive action opens receive screen', (
@@ -302,7 +193,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('home_desktop_receive_button')));
+    await tester.tap(find.byKey(const ValueKey('familiar_home_receive')));
     await _pumpUntilPresent(tester, find.byType(ReceiveScreen));
 
     expect(find.byType(ReceiveScreen), findsOneWidget);
@@ -361,7 +252,7 @@ void main() {
       );
       expect(
         find.byKey(const ValueKey('home_desktop_pay_button')),
-        findsOneWidget,
+        findsNothing,
       );
       final shieldSemantics = tester.widget<Semantics>(
         find.byKey(const ValueKey('home_shield_balance_button')),
@@ -377,8 +268,11 @@ void main() {
         AppThemeData.light.colors.text.disabled,
       );
       await tester.tap(find.byKey(const ValueKey('home_desktop_send_button')));
-      await _pumpUntilPresent(tester, find.byType(SendScreen));
-      expect(find.byType(SendScreen), findsOneWidget);
+      await _pumpUntilPresent(
+        tester,
+        find.byType(FamiliarChooseRecipientScreen),
+      );
+      expect(find.byType(FamiliarChooseRecipientScreen), findsOneWidget);
     },
   );
 
@@ -603,7 +497,7 @@ void main() {
       );
       expect(
         find.byKey(const ValueKey('home_desktop_pay_button')),
-        findsOneWidget,
+        findsNothing,
       );
       expect(
         tester
@@ -728,8 +622,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('143.12'), findsOneWidget);
-    expect(find.text('Shielded balance (Ironwood)'), findsOneWidget);
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey('familiar_available_balance')),
+          )
+          .data,
+      '143.12 ZEC',
+    );
+    expect(find.text('Yours to spend (Ironwood)'), findsOneWidget);
     expect(find.text('0'), findsNothing);
   });
 
@@ -755,13 +656,16 @@ void main() {
     expect(
       tester
           .widget<Text>(
-            find.byKey(const ValueKey('home_desktop_balance_amount_text')),
+            find.byKey(const ValueKey('familiar_available_balance')),
           )
           .data,
-      '0.44291',
+      '0.44291 ZEC',
     );
     expect(find.text('0.44291641'), findsNothing);
-    expect(find.text('Transparent: 0.12345 ZEC'), findsOneWidget);
+    await tester.tap(find.text('Balance details'));
+    await tester.pumpAndSettle();
+    expect(find.text('Transparent funds'), findsOneWidget);
+    expect(find.text('0.12345 ZEC'), findsOneWidget);
   });
 
   testWidgets(
@@ -784,86 +688,57 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Shielded balance (Ironwood)'), findsOneWidget);
+      expect(find.text('Yours to spend (Ironwood)'), findsOneWidget);
       expect(find.text('Shielded balance'), findsNothing);
-      expect(find.text('40.11'), findsOneWidget);
+      expect(
+        tester
+            .widget<Text>(
+              find.byKey(const ValueKey('familiar_available_balance')),
+            )
+            .data,
+        '40.11 ZEC',
+      );
       expect(find.text('40.12'), findsNothing);
     },
   );
 
-  testWidgets('home desktop pay action opens exact-output pay screen', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _appHarness(
-        '/home',
-        syncState: SyncState(
-          accountUuid: 'account-1',
-          hasAccountScopedData: true,
-          orchardBalance: BigInt.from(14_312_000_000),
-          spendableBalance: BigInt.from(14_312_000_000),
-          totalBalance: BigInt.from(14_312_000_000),
+  testWidgets(
+    'home desktop hides postponed features even with funds and swap enabled',
+    (tester) async {
+      await tester.pumpWidget(
+        _appHarness(
+          '/home',
+          swapEnabled: true,
+          syncState: SyncState(
+            accountUuid: 'account-1',
+            hasAccountScopedData: true,
+            orchardBalance: BigInt.from(14_312_000_000),
+            spendableBalance: BigInt.from(14_312_000_000),
+            totalBalance: BigInt.from(14_312_000_000),
+          ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('Shielded balance'), findsOneWidget);
-    expect(find.text('Shielded balance (Ironwood)'), findsNothing);
-    final sendRect = tester.getRect(
-      find.byKey(const ValueKey('home_desktop_send_button')),
-    );
-    final receiveRect = tester.getRect(
-      find.byKey(const ValueKey('home_desktop_receive_button')),
-    );
-    final payRect = tester.getRect(
-      find.byKey(const ValueKey('home_desktop_pay_button')),
-    );
-    final payIcon = tester.widget<AppIcon>(
-      find.descendant(
-        of: find.byKey(const ValueKey('home_desktop_pay_button')),
-        matching: find.byType(AppIcon),
-      ),
-    );
-    // Icon-only 60px pay entry per Figma 5407:152492.
-    expect(payIcon.size, 20);
-    expect(
-      find.ancestor(
-        of: find.byKey(const ValueKey('home_desktop_pay_button')),
-        matching: find.byType(Tooltip),
-      ),
-      findsNothing,
-    );
-    expect(payRect.width, moreOrLessEquals(60, epsilon: 0.1));
-    expect(payRect.top, moreOrLessEquals(sendRect.top, epsilon: 0.1));
-    expect(payRect.bottom, moreOrLessEquals(sendRect.bottom, epsilon: 0.1));
-    expect(receiveRect.left, greaterThan(sendRect.right));
-    expect(payRect.left, greaterThan(receiveRect.right));
-    expect(find.text('NEW'), findsNothing);
-
-    await tester.tap(find.byKey(const ValueKey('home_desktop_pay_button')));
-    await _pumpUntilPresent(tester, find.byType(PayScreen));
-
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(PayScreen)),
-    );
-    final state = container.read(swapStateProvider);
-    expect(find.byType(PayScreen), findsOneWidget);
-    // The wizard opens on the amount-first step.
-    expect(find.byKey(const ValueKey('pay_wizard_title')), findsOneWidget);
-    expect(find.byKey(const ValueKey('pay_amount_step')), findsOneWidget);
-    expect(find.byKey(const ValueKey('pay_amount_input')), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('pay_recipient_search_field')),
-      findsNothing,
-    );
-    expect(state.direction, SwapDirection.zecToExternal);
-    expect(state.quoteMode, SwapQuoteMode.exactOutput);
-    expect(state.payMode, isTrue);
-    expect(state.amountText, isEmpty);
-    expect(state.receiveAmountText, isEmpty);
-    expect(state.destinationText, isEmpty);
-  });
+      expect(find.text('Yours to spend'), findsOneWidget);
+      expect(find.byKey(const ValueKey('familiar_home_send')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('familiar_home_receive')),
+        findsOneWidget,
+      );
+      for (final label in [
+        'Swap and Pay',
+        'Swap',
+        'Pay',
+        'Coinholder voting',
+        'Vote',
+        'Public discovery',
+        'Public Zcash names',
+      ]) {
+        expect(find.text(label), findsNothing);
+      }
+    },
+  );
 
   testWidgets('home desktop hides pay when swap is disabled', (tester) async {
     await tester.pumpWidget(
@@ -881,7 +756,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('home_desktop_pay_button')), findsNothing);
+    expect(find.text('Swap and Pay'), findsNothing);
   });
 
   testWidgets('home hides pay without a spendable balance', (tester) async {
@@ -896,7 +771,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('home_desktop_pay_button')), findsNothing);
+    expect(find.text('Swap and Pay'), findsNothing);
   });
 
   testWidgets('home desktop see all action opens activity screen', (
@@ -913,9 +788,9 @@ void main() {
     );
     await _pumpUntilPresent(tester, find.text('Swapping...'));
 
-    await tester.tap(
-      find.byKey(const ValueKey('home_desktop_activity_see_all_button')),
-    );
+    await tester.ensureVisible(find.text('All activity'));
+    await tester.pump();
+    await tester.tap(find.text('All activity'));
     await _pumpUntilPresent(tester, find.byType(ActivityScreen));
 
     expect(find.byType(ActivityScreen), findsOneWidget);
@@ -1034,16 +909,18 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(
-      find.byKey(const ValueKey('home_desktop_transparent_balance_strip')),
-      findsOneWidget,
+    expect(find.text('Shield transparent funds'), findsNothing);
+    await tester.tap(find.text('Balance details'));
+    await tester.pumpAndSettle();
+    expect(find.text('Transparent funds'), findsOneWidget);
+    expect(find.text('2.42 ZEC'), findsOneWidget);
+    final shieldButton = tester.widget<AppButton>(
+      find.ancestor(
+        of: find.text('Shield transparent funds'),
+        matching: find.byType(AppButton),
+      ),
     );
-    expect(find.text('Transparent: 2.42 ZEC'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('home_shield_balance_button')),
-      findsOneWidget,
-    );
-    expect(find.text('Shield now'), findsOneWidget);
+    expect(shieldButton.onPressed, isNotNull);
   });
 
   testWidgets('home desktop keeps recovery notice visible', (tester) async {
@@ -1183,14 +1060,19 @@ void main() {
     );
     await _pumpUntilPresent(tester, find.text('Swapping...'));
 
-    final scrollViewFinder = find.byKey(
-      const ValueKey('home_desktop_scroll_view'),
-    );
+    final scrollViewFinder = find
+        .descendant(
+          of: find.byType(FamiliarHomeDashboard),
+          matching: find.byType(ListView),
+        )
+        .first;
     final scrollableFinder = find.descendant(
       of: scrollViewFinder,
       matching: find.byType(Scrollable),
     );
-    final scrollableState = tester.state<ScrollableState>(scrollableFinder);
+    final scrollableState = tester.state<ScrollableState>(
+      scrollableFinder.first,
+    );
 
     expect(tester.getSize(scrollViewFinder).width, greaterThan(420));
     expect(find.byKey(const ValueKey('home_notice_card')), findsOneWidget);
@@ -1238,11 +1120,14 @@ void main() {
     await tester.pump();
 
     final balanceFinder = find.byKey(
-      const ValueKey('home_desktop_balance_amount_text'),
+      const ValueKey('familiar_available_balance'),
     );
-    final activityFinder = find.byKey(
-      const ValueKey('home_desktop_activity_row_0'),
-    );
+    final activityFinder = find
+        .descendant(
+          of: find.byType(FamiliarHomeDashboard),
+          matching: find.byType(ActivityFeedRow),
+        )
+        .first;
     final balanceBeforeTicks = tester.widget(balanceFinder);
     final activityBeforeTicks = tester.widget(activityFinder);
 

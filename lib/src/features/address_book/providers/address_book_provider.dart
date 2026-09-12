@@ -130,6 +130,9 @@ class AddressBookNotifier extends AsyncNotifier<AddressBookState> {
     required AddressBookNetwork network,
     required String address,
     required String profilePictureId,
+    String? note,
+    bool? pinned,
+    void Function()? beforeWrite,
   }) async {
     final current = await _loadedState();
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -141,8 +144,13 @@ class AddressBookNotifier extends AsyncNotifier<AddressBookState> {
       profilePictureId: resolveProfilePictureOption(profilePictureId).id,
       createdAtMs: now,
       updatedAtMs: now,
+      note: note ?? '',
+      pinned: pinned ?? false,
     );
     final contacts = _sortedContacts([...current.contacts, contact]);
+    // Callers with a reviewed recipient can revoke a pending save while the
+    // address book is loading (account switch, lock or changed lookup).
+    beforeWrite?.call();
     await _persist(contacts);
     state = AsyncData(current.copyWith(contacts: contacts));
     return contact;
@@ -154,6 +162,8 @@ class AddressBookNotifier extends AsyncNotifier<AddressBookState> {
     required AddressBookNetwork network,
     required String address,
     required String profilePictureId,
+    String? note,
+    bool? pinned,
   }) async {
     final current = await _loadedState();
     final contacts = _sortedContacts([
@@ -165,6 +175,8 @@ class AddressBookNotifier extends AsyncNotifier<AddressBookState> {
             address: address.trim(),
             profilePictureId: resolveProfilePictureOption(profilePictureId).id,
             updatedAtMs: DateTime.now().millisecondsSinceEpoch,
+            note: note,
+            pinned: pinned,
           )
         else
           contact,
@@ -214,6 +226,8 @@ class AddressBookNotifier extends AsyncNotifier<AddressBookState> {
         ).id,
         createdAtMs: imported.createdAtMs > 0 ? imported.createdAtMs : now,
         updatedAtMs: imported.updatedAtMs > 0 ? imported.updatedAtMs : now,
+        note: imported.note,
+        pinned: imported.pinned,
       );
       contacts.add(contact);
       existingIds.add(nextId);

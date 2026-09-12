@@ -60,25 +60,25 @@ class AppPrimaryButtonColors {
   final Color labelHover;
 
   static const dark = AppPrimaryButtonColors(
-    bg: Primitives.p800Dark,
-    bgHover: CrimsonPrimitives.p300Dark,
-    bgPressed: CrimsonPrimitives.p300Dark,
-    border: Primitives.p900Alpha10Dark,
-    borderHover: Primitives.p900Alpha10Dark,
-    borderPressed: Primitives.p900Alpha10Dark,
-    label: Primitives.p50Dark,
-    labelHover: Primitives.p800Dark,
+    bg: FamiliarPrimitives.accentDark,
+    bgHover: Color(0xFFE8F1C1),
+    bgPressed: Color(0xFFCEDC94),
+    border: FamiliarPrimitives.accentDark,
+    borderHover: FamiliarPrimitives.accentDark,
+    borderPressed: FamiliarPrimitives.accentDark,
+    label: FamiliarPrimitives.onAccentDark,
+    labelHover: FamiliarPrimitives.onAccentDark,
   );
 
   static const light = AppPrimaryButtonColors(
-    bg: Primitives.p800Light,
-    bgHover: CrimsonPrimitives.p400Light,
-    bgPressed: CrimsonPrimitives.p400Light,
-    border: Primitives.p0Alpha10Light,
-    borderHover: Primitives.p900Alpha5Light,
-    borderPressed: Primitives.p900Alpha5Light,
-    label: Primitives.p100Light,
-    labelHover: Primitives.p100Light,
+    bg: FamiliarPrimitives.accentLight,
+    bgHover: Color(0xFF365D43),
+    bgPressed: Color(0xFF233A2E),
+    border: FamiliarPrimitives.accentLight,
+    borderHover: FamiliarPrimitives.accentLight,
+    borderPressed: FamiliarPrimitives.accentLight,
+    label: FamiliarPrimitives.onAccentLight,
+    labelHover: FamiliarPrimitives.onAccentLight,
   );
 }
 
@@ -96,17 +96,17 @@ class AppSecondaryButtonColors {
   final Color label;
 
   static const dark = AppSecondaryButtonColors(
-    bg: Primitives.p150Dark,
-    bgHover: Primitives.p200Dark,
-    bgPressed: Primitives.p200Dark,
-    label: Primitives.p800Dark,
+    bg: FamiliarPrimitives.surfaceDark,
+    bgHover: FamiliarPrimitives.softDark,
+    bgPressed: FamiliarPrimitives.sageDark,
+    label: FamiliarPrimitives.inkDark,
   );
 
   static const light = AppSecondaryButtonColors(
-    bg: Primitives.p0Light,
-    bgHover: Primitives.p100Light,
-    bgPressed: Primitives.p100Light,
-    label: Primitives.p900Light,
+    bg: FamiliarPrimitives.surfaceLight,
+    bgHover: FamiliarPrimitives.softLight,
+    bgPressed: FamiliarPrimitives.sageLight,
+    label: FamiliarPrimitives.inkLight,
   );
 }
 
@@ -126,20 +126,17 @@ class AppGhostButtonColors {
   final Color label;
 
   static const dark = AppGhostButtonColors(
-    bg: Primitives.p0Dark,
-    // p100Dark equals the raised/modal surface (#232828), which made the
-    // hover fill invisible on modal panels — one step up stays visible on
-    // both ground and raised surfaces.
-    bgHover: Primitives.p150Dark,
-    border: Primitives.p300Dark,
-    label: Primitives.p700Dark,
+    bg: FamiliarPrimitives.paperDark,
+    bgHover: FamiliarPrimitives.softDark,
+    border: FamiliarPrimitives.lineDark,
+    label: FamiliarPrimitives.inkDark,
   );
 
   static const light = AppGhostButtonColors(
-    bg: Primitives.p0Light,
-    bgHover: Primitives.p100Light,
-    border: Primitives.p300Light,
-    label: Primitives.p800Light,
+    bg: FamiliarPrimitives.paperLight,
+    bgHover: FamiliarPrimitives.softLight,
+    border: FamiliarPrimitives.lineLight,
+    label: FamiliarPrimitives.inkLight,
   );
 }
 
@@ -150,13 +147,13 @@ class AppDisabledButtonColors {
   final Color label;
 
   static const dark = AppDisabledButtonColors(
-    bg: Primitives.p300Alpha20Dark,
-    label: Primitives.p500Alpha50Dark,
+    bg: FamiliarPrimitives.softDark,
+    label: Color(0xFF7F9382),
   );
 
   static const light = AppDisabledButtonColors(
-    bg: Primitives.p300Alpha20Light,
-    label: Primitives.p500Alpha50Light,
+    bg: FamiliarPrimitives.softLight,
+    label: Color(0xFF899286),
   );
 }
 
@@ -180,22 +177,22 @@ class AppDestructiveButtonColors {
   final Color label;
 
   static const dark = AppDestructiveButtonColors(
-    bg: PlumPrimitives.p200Dark,
-    bgHover: PlumPrimitives.p150Dark,
-    bgPressed: PlumPrimitives.p150Dark,
-    border: Primitives.p900Alpha10Dark,
-    borderHover: Primitives.p900Alpha10Dark,
-    borderPressed: Primitives.p900Alpha10Dark,
-    label: PlumPrimitives.p800Dark,
+    bg: FamiliarPrimitives.errorDark,
+    bgHover: Color(0xFFFCC1B9),
+    bgPressed: Color(0xFFE99186),
+    border: FamiliarPrimitives.errorDark,
+    borderHover: FamiliarPrimitives.errorDark,
+    borderPressed: FamiliarPrimitives.errorDark,
+    label: FamiliarPrimitives.errorSurfaceDark,
   );
 
   static const light = AppDestructiveButtonColors(
-    bg: PlumPrimitives.p500Light,
-    bgHover: PlumPrimitives.p600Light,
-    bgPressed: PlumPrimitives.p600Light,
-    border: Primitives.p900Alpha5Light,
-    borderHover: Primitives.p900Alpha5Light,
-    borderPressed: Primitives.p900Alpha5Light,
-    label: PlumPrimitives.p50Light,
+    bg: FamiliarPrimitives.errorLight,
+    bgHover: Color(0xFF922D25),
+    bgPressed: Color(0xFF7B251F),
+    border: FamiliarPrimitives.errorLight,
+    borderHover: FamiliarPrimitives.errorLight,
+    borderPressed: FamiliarPrimitives.errorLight,
+    label: FamiliarPrimitives.surfaceLight,
   );
 }

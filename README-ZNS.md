@@ -30,7 +30,7 @@ Desktop is the default. Mobile runs must select a mobile device and also pass `-
 fvm flutter run -d linux -t lib/zns_preview.dart
 ```
 
-Open **Names** in the desktop sidebar, or **Settings → Zcash names** on mobile. Unlock a software account, open the Names settings, and enter the verified deployment:
+Open **Settings → Public Zcash names**. Unlock a software account and enter the verified deployment in the Names configuration:
 
 | Setting | Current behavior |
 | --- | --- |

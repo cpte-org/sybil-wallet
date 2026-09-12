@@ -1,7 +1,5 @@
 import 'package:flutter/painting.dart';
 
-import '../primitives.dart';
-
 /// Fade / scrim tokens retained from the OLDSemantic fade group.
 ///
 /// * [illustration] — Gentle fade laid over a bottom-anchored
@@ -14,10 +12,10 @@ class AppFadeColors {
 
   final Color illustration;
 
-  static const dark = AppFadeColors(illustration: Primitives.p0Alpha50Dark);
+  static const dark = AppFadeColors(illustration: Color(0x8019261F));
 
   // Fully transparent on light mode — keeps the same rgb anchor as the
   // dark face so fade animations between modes don't flicker through a
   // neutral color.
-  static const light = AppFadeColors(illustration: Primitives.p0Alpha0Dark);
+  static const light = AppFadeColors(illustration: Color(0x0019261F));
 }

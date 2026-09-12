@@ -515,11 +515,38 @@ class ZnsRpcClient {
   }
 
   Future<ZnsNameRecord> lookupName(String name) async {
+    return _readNameRecord(name, requireRegistrationPolicy: true);
+  }
+
+  /// Resolves the public record without loading an owner or checking the
+  /// registration economics. Chain, deployed code and canonical reads still
+  /// apply; the caller must validate activity, expiry and the Zcash address.
+  Future<ZnsNameRecord> readNameRecord(String name) async {
+    return _readNameRecord(name, requireRegistrationPolicy: false);
+  }
+
+  Future<ZnsNameRecord> _readNameRecord(
+    String name, {
+    required bool requireRegistrationPolicy,
+  }) async {
     if (!RegExp(r'^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$').hasMatch(name)) {
       throw const FormatException('Invalid normalized ZNS name');
     }
     final at = await block();
-    await verifyProtocol(at: at);
+    if (requireRegistrationPolicy) {
+      await verifyProtocol(at: at);
+    } else {
+      await verifyChain();
+      if (await code(
+            config.registryAddress,
+            blockTag: znsQuantity(at.number),
+          ) ==
+          '0x') {
+        throw const ZnsDataException(
+          'No names registry exists at the configured address.',
+        );
+      }
+    }
     final tag = znsQuantity(at.number);
     final result = ZnsAbi(
       await _call(

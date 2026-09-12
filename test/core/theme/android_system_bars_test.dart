@@ -46,7 +46,7 @@ void main() {
   test('launch theme hexes in styles.xml match the window tokens', () {
     // values/styles.xml and values-night/styles.xml hardcode these —
     // android resources cannot read Dart tokens, so this pins the copies.
-    expect(AppColors.light.background.window, const Color(0xFFF7F7F7));
-    expect(AppColors.dark.background.window, const Color(0xFF0F0F0F));
+    expect(AppColors.light.background.window, const Color(0xFFF7F6EF));
+    expect(AppColors.dark.background.window, const Color(0xFF19261F));
   });
 }

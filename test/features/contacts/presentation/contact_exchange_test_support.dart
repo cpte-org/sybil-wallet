@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
+import 'package:zcash_wallet/src/core/theme/legacy_material_theme.dart';
 import 'package:zcash_wallet/src/core/layout/app_form_factor.dart';
 import 'package:zcash_wallet/src/core/widgets/app_button.dart';
 import 'package:zcash_wallet/src/features/contacts/presentation/contact_exchange_screen.dart';
@@ -15,6 +16,7 @@ Future<void> pumpContactExchange(
   ContactExchangeCallbacks callbacks = const ContactExchangeCallbacks(),
   Size? size,
   GlobalKey? captureKey,
+  bool advanced = true,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize =
@@ -24,7 +26,7 @@ Future<void> pumpContactExchange(
   await loadFigmaCompareFonts();
   await tester.pumpWidget(
     MaterialApp(
-      theme: ThemeData.dark(),
+      theme: buildLegacyDarkTheme(),
       builder: (context, child) =>
           AppTheme(data: AppThemeData.dark, child: child!),
       home: RepaintBoundary(
@@ -33,6 +35,7 @@ Future<void> pumpContactExchange(
           backgroundColor: AppThemeData.dark.colors.background.ground,
           body: ContactExchangeView(
             state: state,
+            advanced: advanced,
             callbacks: callbacks,
             now: () => contactTestNow,
           ),

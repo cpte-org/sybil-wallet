@@ -359,9 +359,15 @@ class _MobileSwapScreenState extends ConsumerState<MobileSwapScreen> {
                     : AppIcons.chevronBackward,
                 onBack: keyboardOpen
                     ? () => FocusManager.instance.primaryFocus?.unfocus()
-                    : () => context.go(
-                        resolveMobileBackPath(ref, currentPath: '/swap'),
-                      ),
+                    : () {
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go(
+                            resolveMobileBackPath(ref, currentPath: '/swap'),
+                          );
+                        }
+                      },
                 trailing: const SwapNearIntentsAttribution(alignEnd: true),
               ),
               Expanded(

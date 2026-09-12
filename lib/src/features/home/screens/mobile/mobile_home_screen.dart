@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../main.dart' show log;
-import '../../../../core/config/swap_feature_config.dart';
 import '../../../../core/feedback/app_haptics.dart';
 import '../../../../core/formatting/sync_status_label.dart';
 import '../../../../core/config/network_config.dart';
@@ -23,6 +22,7 @@ import '../../../../core/widgets/app_icon.dart';
 import '../../../../core/widgets/app_toast.dart';
 import '../../../../providers/account_provider.dart';
 import '../../../../providers/privacy_mode_provider.dart';
+import '../../../../providers/network_privacy_provider.dart';
 import '../../../../providers/rpc_endpoint_provider.dart';
 import '../../../../providers/sync_keep_awake_provider.dart';
 import '../../../../providers/sync_display_progress_provider.dart';
@@ -43,9 +43,9 @@ import '../../../migration/widgets/mobile/mobile_ironwood_migration_attention.da
 import '../../../migration/providers/ironwood_migration_coordinator_provider.dart';
 import '../../../migration/widgets/mobile/mobile_ironwood_migration_announcement_sheet.dart';
 import '../../../swap/models/swap_activity_navigation.dart';
-import '../../../swap/providers/swap_state_provider.dart';
 import '../../../swap/widgets/swap_activity_status_auto_refresh.dart';
 import '../../services/transparent_shielding_service.dart';
+import '../../widgets/familiar_home_dashboard.dart';
 import 'mobile_keystone_shield_screen.dart';
 
 /// Mobile home tab: shielded balance card, send/receive actions, and
@@ -87,7 +87,8 @@ class MobileHomeScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.s),
                 Builder(
                   builder: (context) => MobileTopNavAccount(
-                    showSyncStatus: !isImporting,
+                    showSyncStatus:
+                        !isImporting && ironwoodMigrationCta.visible,
                     onAccountTap: () => showMobileAccountsSheet(context),
                   ),
                 ),
@@ -869,36 +870,6 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
     );
   }
 
-  Future<void> _openPay() async {
-    final accountUuid = ref
-        .read(accountProvider)
-        .value
-        ?.activeAccountUuid
-        ?.trim();
-    if (accountUuid == null || accountUuid.isEmpty) return;
-
-    final router = GoRouter.of(context);
-    final swapNotifier = ref.read(swapStateProvider.notifier);
-    final selectedAssetFuture = swapNotifier.resolvePaySelectedAssetForEntry(
-      accountUuid: accountUuid,
-    );
-    final selectedAsset = await selectedAssetFuture;
-    if (!mounted ||
-        selectedAsset == null ||
-        router.routerDelegate.currentConfiguration.uri.path != '/home') {
-      return;
-    }
-    final prepared = swapNotifier.preparePayFromShieldedZec(
-      preferredAsset: selectedAsset,
-      expectedAccountUuid: accountUuid,
-    );
-    if (!prepared) return;
-    router.push(
-      '/pay',
-      extra: const PayComposerNavigationArgs(preservePreparedComposer: true),
-    );
-  }
-
   Future<void> _shieldTransparentBalance() async {
     if (_isShieldingBalance) return;
 
@@ -993,10 +964,6 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
         ? fixedPrivacyMask()
         : fiatBalanceText;
     final priceChange24hPct = ref.watch(zecPriceChange24hPctProvider);
-    final payEnabled = ref.watch(swapFeatureEnabledProvider);
-    final showPayEntry =
-        payEnabled &&
-        (!migrationInProgress || sync.ironwoodBalance > BigInt.zero);
     final migrationAttention = mobileIronwoodMigrationAttention(
       widget.ironwoodMigrationCta.status,
       currentHeight: _mobileIronwoodSafelyObservedHeight(sync),
@@ -1062,6 +1029,25 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
         entry.row,
     ];
 
+    if (!widget.ironwoodMigrationCta.visible) {
+      return FamiliarHomeDashboard(
+        sync: sync,
+        networkPrivacy: ref.watch(networkPrivacyProvider),
+        ironwoodOnly:
+            ref.watch(ironwoodHomeBalancePresentationProvider) ==
+            IronwoodHomeBalancePresentationMode.ironwoodOnly,
+        privacyModeEnabled: privacyModeEnabled,
+        activityRows: recentRows,
+        isActivityLoading: !sync.hasAccountScopedData,
+        onSend: () => context.push('/send'),
+        onReceive: () => context.push('/receive'),
+        onActivity: () => context.go('/activity'),
+        onTogglePrivacyMode: widget.onTogglePrivacyMode,
+        onShield: sync.canShieldTransparentBalance && !_isShieldingBalance
+            ? () => unawaited(_shieldTransparentBalance())
+            : null,
+      );
+    }
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.sm,
@@ -1140,30 +1126,6 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
                       ),
                     ),
                   ),
-                  // The Pay entry follows the swap feature flag: pay
-                  // rides the swap engine, so a server-side swap disable
-                  // hides the button, mirroring desktop's `onPay == null`
-                  // gating.
-                  if (showPayEntry) ...[
-                    const SizedBox(width: AppSpacing.xs),
-                    SizedBox(
-                      width: _mobileHomeActionButtonHeight,
-                      height: _mobileHomeActionButtonHeight,
-                      child: Semantics(
-                        button: true,
-                        label: 'Pay',
-                        child: AppButton(
-                          key: const ValueKey('mobile_home_pay'),
-                          minWidth: _mobileHomeActionButtonHeight,
-                          height: _mobileHomeActionButtonHeight,
-                          contentPadding: EdgeInsets.zero,
-                          variant: AppButtonVariant.secondary,
-                          onPressed: _openPay,
-                          child: const _ButtonIcon(AppIcons.paid),
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
               )
             else
@@ -1182,8 +1144,6 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-            const SizedBox(height: AppSpacing.s),
-            _MobileVotingEntryCard(onTap: () => context.push('/voting')),
             if (widget.ironwoodMigrationCta.visible) ...[
               const SizedBox(height: AppSpacing.s),
               MobileIronwoodMigrationBanner(
@@ -1234,93 +1194,6 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
             ),
           ),
       ],
-    );
-  }
-}
-
-class _MobileVotingEntryCard extends StatelessWidget {
-  const _MobileVotingEntryCard({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Semantics(
-      button: true,
-      label: 'Open coinholder voting',
-      child: GestureDetector(
-        key: const ValueKey('mobile_home_coinholder_voting'),
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 77),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.s,
-          ),
-          decoration: BoxDecoration(
-            color: colors.background.ground,
-            borderRadius: BorderRadius.circular(AppRadii.large),
-          ),
-          foregroundDecoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadii.large),
-            border: Border.all(color: const Color(0x12FFFFFF), width: 1.5),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xxs),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppIcon(
-                  AppIcons.vote,
-                  size: 20,
-                  color: colors.icon.accent,
-                ),
-                const SizedBox(width: AppSpacing.s),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Coinholder voting',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTypography.labelLarge.copyWith(
-                                color: colors.text.accent,
-                              ),
-                            ),
-                          ),
-                          AppIcon(
-                            AppIcons.chevronForward,
-                            size: 20,
-                            color: colors.icon.accent,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        'Help to shape the network',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: colors.text.secondary,
-                          height: 17 / 16,
-                          letterSpacing: -0.04,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

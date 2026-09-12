@@ -52,7 +52,7 @@ class AppMobileTabBar extends StatelessWidget {
 
   static const _blur = 17.5;
   static const _itemHeight = 56.0;
-  static const _iconSize = 28.0;
+  static const _iconSize = 23.0;
 
   /// Selection transition — shared by the sliding pill and the icon
   /// tint so they read as one move. The curve is easeOutBack
@@ -248,10 +248,24 @@ class _TabBarItemState extends State<_TabBarItem>
                   duration: widget.motion
                       ? AppMobileTabBar.selectDuration
                       : Duration.zero,
-                  builder: (_, color, _) => AppIcon(
-                    widget.item.iconName,
-                    size: AppMobileTabBar._iconSize,
-                    color: color ?? iconColor,
+                  builder: (_, color, _) => Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AppIcon(
+                        widget.item.iconName,
+                        size: AppMobileTabBar._iconSize,
+                        color: color ?? iconColor,
+                      ),
+                      const SizedBox(height: 3),
+                      ExcludeSemantics(
+                        child: Text(
+                          widget.item.label,
+                          style: AppTypography.labelSmall.copyWith(
+                            color: color ?? iconColor,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

@@ -19,6 +19,7 @@ import 'package:zcash_wallet/src/core/config/swap_feature_config.dart';
 import 'package:zcash_wallet/src/core/widgets/app_icon.dart';
 import 'package:zcash_wallet/src/core/widgets/app_button.dart';
 import 'package:zcash_wallet/src/features/home/screens/mobile/mobile_home_screen.dart';
+import 'package:zcash_wallet/src/features/activity/widgets/activity_feed.dart';
 import 'package:zcash_wallet/src/features/migration/models/mobile_ironwood_migration_attention_state.dart';
 import 'package:zcash_wallet/src/features/migration/providers/ironwood_migration_announcement_provider.dart';
 import 'package:zcash_wallet/src/features/migration/providers/ironwood_migration_coordinator_provider.dart';
@@ -147,12 +148,6 @@ class _FakeSwapActivityStore implements SwapActivityStore {
 
   @override
   Future<void> deleteForAccount({required String accountUuid}) async {}
-}
-
-TextStyle _effectiveTextStyle(WidgetTester tester, Finder finder) {
-  final text = tester.widget<Text>(finder);
-  final defaultStyle = DefaultTextStyle.of(tester.element(finder)).style;
-  return defaultStyle.merge(text.style);
 }
 
 const _accountState = AccountState(
@@ -554,73 +549,38 @@ SwapIntentRecord _externalToZecActivityRecord({
 }
 
 void main() {
-  testWidgets('shows coinholder voting below actions and opens the flow', (
+  testWidgets('home hides postponed features even when swap is enabled', (
     tester,
   ) async {
-    await tester.binding.setSurfaceSize(const Size(393, 852));
-    addTearDown(() async {
-      await tester.binding.setSurfaceSize(null);
-    });
-
+    await tester.binding.setSurfaceSize(const Size(393, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
-      _app(_syncedState(ironwoodBalance: BigInt.from(100000000))),
+      _app(
+        _syncedState(ironwoodBalance: BigInt.from(100000000)),
+        swapEnabled: true,
+      ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump();
 
-    final entry = find.byKey(const ValueKey('mobile_home_coinholder_voting'));
-    expect(entry, findsOneWidget);
-    expect(find.text('Coinholder voting'), findsOneWidget);
-    expect(find.text('Help to shape the network'), findsOneWidget);
+    for (final label in [
+      'Coinholder voting',
+      'Vote',
+      'Swap',
+      'Pay',
+      'Swap and Pay',
+      'Public discovery',
+      'Public Zcash names',
+    ]) {
+      expect(find.text(label), findsNothing);
+    }
     expect(
-      tester.getTopLeft(entry).dy,
-      greaterThan(
-        tester.getBottomLeft(find.byKey(const ValueKey('mobile_home_send'))).dy,
-      ),
+      find.byKey(const ValueKey('mobile_home_coinholder_voting')),
+      findsNothing,
     );
-    final votingSurface = tester.widget<Container>(
-      find.descendant(of: entry, matching: find.byType(Container)).first,
-    );
-    final votingDecoration = votingSurface.decoration! as BoxDecoration;
-    expect(votingDecoration.boxShadow, isNull);
-    expect(votingDecoration.color, AppThemeData.dark.colors.background.ground);
-    expect(
-      votingDecoration.borderRadius,
-      BorderRadius.circular(AppRadii.large),
-    );
-    final votingForegroundDecoration =
-        votingSurface.foregroundDecoration! as BoxDecoration;
-    expect(
-      votingForegroundDecoration.borderRadius,
-      BorderRadius.circular(AppRadii.large),
-    );
-    final votingBorder = votingForegroundDecoration.border! as Border;
-    expect(votingBorder.top.width, 1.5);
-    expect(votingBorder.top.color, const Color(0x12FFFFFF));
-    expect(tester.getSize(entry).height, 77);
-    expect(
-      find.descendant(
-        of: entry,
-        matching: find.byWidgetPredicate(
-          (widget) =>
-              widget is AppIcon && widget.name == AppIcons.vote,
-        ),
-      ),
-      findsOneWidget,
-    );
-    final darkIcons = tester.widgetList<AppIcon>(
-      find.descendant(of: entry, matching: find.byType(AppIcon)),
-    );
-    expect(
-      darkIcons.every(
-        (icon) => icon.color == AppThemeData.dark.colors.icon.accent,
-      ),
-      isTrue,
-    );
-
-    await tester.ensureVisible(entry);
-    await tester.tap(entry);
-    await tester.pumpAndSettle();
-    expect(find.text('voting route'), findsOneWidget);
+    expect(find.byKey(const ValueKey('mobile_home_pay')), findsNothing);
+    expect(find.byKey(const ValueKey('familiar_home_send')), findsOneWidget);
+    expect(find.byKey(const ValueKey('familiar_home_receive')), findsOneWidget);
   });
 
   testWidgets('shows the Figma sync keep-awake prompt copy', (tester) async {
@@ -672,76 +632,6 @@ void main() {
     await tester.tap(find.text('Maybe later'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
-  });
-
-  testWidgets('voting entry grows instead of overflowing with larger text', (
-    tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(393, 852));
-    tester.platformDispatcher.textScaleFactorTestValue = 1.45;
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-
-    await tester.pumpWidget(
-      _app(
-        _syncedState(ironwoodBalance: BigInt.from(100000000)),
-        swapEnabled: false,
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    final entry = find.byKey(const ValueKey('mobile_home_coinholder_voting'));
-    expect(tester.takeException(), isNull);
-    expect(tester.getSize(entry).height, greaterThan(77));
-  });
-
-  testWidgets('voting entry resolves the light theme semantic colors', (
-    tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(393, 852));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-
-    await tester.pumpWidget(
-      _app(
-        _syncedState(ironwoodBalance: BigInt.from(100000000)),
-        theme: AppThemeData.light,
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    final entry = find.byKey(const ValueKey('mobile_home_coinholder_voting'));
-    final votingSurface = tester.widget<Container>(
-      find.descendant(of: entry, matching: find.byType(Container)).first,
-    );
-    final votingDecoration = votingSurface.decoration! as BoxDecoration;
-    expect(votingDecoration.color, AppThemeData.light.colors.background.ground);
-
-    final title = tester.widget<Text>(
-      find.descendant(of: entry, matching: find.text('Coinholder voting')),
-    );
-    final description = tester.widget<Text>(
-      find.descendant(
-        of: entry,
-        matching: find.text('Help to shape the network'),
-      ),
-    );
-    expect(title.style?.color, AppThemeData.light.colors.text.accent);
-    expect(description.style?.color, AppThemeData.light.colors.text.secondary);
-    expect(title.style?.fontSize, 16);
-    expect(title.style?.height, 17 / 16);
-    expect(description.style?.fontSize, 16);
-    expect(description.style?.height, 17 / 16);
-
-    final icons = tester.widgetList<AppIcon>(
-      find.descendant(of: entry, matching: find.byType(AppIcon)),
-    );
-    expect(icons, hasLength(2));
-    expect(
-      icons.every(
-        (icon) => icon.color == AppThemeData.light.colors.icon.accent,
-      ),
-      isTrue,
-    );
   });
 
   testWidgets('shows the importing state before account data exists', (
@@ -811,42 +701,28 @@ void main() {
     expect(find.text('No activity, yet...'), findsOneWidget);
   });
 
-  testWidgets('empty activity uses the Figma inner inset', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(393, 852));
+  testWidgets('empty activity follows wallet actions without a voting card', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(393, 1000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-
     await tester.pumpWidget(_app(_syncedState()));
     await tester.pump();
-
-    final receiveRect = tester.getRect(
-      find.byKey(const ValueKey('mobile_home_receive')),
-    );
-    final votingRect = tester.getRect(
+    await tester.pump();
+    final emptyActivity = find.text('Your payments will appear here.');
+    await tester.ensureVisible(emptyActivity);
+    expect(emptyActivity, findsOneWidget);
+    expect(
       find.byKey(const ValueKey('mobile_home_coinholder_voting')),
-    );
-    final canvasRect = tester.getRect(
-      find.byKey(const ValueKey('mobile_home_rest_canvas')),
-    );
-    final titleRect = tester.getRect(find.text('No activity, yet...'));
-    final bodyRect = tester.getRect(
-      find.text('How about running your\nfirst ZEC tx?'),
-    );
-
-    expect(
-      canvasRect.left,
-      moreOrLessEquals(receiveRect.left + AppSpacing.xs, epsilon: 0.1),
+      findsNothing,
     );
     expect(
-      titleRect.top,
-      moreOrLessEquals(votingRect.bottom + 36, epsilon: 0.1),
-    );
-    expect(
-      bodyRect.top - titleRect.bottom,
-      moreOrLessEquals(AppSpacing.xxs, epsilon: 0.1),
-    );
-    expect(
-      canvasRect.top - bodyRect.bottom,
-      moreOrLessEquals(AppSpacing.xxs, epsilon: 0.1),
+      tester.getTopLeft(emptyActivity).dy,
+      greaterThan(
+        tester
+            .getBottomLeft(find.byKey(const ValueKey('familiar_home_receive')))
+            .dy,
+      ),
     );
   });
 
@@ -1140,7 +1016,7 @@ void main() {
           .onPressed,
       isNotNull,
     );
-    expect(find.byKey(const ValueKey('mobile_home_pay')), findsOneWidget);
+    expect(find.byKey(const ValueKey('mobile_home_pay')), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey('mobile_home_send')));
     await tester.pumpAndSettle();
@@ -1230,7 +1106,7 @@ void main() {
           .onPressed,
       isNotNull,
     );
-    expect(find.byKey(const ValueKey('mobile_home_pay')), findsOneWidget);
+    expect(find.byKey(const ValueKey('mobile_home_pay')), findsNothing);
   });
 
   testWidgets('includes locked Orchard holdings in the migrating amount', (
@@ -2143,87 +2019,44 @@ void main() {
     expect(stripFinder, findsNothing);
   });
 
-  testWidgets('matches the Figma balance card controls and action labels', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _app(_syncedState(orchardBalance: BigInt.from(14312000000))),
-    );
-    await tester.pump();
-    await tester.pump();
+  testWidgets(
+    'balance card shows sync above funds and the two wallet actions',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(393, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        _app(
+          _syncedState(
+            orchardBalance: BigInt.from(14312000000),
+          ).copyWith(
+            spendableBalance: BigInt.from(14312000000),
+            displaySpendableBalance: BigInt.from(14312000000),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
 
-    final privacyButtonRect = tester.getRect(
-      find.byKey(const ValueKey('mobile_home_privacy_button')),
-    );
-    final privacyIcon = tester.widget<AppIcon>(
-      find.descendant(
-        of: find.byKey(const ValueKey('mobile_home_privacy_button')),
-        matching: find.byType(AppIcon),
-      ),
-    );
-    final sendRect = tester.getRect(
-      find.byKey(const ValueKey('mobile_home_send')),
-    );
-    final receiveRect = tester.getRect(
-      find.byKey(const ValueKey('mobile_home_receive')),
-    );
-    final payRect = tester.getRect(
-      find.byKey(const ValueKey('mobile_home_pay')),
-    );
-    final payIcon = tester.widget<AppIcon>(
-      find.descendant(
-        of: find.byKey(const ValueKey('mobile_home_pay')),
-        matching: find.byType(AppIcon),
-      ),
-    );
-    final sendLabelStyle = _effectiveTextStyle(tester, find.text('Send'));
-    final receiveLabelStyle = _effectiveTextStyle(tester, find.text('Receive'));
-    final shieldedLabel = tester.widget<Text>(find.text('Shielded balance'));
-    final fiatLabel = tester.widget<Text>(
-      find.byKey(const ValueKey('mobile_home_balance_fiat_text')),
-    );
-    final balanceText = tester.widget<Text>(
-      find.byKey(const ValueKey('mobile_home_shielded_balance')),
-    );
-    final balanceSpan = balanceText.textSpan! as TextSpan;
-    final amountSpan = balanceSpan.children![0] as TextSpan;
-    final tickerSpan = balanceSpan.children![1] as TextSpan;
-
-    expect(privacyButtonRect.size, const Size(32, 32));
-    expect(privacyIcon.size, 16);
-    expect(payIcon.name, AppIcons.paid);
-    expect(payIcon.size, 20);
-    expect(find.bySemanticsLabel('Pay'), findsOneWidget);
-    expect(payRect.top, moreOrLessEquals(sendRect.top, epsilon: 0.1));
-    expect(payRect.bottom, moreOrLessEquals(sendRect.bottom, epsilon: 0.1));
-    expect(payRect.size, const Size(50, 50));
-    expect(receiveRect.left, greaterThan(sendRect.right));
-    expect(payRect.left, greaterThan(receiveRect.right));
-    expect(find.text('NEW'), findsNothing);
-    expect(find.bySemanticsLabel('New: Pay in USDC'), findsNothing);
-    expect(sendRect.height, AppButtonSizing.largeHeight);
-    expect(sendLabelStyle.fontSize, AppTypography.labelLarge.fontSize);
-    expect(sendLabelStyle.height, AppTypography.labelLarge.height);
-    expect(sendLabelStyle.fontWeight, AppTypography.labelLarge.fontWeight);
-    expect(
-      sendLabelStyle.letterSpacing,
-      AppTypography.labelLarge.letterSpacing,
-    );
-    expect(receiveLabelStyle.fontSize, AppTypography.labelLarge.fontSize);
-    expect(receiveLabelStyle.height, AppTypography.labelLarge.height);
-    expect(receiveLabelStyle.fontWeight, AppTypography.labelLarge.fontWeight);
-    expect(
-      receiveLabelStyle.letterSpacing,
-      AppTypography.labelLarge.letterSpacing,
-    );
-    expect(shieldedLabel.style?.fontSize, 14);
-    expect(shieldedLabel.style?.height, 16 / 14);
-    expect(fiatLabel.style?.fontSize, 14);
-    expect(amountSpan.style?.fontSize, 45);
-    expect(amountSpan.style?.height, 48 / 45);
-    expect(tickerSpan.style?.fontSize, 32);
-    expect(tickerSpan.style?.height, 33 / 32);
-  });
+      final balance = find.byKey(const ValueKey('familiar_available_balance'));
+      final sync = find.byKey(const ValueKey('familiar_balance_sync'));
+      final send = find.byKey(const ValueKey('familiar_home_send'));
+      final receive = find.byKey(const ValueKey('familiar_home_receive'));
+      expect(tester.widget<Text>(balance).data, '143.12 ZEC');
+      expect(find.byTooltip('Hide balances'), findsOneWidget);
+      expect(
+        tester.getBottomLeft(sync).dy,
+        lessThan(tester.getTopLeft(balance).dy),
+      );
+      expect(
+        tester.getTopLeft(send).dy,
+        greaterThan(tester.getBottomLeft(balance).dy),
+      );
+      expect(tester.widget<AppButton>(send).onPressed, isNotNull);
+      expect(tester.widget<AppButton>(receive).onPressed, isNotNull);
+      expect(find.byKey(const ValueKey('mobile_home_pay')), findsNothing);
+      expect(find.bySemanticsLabel('Pay'), findsNothing);
+    },
+  );
 
   testWidgets('zero balance offers the first-receive action', (tester) async {
     await tester.pumpWidget(_app(_syncedState()));
@@ -2235,19 +2068,6 @@ void main() {
     await tester.tap(find.text('Receive your first ZEC'));
     await tester.pumpAndSettle();
     expect(find.text('receive route'), findsOneWidget);
-  });
-
-  testWidgets('pay action opens exact-output pay route', (tester) async {
-    await tester.pumpWidget(
-      _app(_syncedState(orchardBalance: BigInt.from(14312000000))),
-    );
-    await tester.pump();
-    await tester.pump();
-
-    await tester.tap(find.byKey(const ValueKey('mobile_home_pay')));
-    await tester.pumpAndSettle();
-
-    expect(find.text('pay route zecToExternal exactOutput'), findsOneWidget);
   });
 
   testWidgets('hides the pay entry when swap is disabled', (tester) async {
@@ -2262,8 +2082,8 @@ void main() {
 
     expect(find.byKey(const ValueKey('mobile_home_pay')), findsNothing);
     // Send/Receive remain.
-    expect(find.byKey(const ValueKey('mobile_home_send')), findsOneWidget);
-    expect(find.byKey(const ValueKey('mobile_home_receive')), findsOneWidget);
+    expect(find.byKey(const ValueKey('familiar_home_send')), findsOneWidget);
+    expect(find.byKey(const ValueKey('familiar_home_receive')), findsOneWidget);
   });
 
   testWidgets('uses the mobile Rest illustration canvas for empty activity', (
@@ -2451,64 +2271,29 @@ void main() {
     expect(find.text('activity tx route $receiveWalletOrder'), findsOneWidget);
   });
 
-  testWidgets('recent activity section uses the Figma inner inset', (
-    tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(800, 1400));
-    addTearDown(() async {
-      await tester.binding.setSurfaceSize(null);
-    });
-
-    await tester.pumpWidget(
-      _app(
-        _syncedState(
-          orchardBalance: BigInt.from(100000000),
-        ).copyWith(recentTransactions: [_tx(1)]),
-      ),
-    );
-    await tester.pump();
-
-    final sendRect = tester.getRect(
-      find.byKey(const ValueKey('mobile_home_send')),
-    );
-    final payRect = tester.getRect(
-      find.byKey(const ValueKey('mobile_home_pay')),
-    );
-    final rowRect = tester.getRect(
-      find.byKey(const ValueKey('mobile_home_activity_row_0')),
-    );
-    final headerFinder = find.text('Recent activity');
-    final seeAllFinder = find.text('See all');
-    final headerRect = tester.getRect(headerFinder);
-    final seeAllRect = tester.getRect(
-      find.ancestor(
-        of: seeAllFinder,
-        matching: find.byWidgetPredicate(
-          (widget) => widget is SizedBox && widget.height == 24,
+  testWidgets(
+    'recent activity stays reachable after the simplified wallet actions',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(393, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        _app(
+          _syncedState(
+            orchardBalance: BigInt.from(100000000),
+          ).copyWith(recentTransactions: [_tx(1)]),
         ),
-      ),
-    );
-    final headerText = tester.widget<Text>(headerFinder);
-    final seeAllText = tester.widget<Text>(seeAllFinder);
+      );
+      await tester.pump();
+      await tester.pump();
 
-    expect(
-      rowRect.left,
-      moreOrLessEquals(sendRect.left + AppSpacing.xs, epsilon: 0.1),
-    );
-    expect(
-      rowRect.right,
-      moreOrLessEquals(payRect.right - AppSpacing.xs, epsilon: 0.1),
-    );
-    expect(headerRect.left, rowRect.left);
-    expect(seeAllRect.height, 24);
-    expect(headerText.style?.fontSize, AppTypography.labelLarge.fontSize);
-    expect(headerText.style?.fontWeight, FontWeight.w600);
-    expect(seeAllText.style?.fontSize, AppTypography.labelLarge.fontSize);
-    expect(
-      seeAllText.style?.color,
-      AppThemeData.dark.colors.button.ghost.label,
-    );
-  });
+      expect(find.byType(ActivityFeedRow), findsOneWidget);
+      expect(find.byKey(const ValueKey('mobile_home_pay')), findsNothing);
+      await tester.ensureVisible(find.text('All activity'));
+      await tester.tap(find.text('All activity'));
+      await tester.pumpAndSettle();
+      expect(find.text('activity route'), findsOneWidget);
+    },
+  );
 
   testWidgets('display progress ticks do not rebuild mobile Home content', (
     tester,
@@ -2532,11 +2317,9 @@ void main() {
     await tester.pump();
 
     final balanceFinder = find.byKey(
-      const ValueKey('mobile_home_shielded_balance'),
+      const ValueKey('familiar_available_balance'),
     );
-    final activityFinder = find.byKey(
-      const ValueKey('mobile_home_activity_row_0'),
-    );
+    final activityFinder = find.byType(ActivityFeedRow).first;
     final balanceBeforeTicks = tester.widget(balanceFinder);
     final activityBeforeTicks = tester.widget(activityFinder);
 

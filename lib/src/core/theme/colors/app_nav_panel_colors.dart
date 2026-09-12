@@ -17,16 +17,16 @@ class AppNavPanelColors {
   final Color activeLabel;
 
   static const dark = AppNavPanelColors(
-    badgeBg: CrimsonPrimitives.p300Dark,
-    activeBg: CrimsonPrimitives.p400Alpha15Dark,
-    activeIcon: CrimsonPrimitives.p400Dark,
-    activeLabel: CrimsonPrimitives.p900Dark,
+    badgeBg: FamiliarPrimitives.accentDark,
+    activeBg: FamiliarPrimitives.navActive,
+    activeIcon: FamiliarPrimitives.navLight,
+    activeLabel: FamiliarPrimitives.navLight,
   );
 
   static const light = AppNavPanelColors(
-    badgeBg: CrimsonPrimitives.p300Light,
-    activeBg: CrimsonPrimitives.p300Alpha10Light,
-    activeIcon: CrimsonPrimitives.p300Light,
-    activeLabel: CrimsonPrimitives.p800Light,
+    badgeBg: FamiliarPrimitives.accentLight,
+    activeBg: FamiliarPrimitives.limeLight,
+    activeIcon: FamiliarPrimitives.accentLight,
+    activeLabel: FamiliarPrimitives.inkLight,
   );
 }

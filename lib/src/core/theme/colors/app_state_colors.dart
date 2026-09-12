@@ -43,28 +43,28 @@ class AppStateColors {
   final Color focusRingDestructive;
 
   static const dark = AppStateColors(
-    hover: Primitives.p100Dark,
-    hoverOpacity: Primitives.p0Alpha15Dark,
-    pressed: Primitives.p150Dark,
-    focus: Primitives.p200Dark,
-    selected: Primitives.p150Dark,
-    selectedOpacity: Primitives.p0Alpha30Dark,
-    focusRing: Primitives.p800Dark,
-    focusGap: Primitives.p0Dark,
-    focusRingBrand: CrimsonPrimitives.p400Dark,
-    focusRingDestructive: PlumPrimitives.p200Dark,
+    hover: FamiliarPrimitives.softDark,
+    hoverOpacity: Color(0x1ADDEAAA),
+    pressed: FamiliarPrimitives.sageDark,
+    focus: FamiliarPrimitives.lineDark,
+    selected: FamiliarPrimitives.limeDark,
+    selectedOpacity: Color(0x33DDEAAA),
+    focusRing: FamiliarPrimitives.accentDark,
+    focusGap: FamiliarPrimitives.paperDark,
+    focusRingBrand: FamiliarPrimitives.accentDark,
+    focusRingDestructive: FamiliarPrimitives.errorDark,
   );
 
   static const light = AppStateColors(
-    hover: Primitives.p50Light,
-    hoverOpacity: Primitives.p900Alpha5Light,
-    pressed: Primitives.p150Light,
-    focus: Primitives.p200Light,
-    selected: Primitives.p150Light,
-    selectedOpacity: Primitives.p900Alpha5Light,
-    focusRing: Primitives.p900Light,
-    focusGap: Primitives.p0Light,
-    focusRingBrand: CrimsonPrimitives.p300Light,
-    focusRingDestructive: PlumPrimitives.p400Light,
+    hover: FamiliarPrimitives.softLight,
+    hoverOpacity: Color(0x0D294A35),
+    pressed: FamiliarPrimitives.sageLight,
+    focus: FamiliarPrimitives.lineLight,
+    selected: FamiliarPrimitives.limeLight,
+    selectedOpacity: Color(0x26294A35),
+    focusRing: FamiliarPrimitives.accentLight,
+    focusGap: FamiliarPrimitives.paperLight,
+    focusRingBrand: FamiliarPrimitives.accentLight,
+    focusRingDestructive: FamiliarPrimitives.errorLight,
   );
 }

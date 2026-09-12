@@ -18,6 +18,7 @@ import 'package:zcash_wallet/src/features/settings/screens/settings_base_key_scr
 import 'package:zcash_wallet/src/features/settings/base_key_export.dart';
 import 'package:zcash_wallet/src/features/settings/names_settings.dart';
 import 'package:zcash_wallet/src/features/zns/application/zns_controller.dart';
+import 'package:zcash_wallet/src/features/zns/application/public_name_lookup.dart';
 import 'package:zcash_wallet/src/features/zns/presentation/zns_view_data.dart';
 import 'package:zcash_wallet/src/features/settings/settings_platform.dart';
 import 'package:zcash_wallet/src/features/settings/widgets/network_privacy_control.dart';
@@ -58,31 +59,60 @@ void main() {
               ),
             ),
             znsControllerProvider.overrideWith(_SettingsNamesController.new),
+            publicNameLookupPreferenceProvider.overrideWith(
+              _LookupDisabledPreference.new,
+            ),
           ],
         ),
       );
+      await _openNetworkOptions(tester);
       await tester.pump();
-      await tester.tap(find.text('Base account private key'));
+      await tester.ensureVisible(find.text('Security and recovery'));
+      await tester.tap(find.text('Security and recovery'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Base / Ethereum private key'));
+      await tester.tap(find.text('Base / Ethereum private key'));
       await tester.pumpAndSettle();
       expect(find.text('Confirm access'), findsOneWidget);
-      expect(find.text('To view the Base account private key.'), findsOneWidget);
+      expect(
+        find.text('To view your Base / Ethereum private key.'),
+        findsOneWidget,
+      );
       await tester.enterText(find.byType(TextField), 'testpassword');
       await tester.pump();
       await tester.tap(find.bySemanticsLabel('Confirm password'));
       await tester.pumpAndSettle();
-      expect(find.text('Base Account Private Key'), findsOneWidget);
+      expect(find.text('Base / Ethereum private key'), findsOneWidget);
       expect(
         find.byKey(const ValueKey('settings_base_key_value')),
         findsOneWidget,
       );
       final screenContext = tester.element(
-        find.text('Base Account Private Key'),
+        find.text('Base / Ethereum private key'),
       );
       GoRouter.of(screenContext).pop();
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Names').last);
-      await tester.tap(find.text('Names').last);
+      GoRouter.of(
+        tester.element(find.text('Base / Ethereum private key')),
+      ).pop();
       await tester.pumpAndSettle();
+      expect(find.text('Public Zcash names'), findsOneWidget);
+      await tester.ensureVisible(find.text('Public Zcash names'));
+      await tester.tap(find.text('Public Zcash names'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
+      await tester.tap(
+        find.byKey(const ValueKey('settings_manage_public_names')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('managed names route'), findsOneWidget);
+      GoRouter.of(tester.element(find.text('managed names route'))).pop();
+      await tester.pumpAndSettle();
+      if (find.text('Registry address').evaluate().isEmpty) {
+        await tester.ensureVisible(find.text('Connection details'));
+        await tester.tap(find.text('Connection details'));
+        await tester.pumpAndSettle();
+      }
       expect(find.text('Name service settings'), findsOneWidget);
       expect(find.text('Registry address'), findsOneWidget);
       expect(find.byType(Dialog), findsNothing);
@@ -98,16 +128,19 @@ void main() {
     });
 
     await tester.pumpWidget(_settingsHarness());
+    await _openNetworkOptions(tester);
     await tester.pump();
 
+    await tester.ensureVisible(find.text('Security and recovery'));
+    await tester.tap(find.text('Security and recovery'));
+    await tester.pumpAndSettle();
     expect(_rowBackgroundColor(tester, 'Password'), isNull);
-    expect(find.text('Base account private key'), findsOneWidget);
-    expect(find.text('Explorer'), findsOneWidget);
-    expect(find.text('CipherScan'), findsOneWidget);
+    expect(find.text('Base / Ethereum private key'), findsOneWidget);
 
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
     addTearDown(mouse.removePointer);
     await mouse.addPointer(location: Offset.zero);
+    await tester.ensureVisible(find.text('Password'));
     await mouse.moveTo(tester.getCenter(find.text('Password')));
     await tester.pump();
 
@@ -134,9 +167,10 @@ void main() {
 
     try {
       await tester.pumpWidget(_settingsHarness());
+      await _openNetworkOptions(tester);
       await tester.pump();
 
-      expect(find.text('Danger zone'), findsNothing);
+      expect(find.text('Remove this app'), findsNothing);
       expect(find.text('Uninstall Vizor'), findsNothing);
     } finally {
       _resetPlatformOverride();
@@ -164,6 +198,7 @@ void main() {
           ],
         ),
       );
+      await _openNetworkOptions(tester);
       await tester.pump();
 
       await tester.ensureVisible(find.text('Updates'));
@@ -202,6 +237,7 @@ void main() {
           ],
         ),
       );
+      await _openNetworkOptions(tester);
       await tester.pump();
 
       await tester.ensureVisible(find.text('Updates'));
@@ -224,6 +260,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(_settingsHarness());
+    await _openNetworkOptions(tester);
     await tester.pump();
 
     expect(find.text('About Vizor'), findsOneWidget);
@@ -252,6 +289,7 @@ void main() {
         networkPrivacyCalls: calls,
       ),
     );
+    await _openNetworkOptions(tester);
     await tester.pump();
 
     expect(find.text('Connecting…'), findsOneWidget);
@@ -367,6 +405,7 @@ void main() {
         networkPrivacyCalls: calls,
       ),
     );
+    await _openNetworkOptions(tester);
     await tester.pump();
 
     // Nothing to escape from here: the route is already on its way to direct.
@@ -393,6 +432,7 @@ void main() {
         ),
       ),
     );
+    await _openNetworkOptions(tester);
     await tester.pump();
 
     expect(find.text('Connected'), findsOneWidget);
@@ -451,6 +491,7 @@ void main() {
           ),
         ),
       );
+      await _openNetworkOptions(tester);
       await tester.pump();
 
       expect(
@@ -476,6 +517,7 @@ void main() {
         ),
       ),
     );
+    await _openNetworkOptions(tester);
     await tester.pump();
 
     expect(find.text('Switching to direct…'), findsOneWidget);
@@ -505,6 +547,7 @@ void main() {
         ),
       ),
     );
+    await _openNetworkOptions(tester);
     await tester.pump();
 
     expect(
@@ -531,6 +574,7 @@ void main() {
         networkPrivacyCalls: calls,
       ),
     );
+    await _openNetworkOptions(tester);
     await tester.pump();
 
     expect(find.text('Connection failed'), findsOneWidget);
@@ -558,9 +602,10 @@ void main() {
         _overridePlatform(platform);
 
         await tester.pumpWidget(_settingsHarness());
+        await _openNetworkOptions(tester);
         await tester.pump();
 
-        expect(find.text('Danger zone'), findsOneWidget);
+        expect(find.text('Remove this app'), findsOneWidget);
         expect(find.text('Uninstall Vizor'), findsOneWidget);
       }
     } finally {
@@ -586,12 +631,23 @@ Widget _settingsHarness({
     initialLocation: '/settings',
     routes: [
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
-      GoRoute(path: '/settings/names', builder: (_, _) => const NamesSettingsScreen()),
+      GoRoute(
+        path: '/settings/security',
+        builder: (_, _) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/settings/names',
+        builder: (_, _) => const NamesSettingsScreen(),
+      ),
       GoRoute(
         path: '/settings/base-key',
         builder: (_, _) => const SettingsBaseKeyScreen(),
       ),
       GoRoute(path: '/home', builder: (_, _) => const Text('home route')),
+      GoRoute(
+        path: '/names',
+        builder: (_, _) => const Text('managed names route'),
+      ),
       GoRoute(path: '/send', builder: (_, _) => const Text('send route')),
       GoRoute(path: '/receive', builder: (_, _) => const Text('receive route')),
       GoRoute(
@@ -718,7 +774,10 @@ Finder _rowContainerFinder(String label) {
       (widget) =>
           widget is Container &&
           widget.padding ==
-              const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
+              const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xxs,
+                vertical: AppSpacing.s,
+              ),
     ),
   );
 }
@@ -739,4 +798,19 @@ bool _hasFocusRing(WidgetTester tester) {
 class _SettingsNamesController extends ZnsController {
   @override
   ZnsViewData build() => const ZnsViewData();
+}
+
+Future<void> _openNetworkOptions(WidgetTester tester) async {
+  await tester.pump();
+  final title = find.text('Network and app settings');
+  if (title.evaluate().isEmpty) return;
+  await tester.ensureVisible(title);
+  await tester.tap(title);
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 300));
+}
+
+class _LookupDisabledPreference extends PublicNameLookupPreference {
+  @override
+  Future<bool> build() async => false;
 }

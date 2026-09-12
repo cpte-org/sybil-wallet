@@ -8,12 +8,9 @@ import '../primitives.dart';
 /// * [input] — Text input surface colors.
 /// * [nav] — Navigation rail background.
 /// * [navActive] — Active nav item indicator.
-/// * [tooltip] — Tooltip / popover background. Theme-invariant.
+/// * [tooltip] — Tooltip / popover background.
 /// * [qrCode] — QR code backing surface. Theme-invariant for scan contrast.
-/// * [scrollbarThumb] — Desktop pane overlay scrollbar thumb. Solid (fully
-///   opaque) per the Figma Scrollbar component: `#393E3E` dark / `#E1E1E1`
-///   light. Distinct from the sidebar accounts scrollbar, which uses the
-///   semi-transparent `background.neutralStrongOpacity` token.
+/// * [scrollbarThumb] — Opaque desktop pane overlay scrollbar thumb.
 class AppSurfaceColors {
   const AppSurfaceColors({
     required this.card,
@@ -34,25 +31,23 @@ class AppSurfaceColors {
   final Color scrollbarThumb;
 
   static const dark = AppSurfaceColors(
-    card: Primitives.p100Dark,
+    card: FamiliarPrimitives.surfaceDark,
     input: AppInputSurfaceColors.dark,
-    nav: Primitives.p50Dark,
-    navActive: Primitives.p150Dark,
-    tooltip: Primitives.p200Dark,
-    qrCode: Primitives.p0Light,
-    scrollbarThumb: Primitives.p200Dark,
+    nav: FamiliarPrimitives.navDark,
+    navActive: FamiliarPrimitives.limeDark,
+    tooltip: FamiliarPrimitives.softDark,
+    qrCode: Color(0xFFFFFFFF),
+    scrollbarThumb: FamiliarPrimitives.lineDark,
   );
 
   static const light = AppSurfaceColors(
-    card: Primitives.p50Light,
+    card: FamiliarPrimitives.surfaceLight,
     input: AppInputSurfaceColors.light,
-    nav: Primitives.p0Light,
-    navActive: Primitives.p100Light,
-    // Tooltip is the same concrete value in both modes; picking p800Light here
-    // keeps the expression inside the light-face lookup.
-    tooltip: Primitives.p800Light,
-    qrCode: Primitives.p0Light,
-    scrollbarThumb: Primitives.p150Light,
+    nav: FamiliarPrimitives.paperLight,
+    navActive: FamiliarPrimitives.limeLight,
+    tooltip: FamiliarPrimitives.accentLight,
+    qrCode: Color(0xFFFFFFFF),
+    scrollbarThumb: FamiliarPrimitives.lineLight,
   );
 }
 
@@ -69,14 +64,14 @@ class AppInputSurfaceColors {
   final Color focus;
 
   static const dark = AppInputSurfaceColors(
-    primary: Primitives.p50Dark,
-    secondary: Primitives.p150Dark,
-    focus: Primitives.p100Dark,
+    primary: FamiliarPrimitives.surfaceDark,
+    secondary: FamiliarPrimitives.softDark,
+    focus: FamiliarPrimitives.paperDark,
   );
 
   static const light = AppInputSurfaceColors(
-    primary: Primitives.p0Light,
-    secondary: Primitives.p100Light,
-    focus: Primitives.p50Light,
+    primary: FamiliarPrimitives.surfaceLight,
+    secondary: FamiliarPrimitives.softLight,
+    focus: FamiliarPrimitives.paperLight,
   );
 }

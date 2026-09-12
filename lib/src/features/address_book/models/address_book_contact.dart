@@ -97,6 +97,8 @@ class AddressBookContact {
     required this.profilePictureId,
     required this.createdAtMs,
     required this.updatedAtMs,
+    this.note = '',
+    this.pinned = false,
   });
 
   final String id;
@@ -106,6 +108,8 @@ class AddressBookContact {
   final String profilePictureId;
   final int createdAtMs;
   final int updatedAtMs;
+  final String note;
+  final bool pinned;
 
   String get addressPreview => previewAddress(address);
 
@@ -115,6 +119,8 @@ class AddressBookContact {
     String? address,
     String? profilePictureId,
     int? updatedAtMs,
+    String? note,
+    bool? pinned,
   }) {
     return AddressBookContact(
       id: id,
@@ -124,6 +130,8 @@ class AddressBookContact {
       profilePictureId: profilePictureId ?? this.profilePictureId,
       createdAtMs: createdAtMs,
       updatedAtMs: updatedAtMs ?? this.updatedAtMs,
+      note: note ?? this.note,
+      pinned: pinned ?? this.pinned,
     );
   }
 
@@ -136,6 +144,8 @@ class AddressBookContact {
       'profilePictureId': profilePictureId,
       'createdAtMs': createdAtMs,
       'updatedAtMs': updatedAtMs,
+      'note': note,
+      'pinned': pinned,
     };
   }
 
@@ -156,6 +166,8 @@ class AddressBookContact {
       ),
       createdAtMs: (json['createdAtMs'] as num?)?.toInt() ?? 0,
       updatedAtMs: (json['updatedAtMs'] as num?)?.toInt() ?? 0,
+      note: json['note'] as String? ?? '',
+      pinned: json['pinned'] as bool? ?? false,
     );
   }
 }

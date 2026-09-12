@@ -235,105 +235,143 @@ void main() {
     expect(AppTypographyMobile.labelSmall, AppTypographyMobile.labelMedium);
   });
 
-  test('semantic color tokens match 2 Color Theme-3.zip', () {
+  test('semantic colours match the approved Familiar palette', () {
     final light = AppThemeData.light.colors;
     final dark = AppThemeData.dark.colors;
 
-    expect(light.background.window, const Color(0xFFF7F7F7));
-    expect(dark.background.window, const Color(0xFF0F0F0F));
+    expect(light.background.window, const Color(0xFFF7F6EF));
+    expect(light.background.ground, const Color(0xFFF7F6EF));
+    expect(light.background.base, const Color(0xFFFFFEF9));
+    expect(light.background.raised, const Color(0xFFFFFEF9));
+    expect(light.background.overlay, const Color(0xFFEEEEE4));
+    expect(dark.background.window, const Color(0xFF19261F));
+    expect(dark.background.ground, const Color(0xFF19261F));
+    expect(dark.background.base, const Color(0xFF22352A));
+    expect(dark.background.raised, const Color(0xFF22352A));
+    expect(dark.background.overlay, const Color(0xFF2C3D31));
+    expect(light.background.neutralScrim, const Color(0x80122119));
+    expect(dark.background.neutralScrim, const Color(0x80122119));
 
-    expect(light.background.ground, Primitives.p0Light);
-    expect(light.background.base, Primitives.p50Light);
-    expect(light.background.raised, Primitives.p100Light);
-    expect(light.background.overlay, Primitives.p150Light);
-    expect(light.background.neutralScrim, const Color(0x80141818));
-    expect(light.background.neutralSubtleOpacity, const Color(0x33B8B8B8));
+    expect(light.surface.card, const Color(0xFFFFFEF9));
+    expect(dark.surface.card, const Color(0xFF22352A));
+    expect(light.surface.input.primary, const Color(0xFFFFFEF9));
+    expect(light.surface.input.secondary, const Color(0xFFEEEEE4));
+    expect(light.surface.input.focus, const Color(0xFFF7F6EF));
+    expect(dark.surface.input.primary, const Color(0xFF22352A));
+    expect(dark.surface.input.secondary, const Color(0xFF2C3D31));
+    expect(dark.surface.input.focus, const Color(0xFF19261F));
+    // Device-scanned QR codes keep a pure white backing in both themes.
+    expect(light.surface.qrCode, const Color(0xFFFFFFFF));
+    expect(dark.surface.qrCode, const Color(0xFFFFFFFF));
 
-    expect(dark.background.ground, Primitives.p50Dark);
-    expect(dark.background.base, Primitives.p100Dark);
-    expect(dark.background.raised, Primitives.p150Dark);
-    expect(dark.background.overlay, Primitives.p200Dark);
-    expect(dark.background.neutralScrim, const Color(0x80141818));
-    expect(dark.background.neutralSubtleOpacity, const Color(0x33626767));
+    expect(light.text.accent, const Color(0xFF243B30));
+    expect(light.text.primary, const Color(0xFF35483D));
+    expect(light.text.secondary, const Color(0xFF627065));
+    expect(dark.text.accent, const Color(0xFFEDF1DE));
+    expect(dark.text.primary, const Color(0xFFE0E8D9));
+    expect(dark.text.secondary, const Color(0xFFB0C1B1));
+    expect(light.border.subtle, const Color(0xFFD9DFD3));
+    expect(dark.border.subtle, const Color(0xFF415345));
 
-    expect(light.surface.input.primary, Primitives.p0Light);
-    expect(light.surface.input.secondary, Primitives.p100Light);
-    expect(light.surface.input.focus, Primitives.p50Light);
-    expect(dark.surface.input.primary, Primitives.p50Dark);
-    expect(dark.surface.input.secondary, Primitives.p150Dark);
-    expect(dark.surface.input.focus, Primitives.p100Dark);
+    expect(light.button.primary.bg, const Color(0xFF294A35));
+    expect(light.button.primary.label, const Color(0xFFFFFEF9));
+    expect(dark.button.primary.bg, const Color(0xFFDDEAAA));
+    expect(dark.button.primary.label, const Color(0xFF233A2E));
+    expect(light.button.secondary.bg, const Color(0xFFFFFEF9));
+    expect(light.button.secondary.bgHover, const Color(0xFFEEEEE4));
+    expect(light.button.secondary.bgPressed, const Color(0xFFDCE8D9));
+    expect(dark.button.secondary.bg, const Color(0xFF22352A));
+    expect(dark.button.secondary.bgHover, const Color(0xFF2C3D31));
+    expect(dark.button.secondary.bgPressed, const Color(0xFF304B38));
+    expect(light.button.disabled.bg, const Color(0xFFEEEEE4));
+    expect(dark.button.disabled.bg, const Color(0xFF2C3D31));
 
-    expect(light.button.disabled.bg, const Color(0x33B8B8B8));
-    expect(light.button.disabled.label, const Color(0x80858686));
-    expect(dark.button.disabled.bg, const Color(0x334D5252));
-    expect(dark.button.disabled.label, const Color(0x80858686));
+    expect(light.text.warning, const Color(0xFF8A4A13));
+    expect(dark.text.warning, const Color(0xFFF0BF7F));
+    expect(light.text.destructive, const Color(0xFFAC352C));
+    expect(dark.text.destructive, const Color(0xFFF8AAA0));
+    expect(light.button.destructive.bg, const Color(0xFFAC352C));
+    expect(dark.button.destructive.bg, const Color(0xFFF8AAA0));
+    expect(light.background.utilityDestructiveSubtle, const Color(0xFFFFF0ED));
+    expect(dark.background.utilityDestructiveSubtle, const Color(0xFF4B302A));
+    expect(light.icon.success, const Color(0xFF294A35));
+    expect(dark.icon.success, const Color(0xFFDDEAAA));
+    expect(light.text.brandCrimson, const Color(0xFF294A35));
+    expect(dark.icon.brandCrimson, const Color(0xFFDDEAAA));
 
-    expect(light.button.secondary.bg, Primitives.p0Light);
-    expect(light.button.secondary.bgHover, Primitives.p100Light);
-    expect(light.button.secondary.bgPressed, Primitives.p100Light);
-    expect(light.button.secondary.label, Primitives.p900Light);
-    expect(dark.button.secondary.bg, Primitives.p150Dark);
-    expect(dark.button.secondary.bgHover, Primitives.p200Dark);
-    expect(dark.button.secondary.bgPressed, Primitives.p200Dark);
-    expect(dark.button.secondary.label, Primitives.p800Dark);
-
-    expect(light.button.destructive.bg, const Color(0xFF772E89));
-    expect(light.button.destructive.bgHover, const Color(0xFF5E2673));
-    expect(light.button.destructive.label, const Color(0xFFE6C5EC));
-    expect(dark.button.destructive.bg, const Color(0xFF772E89));
-    expect(dark.button.destructive.bgHover, const Color(0xFF5E2673));
-    expect(dark.button.destructive.label, const Color(0xFFE6C5EC));
-
-    expect(light.icon.success, const Color(0xFF00A460));
-    expect(dark.icon.success, const Color(0xFF0DC87D));
-    expect(light.text.brandCrimson, const Color(0xFFA83861));
-    expect(dark.icon.brandCrimson, const Color(0xFFA83861));
-
-    expect(light.background.utilitySuccessAlpha, const Color(0x263BD38B));
-    expect(dark.background.utilitySuccessAlpha, const Color(0x260DC87D));
-    expect(light.fade.illustration, Primitives.p0Alpha0Dark);
-    expect(dark.fade.illustration, Primitives.p0Alpha50Dark);
-
-    expect(light.state.hover, Primitives.p50Light);
-    expect(light.state.hoverOpacity, const Color(0x0D141818));
-    expect(light.state.focusRingDestructive, PlumPrimitives.p400Light);
-    expect(dark.state.hover, Primitives.p100Dark);
-    expect(dark.state.hoverOpacity, const Color(0x26141818));
-    expect(dark.state.focusRingDestructive, PlumPrimitives.p200Dark);
-
-    expect(light.shadows.shadow1, Primitives.p150Light);
-    expect(light.shadows.shadow2, Primitives.p300Light);
-    expect(light.shadows.shadow3, const Color(0x33141818));
-    expect(light.shadows.subtle, const Color(0x0D141818));
-    expect(light.shadows.regular, const Color(0x1A141818));
-    expect(dark.shadows.shadow1, const Color(0x00141818));
-    expect(dark.shadows.shadow2, const Color(0x00141818));
-    expect(dark.shadows.shadow3, const Color(0x00141818));
-    expect(dark.shadows.subtle, const Color(0x00141818));
-    expect(dark.shadows.regular, const Color(0x00141818));
-
-    expect(light.sync.glow, GreenPrimitives.p200Light);
-    expect(dark.sync.glow, Primitives.p500Dark);
+    expect(light.state.selected, const Color(0xFFE0EBAF));
+    expect(dark.state.selected, const Color(0xFF3C4B29));
+    expect(light.state.focusRing, const Color(0xFF294A35));
+    expect(dark.state.focusRing, const Color(0xFFDDEAAA));
+    expect(light.state.focusRingDestructive, const Color(0xFFAC352C));
+    expect(dark.state.focusRingDestructive, const Color(0xFFF8AAA0));
+    expect(light.fade.illustration, const Color(0x0019261F));
+    expect(dark.fade.illustration, const Color(0x8019261F));
+    expect(light.sync.lightError, const Color(0xFFAC352C));
+    expect(dark.sync.lightError, const Color(0xFFF8AAA0));
   });
 
-  test('macOS utility color tokens match 2 Color Theme-3.zip', () {
+  test('Familiar text and active controls retain readable contrast', () {
+    double contrast(Color foreground, Color background) {
+      final a = foreground.computeLuminance();
+      final b = background.computeLuminance();
+      return (a > b ? a + 0.05 : b + 0.05) / (a > b ? b + 0.05 : a + 0.05);
+    }
+
+    for (final colors in [
+      AppThemeData.light.colors,
+      AppThemeData.dark.colors,
+    ]) {
+      for (final surface in [colors.background.ground, colors.surface.card]) {
+        for (final text in [
+          colors.text.primary,
+          colors.text.secondary,
+          colors.text.warning,
+          colors.text.destructive,
+        ]) {
+          expect(contrast(text, surface), greaterThanOrEqualTo(4.5));
+        }
+      }
+      expect(
+        contrast(colors.button.primary.label, colors.button.primary.bg),
+        greaterThanOrEqualTo(4.5),
+      );
+      expect(
+        contrast(
+          colors.button.primary.labelHover,
+          colors.button.primary.bgHover,
+        ),
+        greaterThanOrEqualTo(4.5),
+      );
+      expect(
+        contrast(colors.button.destructive.label, colors.button.destructive.bg),
+        greaterThanOrEqualTo(4.5),
+      );
+      expect(
+        contrast(colors.navPanel.activeLabel, colors.navPanel.activeBg),
+        greaterThanOrEqualTo(4.5),
+      );
+      expect(colors.text.warning, isNot(colors.text.destructive));
+      expect(colors.text.warning, isNot(colors.text.success));
+    }
+  });
+
+  test('macOS utility colours follow Familiar window surfaces', () {
     final light = AppThemeData.light.colors.macosUtility;
     final dark = AppThemeData.dark.colors.macosUtility;
 
-    expect(light.window, const Color(0xFFF7F7F7));
-    expect(light.windowTransparent, const Color(0x00F5F5F5));
-    expect(light.navPanel, const Color(0x4DFFFFFF));
-    expect(light.font, const Color(0xD91A1A1A));
-    expect(light.thinBorder, const Color(0x8CFFFFFF));
-    // Inner ring is the Figma inner-shadow white highlight in both modes,
-    // superseding the color-theme export value.
+    expect(light.window, const Color(0xFFF7F6EF));
+    expect(light.windowTransparent, const Color(0x00F7F6EF));
+    expect(light.navPanel, const Color(0x4DFFFEF9));
+    expect(light.font, const Color(0xFF243B30));
+    expect(light.thinBorder, const Color(0xFFD9DFD3));
     expect(light.innerBorder, const Color(0x26FFFFFF));
 
-    expect(dark.window, const Color(0xFF0F0F0F));
-    expect(dark.windowTransparent, const Color(0x000F0F0F));
-    expect(dark.navPanel, const Color(0x4D1A1A1A));
-    expect(dark.font, const Color(0xCCFFFFFF));
-    expect(dark.thinBorder, const Color(0x3B1A1A1A));
+    expect(dark.window, const Color(0xFF19261F));
+    expect(dark.windowTransparent, const Color(0x0019261F));
+    expect(dark.navPanel, const Color(0x4D13251C));
+    expect(dark.font, const Color(0xFFEDF1DE));
+    expect(dark.thinBorder, const Color(0xFF415345));
     expect(dark.innerBorder, const Color(0x26FFFFFF));
   });
 

@@ -2,9 +2,8 @@ import 'package:flutter/material.dart' show MaterialApp;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
-import 'package:zcash_wallet/src/core/theme/primitives.dart';
 import 'package:zcash_wallet/src/core/widgets/review_buttons_stack.dart';
-import 'package:zcash_wallet/src/core/widgets/review_wrap_card.dart';
+import 'package:zcash_wallet/src/core/widgets/familiar_widgets.dart';
 import 'package:zcash_wallet/src/features/send/widgets/send_review_content_view.dart';
 import 'package:zcash_wallet/src/features/send/widgets/send_status_content_view.dart';
 import 'package:zcash_wallet/widgetbook/send_review_status_use_cases.dart';
@@ -17,7 +16,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.byType(SendReviewContentView), findsOneWidget);
-    expect(find.text('Review send'), findsOneWidget);
+    expect(find.text('Review payment'), findsOneWidget);
     expect(find.text('u195091 ... 190591'), findsOneWidget);
     expect(find.text('Shielded'), findsOneWidget);
     expect(find.text('Confirm & send'), findsOneWidget);
@@ -54,19 +53,20 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('Sent successfully'), findsOneWidget);
     expect(find.text('Completed'), findsOneWidget);
+    expect(find.text('Tx ID'), findsNothing);
+    await tester.ensureVisible(find.text('Payment details'));
+    await tester.tap(find.text('Payment details'));
+    await tester.pumpAndSettle();
     expect(find.text('Tx ID'), findsOneWidget);
   });
 
-  testWidgets('failed use case keeps the dark card in the light theme', (
-    tester,
-  ) async {
+  testWidgets('failed use case keeps a clear failure state', (tester) async {
     await _pumpUseCase(tester, buildSendStatusFailedUseCase);
 
     expect(tester.takeException(), isNull);
     expect(find.text('Send failed'), findsOneWidget);
     expect(find.text('Failed'), findsOneWidget);
-    final card = tester.widget<ReviewWrapCard>(find.byType(ReviewWrapCard));
-    expect(card.surfaceColor, Primitives.p50Dark);
+    expect(find.byType(FamiliarCard), findsNWidgets(2));
     expect(find.byType(SendStatusContentView), findsOneWidget);
   });
 }

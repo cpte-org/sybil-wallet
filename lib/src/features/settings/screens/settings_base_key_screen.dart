@@ -49,8 +49,7 @@ class SettingsBaseKeyScreen extends ConsumerStatefulWidget {
 
 enum _Stage { password, reveal }
 
-class _SettingsBaseKeyScreenState
-    extends ConsumerState<SettingsBaseKeyScreen>
+class _SettingsBaseKeyScreenState extends ConsumerState<SettingsBaseKeyScreen>
     with WidgetsBindingObserver {
   final _passwordController = TextEditingController();
   _Stage _stage = _Stage.password;
@@ -104,8 +103,7 @@ class _SettingsBaseKeyScreenState
   }
 
   void _handleSessionChanged(String previous, String next) {
-    final accountChanged =
-        previous.split(':').first != next.split(':').first;
+    final accountChanged = previous.split(':').first != next.split(':').first;
     final idleAtGate =
         _stage == _Stage.password && !_isSubmitting && _key == null;
     if (idleAtGate && !accountChanged) return;
@@ -137,9 +135,9 @@ class _SettingsBaseKeyScreenState
       return;
     }
     if (!isWalletPasswordValid(_passwordController.text)) {
-      setState(() => _passwordError = validateWalletPassword(
-        _passwordController.text,
-      ));
+      setState(
+        () => _passwordError = validateWalletPassword(_passwordController.text),
+      );
       return;
     }
     final generation = _generation;
@@ -197,9 +195,10 @@ class _SettingsBaseKeyScreenState
     final access = ref.watch(baseKeyExportAccessProvider);
     final exporter = access.asData?.value;
     final gate = ConfirmAccessCard(
-      subtitle: 'To view the Base account private key.',
+      subtitle: 'To view your Base / Ethereum private key.',
       controller: _passwordController,
-      errorText: _passwordError ??
+      errorText:
+          _passwordError ??
           (access.isLoading || exporter != null
               ? null
               : 'Unlock the selected software account to continue.'),
@@ -210,12 +209,12 @@ class _SettingsBaseKeyScreenState
     );
     final content = switch (_stage) {
       _Stage.password => Center(
-          child: kAppFormFactor == AppFormFactor.mobile
-              ? SingleChildScrollView(
-                  child: FittedBox(fit: BoxFit.scaleDown, child: gate),
-                )
-              : gate,
-        ),
+        child: kAppFormFactor == AppFormFactor.mobile
+            ? SingleChildScrollView(
+                child: FittedBox(fit: BoxFit.scaleDown, child: gate),
+              )
+            : gate,
+      ),
       _Stage.reveal => _buildReveal(),
     };
     if (kAppFormFactor == AppFormFactor.mobile) {
@@ -284,7 +283,7 @@ class _SettingsBaseKeyScreenState
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Base Account Private Key',
+              'Base / Ethereum private key',
               textAlign: TextAlign.center,
               style: AppTypography.headlineLarge.copyWith(
                 color: colors.text.accent,

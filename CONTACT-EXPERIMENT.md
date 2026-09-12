@@ -56,7 +56,7 @@ exit so pending writes can finish; interrupting or terminating the outer launche
 can force-kill its children.
 
 In each isolated wallet, create or unlock a disposable software testnet account
-and choose **Contacts → Contact exchange**. Mobile has the same entry and flow
+and choose **People → Add someone**. Mobile has the same entry and flow
 when built with `VIZOR_FORM_FACTOR=mobile` and the experiment define. Mainnet,
 locked and hardware accounts cannot use this flow. The signing identities in
 this experiment are not seed-recoverable.

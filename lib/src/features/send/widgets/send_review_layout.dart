@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../../../core/formatting/address_display.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_icon.dart';
-import '../../../core/widgets/app_profile_picture.dart';
+import '../../../core/widgets/familiar_widgets.dart';
 import '../../../core/widgets/review_info_row.dart';
 import '../../../core/widgets/review_list_row.dart';
 
@@ -118,8 +118,7 @@ class SendReviewInfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+    return FamiliarCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -128,6 +127,10 @@ class SendReviewInfoSection extends StatelessWidget {
             value: amountText,
             leading: const ReviewZecCoinImage(),
             bottomLeftText: fiatText,
+            valueStyle: AppTypography.displayLarge.copyWith(
+              color: FamiliarPalette.of(context).ink,
+            ),
+            rowHeight: 110,
           ),
           ReviewConnectorIcon(iconName: connectorIconName),
           recipientRow ?? _recipientRow(context),
@@ -153,24 +156,16 @@ class SendReviewInfoSection extends StatelessWidget {
         trailingActionLabel: 'Show full address',
         onTrailingAction: onShowFullAddress,
       ),
-      SendReviewContactRecipient(
-        :final name,
-        :final profilePictureId,
-        :final address,
-      ) =>
-        ReviewInfoRow(
-          label: 'To',
-          value: name,
-          leading: AppProfilePicture(
-            profilePictureId: profilePictureId,
-            size: AppProfilePictureSize.large,
-          ),
-          struckThrough: recipientStruckThrough,
-          bottomLeftIconName: _contactRecipientBottomLeftIconName,
-          bottomLeftText: _contactRecipientBottomLeftText(address),
-          trailingActionLabel: 'Show full address',
-          onTrailingAction: onShowFullAddress,
-        ),
+      SendReviewContactRecipient(:final name, :final address) => ReviewInfoRow(
+        label: 'To',
+        value: name,
+        leading: FamiliarAvatar(label: name, identity: address, size: 40),
+        struckThrough: recipientStruckThrough,
+        bottomLeftIconName: _contactRecipientBottomLeftIconName,
+        bottomLeftText: _contactRecipientBottomLeftText(address),
+        trailingActionLabel: 'Show full address',
+        onTrailingAction: onShowFullAddress,
+      ),
     };
   }
 }
@@ -200,12 +195,10 @@ class SendReviewContentColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-
     return Align(
       alignment: Alignment.topCenter,
       child: SizedBox(
-        width: AppWindowSizing.contentAreaMaxWidth,
+        width: 600,
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.s,
@@ -215,16 +208,7 @@ class SendReviewContentColumn extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                // Figma `Body L` SemiBold — branch pattern is the
-                // bodyLarge token with an inline weight bump.
-                style: AppTypography.bodyLarge.copyWith(
-                  color: colors.text.accent,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              FamiliarPageHeader(title: title),
               for (final child in children) ...[
                 const SizedBox(height: _sectionGap),
                 child,

@@ -418,7 +418,8 @@ class _AppButtonState extends State<AppButton> {
         height: height,
         decoration: ShapeDecoration(
           color: currentBg,
-          shape: StadiumBorder(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
             side: borderWidth == 0
                 ? BorderSide.none
                 : BorderSide(color: borderColor, width: borderWidth),
@@ -471,7 +472,8 @@ class _AppButtonState extends State<AppButton> {
               opacity: (_focused && _enabled) ? 1.0 : 0.0,
               child: DecoratedBox(
                 decoration: ShapeDecoration(
-                  shape: StadiumBorder(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                     side: BorderSide(
                       color: focusRingColor,
                       width: focusRingWidth,

@@ -1,3 +1,4 @@
+import '../../../core/widgets/familiar_widgets.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -1148,107 +1149,145 @@ class _SendComposeBodyState extends ConsumerState<_SendComposeBody> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          RawAutocomplete<AddressBookContact>(
-                            textEditingController: _addressController,
-                            focusNode: _addressFocusNode,
-                            displayStringForOption: (contact) => contact.label,
-                            optionsViewOpenDirection:
-                                OptionsViewOpenDirection.down,
-                            optionsBuilder: (value) {
-                              if (value.text.trim().isEmpty) {
-                                return const <AddressBookContact>[];
-                              }
-                              return filterAddressBookContacts(
-                                addressBookContacts,
-                                query: value.text,
-                                networks: const {AddressBookNetwork.zcash},
-                              );
-                            },
-                            onSelected: _selectContact,
-                            optionsViewBuilder:
-                                (context, onSelected, options) => Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: AppSpacing.xs,
-                                  ),
-                                  child: _SendContactAutocompleteOptions(
-                                    contacts: options.toList(growable: false),
-                                    highlightedIndex:
-                                        AutocompleteHighlightedOption.of(
-                                          context,
-                                        ),
-                                    onSelected: onSelected,
+                          if (widget.prefill?.label != null &&
+                              _addressController.text ==
+                                  widget.prefill!.address &&
+                              _addressType != 'invalid' &&
+                              _addressType != 'error') ...[
+                            Row(
+                              children: [
+                                FamiliarAvatar(
+                                  label: widget.prefill!.label!,
+                                  identity:
+                                      _contactRecipient?.identity ??
+                                      'saved:${widget.prefill!.id}',
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Text(
+                                    'To ${widget.prefill!.label!}',
+                                    style: AppTypography.headlineSmall,
                                   ),
                                 ),
-                            fieldViewBuilder:
-                                (
-                                  context,
-                                  controller,
-                                  focusNode,
-                                  onFieldSubmitted,
-                                ) => Focus(
-                                  canRequestFocus: false,
-                                  skipTraversal: true,
-                                  onKeyEvent: (node, event) {
-                                    if (event is KeyDownEvent &&
-                                        (event.logicalKey ==
-                                                LogicalKeyboardKey.enter ||
-                                            event.logicalKey ==
-                                                LogicalKeyboardKey
-                                                    .numpadEnter)) {
-                                      onFieldSubmitted();
-                                      return KeyEventResult.handled;
-                                    }
-                                    return KeyEventResult.ignored;
-                                  },
-                                  child: AppTextField(
-                                    key: const ValueKey('send_address_field'),
-                                    label: 'Send to',
-                                    labelStyle: sendFieldLabelStyle,
-                                    rightSlot: _SendContactsLabelButton(
-                                      label: 'Contacts',
-                                      onTap: _openContactPicker,
+                                TextButton(
+                                  onPressed: () => context.push('/send'),
+                                  child: const Text('Change'),
+                                ),
+                              ],
+                            ),
+                            ExpansionTile(
+                              title: const Text('Receiving address'),
+                              tilePadding: EdgeInsets.zero,
+                              children: [
+                                SelectableText(
+                                  _addressController.text,
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ],
+                            ),
+                          ] else
+                            RawAutocomplete<AddressBookContact>(
+                              textEditingController: _addressController,
+                              focusNode: _addressFocusNode,
+                              displayStringForOption: (contact) =>
+                                  contact.label,
+                              optionsViewOpenDirection:
+                                  OptionsViewOpenDirection.down,
+                              optionsBuilder: (value) {
+                                if (value.text.trim().isEmpty) {
+                                  return const <AddressBookContact>[];
+                                }
+                                return filterAddressBookContacts(
+                                  addressBookContacts,
+                                  query: value.text,
+                                  networks: const {AddressBookNetwork.zcash},
+                                );
+                              },
+                              onSelected: _selectContact,
+                              optionsViewBuilder:
+                                  (context, onSelected, options) => Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: AppSpacing.xs,
                                     ),
-                                    tone: addressTone,
-                                    borderColor:
-                                        addressTone ==
-                                            AppTextFieldTone.destructive
-                                        ? colors.border.utilityDestructive
-                                        : null,
-                                    focusNode: focusNode,
-                                    controller: controller,
-                                    hintText: 'Zcash address',
-                                    leading: AppIcon(
-                                      addressLeadingIcon,
-                                      size: 20,
-                                      color: addressLeadingColor,
+                                    child: _SendContactAutocompleteOptions(
+                                      contacts: options.toList(growable: false),
+                                      highlightedIndex:
+                                          AutocompleteHighlightedOption.of(
+                                            context,
+                                          ),
+                                      onSelected: onSelected,
                                     ),
-                                    messageText: addressMessage,
-                                    messageIcon: addressMessageIcon,
-                                    onChanged: (_) => _handleAddressChanged(),
-                                    onSubmitted: (_) => onFieldSubmitted(),
-                                    keyboardType: TextInputType.text,
-                                    showClearButton: true,
-                                    onClear: () {
-                                      _addressSeq++;
-                                      _maxDebounceTimer?.cancel();
-                                      setState(() {
-                                        _addressType = '';
-                                        _error = null;
-                                        if (_isMaxMode) {
-                                          _validateSeq++;
-                                          _maxSeq++;
-                                          _maxQuote = null;
-                                          _isResolvingMax = false;
-                                          _amountError = '';
-                                        }
-                                      });
-                                      if (!_isMaxMode) {
-                                        _validateAmount();
+                                  ),
+                              fieldViewBuilder:
+                                  (
+                                    context,
+                                    controller,
+                                    focusNode,
+                                    onFieldSubmitted,
+                                  ) => Focus(
+                                    canRequestFocus: false,
+                                    skipTraversal: true,
+                                    onKeyEvent: (node, event) {
+                                      if (event is KeyDownEvent &&
+                                          (event.logicalKey ==
+                                                  LogicalKeyboardKey.enter ||
+                                              event.logicalKey ==
+                                                  LogicalKeyboardKey
+                                                      .numpadEnter)) {
+                                        onFieldSubmitted();
+                                        return KeyEventResult.handled;
                                       }
+                                      return KeyEventResult.ignored;
                                     },
+                                    child: AppTextField(
+                                      key: const ValueKey('send_address_field'),
+                                      label: 'Send to',
+                                      labelStyle: sendFieldLabelStyle,
+                                      rightSlot: _SendContactsLabelButton(
+                                        label: 'Contacts',
+                                        onTap: _openContactPicker,
+                                      ),
+                                      tone: addressTone,
+                                      borderColor:
+                                          addressTone ==
+                                              AppTextFieldTone.destructive
+                                          ? colors.border.utilityDestructive
+                                          : null,
+                                      focusNode: focusNode,
+                                      controller: controller,
+                                      hintText: 'Zcash address',
+                                      leading: AppIcon(
+                                        addressLeadingIcon,
+                                        size: 20,
+                                        color: addressLeadingColor,
+                                      ),
+                                      messageText: addressMessage,
+                                      messageIcon: addressMessageIcon,
+                                      onChanged: (_) => _handleAddressChanged(),
+                                      onSubmitted: (_) => onFieldSubmitted(),
+                                      keyboardType: TextInputType.text,
+                                      showClearButton: true,
+                                      onClear: () {
+                                        _addressSeq++;
+                                        _maxDebounceTimer?.cancel();
+                                        setState(() {
+                                          _addressType = '';
+                                          _error = null;
+                                          if (_isMaxMode) {
+                                            _validateSeq++;
+                                            _maxSeq++;
+                                            _maxQuote = null;
+                                            _isResolvingMax = false;
+                                            _amountError = '';
+                                          }
+                                        });
+                                        if (!_isMaxMode) {
+                                          _validateAmount();
+                                        }
+                                      },
+                                    ),
                                   ),
-                                ),
-                          ),
+                            ),
                           const SizedBox(
                             height: _singleLineFieldOverlayReserve,
                           ),
@@ -1433,9 +1472,9 @@ class _SendComposeBodyState extends ConsumerState<_SendComposeBody> {
 class _SendComposeLayout extends StatelessWidget {
   const _SendComposeLayout({required this.child, required this.reviewButton});
 
-  static const contentWidth = 420.0;
-  static const fieldsWidth = 396.0;
-  static const reviewButtonWidth = 196.0;
+  static const contentWidth = 660.0;
+  static const fieldsWidth = 612.0;
+  static const reviewButtonWidth = 612.0;
   static const _containerHorizontalPadding = AppSpacing.s;
   static const _containerVerticalPadding = AppSpacing.sm;
   static const _sectionGap = 32.0;
@@ -1470,8 +1509,14 @@ class _SendComposeLayout extends StatelessWidget {
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minHeight: minHeight),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      const Text(
+                        '1  Person    ·    2  Amount    ·    3  Review',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      const SizedBox(height: 24),
                       const _SendTitle(),
                       const SizedBox(height: _sectionGap),
                       SizedBox(

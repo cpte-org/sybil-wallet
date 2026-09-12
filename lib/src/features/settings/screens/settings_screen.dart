@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart' show ExpansionTile, TextButton;
 import 'dart:async';
 
 import 'package:flutter/foundation.dart'
@@ -14,8 +15,8 @@ import '../../../core/layout/app_pane_scroll_scaffold.dart';
 import '../../../core/profile_pictures.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/familiar_widgets.dart';
 import '../../../core/widgets/app_pane_modal_overlay.dart';
-import '../../../core/widgets/app_profile_picture.dart';
 import '../../../providers/account_provider.dart';
 import '../../../core/config/zcash_explorer.dart';
 import '../../../providers/rpc_endpoint_provider.dart';
@@ -202,7 +203,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onProfilePicture: hasActiveAccount
                     ? () => _showModal(_SettingsModalType.profilePicture)
                     : null,
-                onAddressBook: () => context.push('/address-book'),
+                onAddressBook: () => context.push('/people'),
                 onLinkMobile: () => context.push('/settings/link-mobile'),
                 onTheme: () => _showModal(_SettingsModalType.theme),
                 onUpdates: updateState == null
@@ -354,12 +355,10 @@ class _SettingsPane extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
+        constraints: const BoxConstraints(maxWidth: 680),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s),
           child: Column(
@@ -367,12 +366,11 @@ class _SettingsPane extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: AppSpacing.sm),
-              Text(
-                'Settings',
-                textAlign: TextAlign.center,
-                style: AppTypography.headlineLarge.copyWith(
-                  color: colors.text.accent,
-                ),
+              FamiliarPageHeader(
+                title: GoRouterState.of(context).uri.path.endsWith('/security')
+                    ? 'Keep what’s yours.'
+                    : 'Your wallet, your way.',
+                eyebrow: 'Settings',
               ),
               const SizedBox(height: AppSpacing.base),
               _SettingsList(
@@ -465,129 +463,95 @@ class _SettingsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _SettingsBlock(
-          title: 'Account',
-          rows: [
-            _SettingsRow(
-              iconName: AppIcons.key,
-              label: 'Secret passphrase',
-              onTap: activeAccountIsHardware ? null : onSeedPhrase,
-            ),
-            _SettingsRow(
-              iconName: AppIcons.eye,
-              label: 'Viewing key',
-              onTap: onViewingKey,
-            ),
-            _SettingsRow(
-              iconName: AppIcons.key,
-              label: 'Base account private key',
-              onTap: onBaseKey,
-            ),
-            _SettingsRow(
-              iconName: AppIcons.lock,
-              label: 'Password',
-              onTap: onChangePassword,
-            ),
-            _SettingsRow(
-              iconName: AppIcons.user,
-              label: 'Profile picture',
-              value: profilePictureLabel,
-              valueLeading: AppProfilePicture(
-                profilePictureId: profilePictureId,
-                size: AppProfilePictureSize.medium,
-              ),
-              onTap: onProfilePicture,
-            ),
-            _SettingsRow(
-              iconName: AppIcons.scroll,
-              label: 'Account name',
-              value: accountName,
-              onTap: onAccountName,
-            ),
-            _SettingsRow(
-              iconName: AppIcons.users,
-              label: 'Contacts',
-              onTap: onAddressBook,
-            ),
-            _SettingsRow(
-              iconName: AppIcons.link,
-              label: 'Link mobile',
-              onTap: onLinkMobile,
-            ),
-          ],
+    final securitySection = _SettingsBlock(
+      title: 'Security and recovery',
+      rows: [
+        _SettingsRow(
+          iconName: AppIcons.key,
+          label: 'Wallet recovery phrase',
+          subtitle: 'Recover your funds',
+          onTap: activeAccountIsHardware ? null : onSeedPhrase,
         ),
-        const SizedBox(height: AppSpacing.md),
-        _SettingsBlock(
-          title: 'Privacy',
-          rows: const [
-            NetworkPrivacyControl(
-              key: ValueKey('settings_tor_control'),
-              showSurface: false,
-            ),
-          ],
+        _SettingsRow(
+          iconName: AppIcons.users,
+          label: 'Connection backup',
+          subtitle: 'Connected contacts and relationship keys',
+          onTap: () => context.push('/contacts/backup'),
         ),
-        const SizedBox(height: AppSpacing.md),
-        _SettingsBlock(
-          title: 'System',
-          rows: [
-            _SettingsRow(
-              iconName: AppIcons.endpoint,
-              label: 'Endpoint',
-              value: endpointLabel,
-              onTap: onEndpoint,
-            ),
-            _SettingsRow(
-              iconName: AppIcons.globe,
-              label: 'Explorer',
-              value: explorerLabel,
-              onTap: onExplorer,
-            ),
-            _SettingsRow(
-              iconName: AppIcons.users,
-              label: 'Names',
-              onTap: onNames,
-            ),
-            _SettingsRow(
-              iconName: AppIcons.theme,
-              label: 'Theme',
-              value: themeLabel,
-              onTap: onTheme,
-            ),
-            if (updateLabel != null && onUpdates != null)
-              _SettingsRow(
-                iconName: AppIcons.sync,
-                label: 'Updates',
-                value: updateLabel,
-                onTap: onUpdates,
-              ),
-          ],
+        _SettingsRow(
+          iconName: AppIcons.lock,
+          label: 'Password',
+          onTap: onChangePassword,
         ),
-        const SizedBox(height: AppSpacing.md),
-        _SettingsBlock(
-          title: 'Misc',
-          rows: [
-            _SettingsRow(
-              iconName: AppIcons.vizor,
-              iconGlyphSize: 16.5,
-              label: 'About Vizor',
-              onTap: onAbout,
-            ),
-            if (onDonation != null)
-              _SettingsRow(
-                iconName: AppIcons.donation,
-                iconGlyphSize: 16.5,
-                label: 'Support Vizor',
-                onTap: onDonation!,
-              ),
-          ],
+        _SettingsRow(
+          iconName: AppIcons.key,
+          label: 'Base / Ethereum private key',
+          subtitle: 'Use your Base account in another wallet',
+          onTap: onBaseKey,
         ),
-        if (onUninstall != null) ...[
-          const SizedBox(height: AppSpacing.md),
-          _SettingsBlock(
-            title: 'Danger zone',
+        _SettingsRow(
+          iconName: AppIcons.eye,
+          label: 'Viewing key',
+          subtitle: 'Share read-only access to this account',
+          onTap: onViewingKey,
+        ),
+        _SettingsRow(
+          iconName: AppIcons.link,
+          label: 'Link mobile',
+          onTap: onLinkMobile,
+        ),
+      ],
+    );
+    const connectionsSection = _SettingsBlock(
+      title: 'Connection privacy',
+      rows: [
+        NetworkPrivacyControl(
+          key: ValueKey('settings_tor_control'),
+          showSurface: false,
+        ),
+      ],
+    );
+    final networkSection = _SettingsBlock(
+      title: 'Network and app',
+      rows: [
+        _SettingsRow(
+          iconName: AppIcons.endpoint,
+          label: 'Endpoint',
+          value: endpointLabel,
+          onTap: onEndpoint,
+        ),
+        _SettingsRow(
+          iconName: AppIcons.globe,
+          label: 'Explorer',
+          value: explorerLabel,
+          onTap: onExplorer,
+        ),
+        if (updateLabel != null && onUpdates != null)
+          _SettingsRow(
+            iconName: AppIcons.sync,
+            label: 'Updates',
+            value: updateLabel,
+            onTap: onUpdates,
+          ),
+        _SettingsRow(
+          iconName: AppIcons.vizor,
+          iconGlyphSize: 16.5,
+          label: 'About Vizor',
+          onTap: onAbout,
+        ),
+        if (onDonation != null)
+          _SettingsRow(
+            iconName: AppIcons.donation,
+            iconGlyphSize: 16.5,
+            label: 'Support Vizor',
+            onTap: onDonation!,
+          ),
+      ],
+    );
+    final removalSection = onUninstall == null
+        ? null
+        : _SettingsBlock(
+            title: 'Remove this app',
             rows: [
               _SettingsRow(
                 iconName: AppIcons.trash,
@@ -596,8 +560,68 @@ class _SettingsList extends StatelessWidget {
                 onTap: onUninstall!,
               ),
             ],
-          ),
-        ],
+          );
+    final security = GoRouterState.of(context).uri.path.endsWith('/security');
+    if (security) return securitySection;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SettingsBlock(
+          title: 'You and your wallet',
+          rows: [
+            _SettingsRow(
+              iconName: AppIcons.user,
+              label: 'Account',
+              value: accountName,
+              onTap: onAccountName,
+            ),
+            _SettingsRow(
+              iconName: AppIcons.lock,
+              label: 'Security and recovery',
+              subtitle: 'Backups, Base key and locking',
+              onTap: () => context.push('/settings/security'),
+            ),
+            _SettingsRow(
+              iconName: AppIcons.theme,
+              label: 'Appearance',
+              value: themeLabel,
+              onTap: onTheme,
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        _SettingsBlock(
+          title: 'People and names',
+          rows: [
+            _SettingsRow(
+              iconName: AppIcons.link,
+              label: 'Contact options',
+              subtitle: 'Connections, backup and advanced tools',
+              onTap: () => context.push('/settings/contacts'),
+            ),
+            _SettingsRow(
+              iconName: AppIcons.globe,
+              label: 'Public Zcash names',
+              subtitle: 'Manage names and find people',
+              onTap: onNames,
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        ExpansionTile(
+          title: const Text('Network and app settings'),
+          tilePadding: EdgeInsets.zero,
+          children: [
+            connectionsSection,
+            const SizedBox(height: 16),
+            networkSection,
+            ?removalSection,
+          ],
+        ),
+        TextButton(
+          onPressed: onProfilePicture,
+          child: const Text('Change profile picture'),
+        ),
       ],
     );
   }
@@ -672,7 +696,7 @@ class _ThemeModalState extends State<_ThemeModal> {
           const SizedBox(height: AppSpacing.md),
           _ThemeOptionCard(
             iconName: AppIcons.monitor,
-            label: 'System (Auto)',
+            label: 'System',
             selected: _selectedMode == ThemeMode.system,
             onTap: () => _select(ThemeMode.system),
           ),
@@ -1026,39 +1050,33 @@ class _SettingsBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.md,
-      ),
-      decoration: BoxDecoration(
-        color: colors.background.ground,
-        borderRadius: BorderRadius.circular(AppRadii.large),
-        boxShadow: _settingsSurfaceShadow(colors),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.xxs),
-            child: Text(
-              title,
-              style: AppTypography.labelLarge.copyWith(
-                fontWeight: FontWeight.w400,
-                color: colors.text.secondary,
-              ),
+    final palette = FamiliarPalette.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+          child: Text(
+            title,
+            style: AppTypography.bodyLarge.copyWith(
+              color: palette.ink,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: AppSpacing.s),
-          for (var i = 0; i < rows.length; i++) ...[
-            if (i > 0) const SizedBox(height: AppSpacing.xs),
-            rows[i],
-          ],
-        ],
-      ),
+        ),
+        FamiliarCard(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < rows.length; i++) ...[
+                if (i > 0) Container(height: 1, color: palette.line),
+                rows[i],
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -1068,17 +1086,17 @@ class _SettingsRow extends StatefulWidget {
     required this.iconName,
     required this.label,
     this.iconGlyphSize = 20,
+    this.subtitle,
     this.value,
-    this.valueLeading,
     this.destructive = false,
     this.onTap,
   });
 
   final String iconName;
   final String label;
+  final String? subtitle;
   final double iconGlyphSize;
   final String? value;
-  final Widget? valueLeading;
   final bool destructive;
   final VoidCallback? onTap;
 
@@ -1145,17 +1163,31 @@ class _SettingsRowState extends State<_SettingsRow> {
         ),
         const SizedBox(width: AppSpacing.xs),
         Expanded(
-          child: Text(
-            widget.label,
-            overflow: TextOverflow.ellipsis,
-            style: AppTypography.labelMedium.copyWith(color: contentColor),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.label,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: contentColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              if (widget.subtitle != null) ...[
+                const SizedBox(height: 3),
+                Text(
+                  widget.subtitle!,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: colors.text.secondary,
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
         const SizedBox(width: AppSpacing.xs),
-        if (widget.valueLeading != null) ...[
-          widget.valueLeading!,
-          const SizedBox(width: AppSpacing.xxs),
-        ],
+
         if (widget.value != null) ...[
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 260),
@@ -1179,8 +1211,11 @@ class _SettingsRowState extends State<_SettingsRow> {
       clipBehavior: Clip.none,
       children: [
         Container(
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
+          constraints: const BoxConstraints(minHeight: 64),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xxs,
+            vertical: AppSpacing.s,
+          ),
           decoration: BoxDecoration(
             color: isInteractive && _hovered
                 ? _settingsRowHoverBackgroundColor(context)

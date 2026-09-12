@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/familiar_widgets.dart';
 import '../../../core/widgets/app_text_field.dart';
 
 /// Recipient address type used to choose the leading icon.
@@ -50,7 +51,7 @@ class SendComposeView extends StatelessWidget {
     this.route = SendPoolRoute.unknown,
     this.amountText = '',
     this.amountHint = '0.00',
-    this.maxLabel = 'Use Max',
+    this.maxLabel = 'Max',
     this.amountInputIsUsd = false,
     this.amountConversionText = r'$ 0',
     this.amountConversionLoading = false,
@@ -62,7 +63,7 @@ class SendComposeView extends StatelessWidget {
     this.memoCounter = '512/512',
     this.memoError,
     this.reviewEnabled = false,
-    this.reviewLabel = 'Review',
+    this.reviewLabel = 'Review payment',
     this.onReview,
     this.onContactsPressed,
     this.onAddMemo,
@@ -120,13 +121,11 @@ class SendComposeView extends StatelessWidget {
   static const _containerHorizontalPadding = AppSpacing.s;
   static const _containerVerticalPadding = AppSpacing.sm;
   static const _sectionGap = 32.0;
-  static const _fieldsVerticalPadding = AppSpacing.xs;
 
   bool get _expanded => memoMode == SendMemoMode.expanded;
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
     final amountErrorText =
         amountError != null && amountError!.trim().isNotEmpty
         ? amountError
@@ -178,19 +177,17 @@ class SendComposeView extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        title,
-                        textAlign: TextAlign.center,
-                        style: AppTypography.headlineLarge.copyWith(
-                          color: colors.text.accent,
-                        ),
+                      FamiliarPageHeader(
+                        title: title,
+                        subtitle: 'Who’s it for?',
                       ),
                       const SizedBox(height: _sectionGap),
                       SizedBox(
                         width: formWidth,
-                        child: Padding(
+                        child: FamiliarCard(
                           padding: const EdgeInsets.symmetric(
-                            vertical: _fieldsVerticalPadding,
+                            horizontal: AppSpacing.sm,
+                            vertical: AppSpacing.md,
                           ),
                           child: fields,
                         ),

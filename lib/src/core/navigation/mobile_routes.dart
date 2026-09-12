@@ -1,11 +1,18 @@
+import '../../features/contacts/presentation/familiar_add_person_screen.dart';
+import '../../features/contacts/presentation/familiar_choose_recipient_screen.dart';
 import 'package:flutter/cupertino.dart' show CupertinoPage;
 import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart' show Scaffold;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/zns/presentation/zns_wallet_screen.dart';
 import '../../features/contacts/presentation/contact_exchange_screen.dart';
+import '../../features/contacts/presentation/familiar_people_screen.dart';
+import '../../features/contacts/presentation/contact_backup_screen.dart';
+import '../../features/contacts/presentation/contact_delivery_screen.dart';
 import '../../features/contacts/presentation/contact_introduction_screen.dart';
 import '../../features/settings/names_settings.dart';
+import '../../features/settings/contact_settings.dart';
 import '../../features/settings/screens/settings_base_key_screen.dart';
 
 import '../../features/accounts/screens/mobile/mobile_accounts_screen.dart';
@@ -48,14 +55,14 @@ import '../../features/settings/screens/mobile/mobile_settings_screen.dart';
 import '../../features/settings/screens/mobile/mobile_viewing_key_screen.dart';
 import '../../features/swap/screens/mobile/mobile_swap_screen.dart';
 import '../../features/voting/screens/mobile/mobile_voting_screens.dart';
-import '../config/swap_feature_config.dart';
 import '../layout/mobile/app_mobile_shell.dart';
 import '../layout/mobile/app_mobile_tab_bar.dart';
 import '../widgets/app_icon.dart';
+import '../theme/app_theme.dart';
 import 'mobile_tab_history.dart';
 
 /// The mobile route tree: the shared entry/onboarding routes, a
-/// stateful tab shell (home / swap / activity / settings), and
+/// stateful tab shell (wallet / people / activity / settings), and
 /// full-screen flows pushed over the shell as [CupertinoPage]s so iOS
 /// edge-swipe back works.
 ///
@@ -66,6 +73,28 @@ import 'mobile_tab_history.dart';
 List<RouteBase> buildMobileRoutes({required List<RouteBase> entryRoutes}) {
   return [
     ...entryRoutes,
+    GoRoute(
+      path: '/swap',
+      pageBuilder: (context, state) => CupertinoPage(
+        key: state.pageKey,
+        child: Scaffold(
+          backgroundColor: context.colors.background.window,
+          body: const MobileSwapScreen(),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/contacts/backup',
+      pageBuilder: (_, state) =>
+          CupertinoPage(key: state.pageKey, child: const ContactBackupScreen()),
+    ),
+    GoRoute(
+      path: '/contacts/delivery',
+      pageBuilder: (_, state) => CupertinoPage(
+        key: state.pageKey,
+        child: const ContactDeliveryScreen(),
+      ),
+    ),
     GoRoute(
       path: '/names',
       pageBuilder: (_, state) =>
@@ -149,6 +178,13 @@ List<RouteBase> buildMobileRoutes({required List<RouteBase> entryRoutes}) {
       ),
     ),
     GoRoute(
+      path: '/settings/contacts',
+      pageBuilder: (context, state) => CupertinoPage(
+        key: state.pageKey,
+        child: const ContactSettingsScreen(),
+      ),
+    ),
+    GoRoute(
       path: '/settings/names',
       pageBuilder: (context, state) =>
           CupertinoPage(key: state.pageKey, child: const NamesSettingsScreen()),
@@ -184,23 +220,36 @@ List<RouteBase> buildMobileRoutes({required List<RouteBase> entryRoutes}) {
       ),
     ),
     GoRoute(
+      path: '/people/add',
+      pageBuilder: (_, state) => CupertinoPage(
+        key: state.pageKey,
+        child: FamiliarAddPersonScreen(
+          savedId: state.extra is String ? state.extra as String : null,
+        ),
+      ),
+    ),
+    GoRoute(
       path: '/send',
       pageBuilder: (context, state) {
         final extra = state.extra;
         return CupertinoPage(
           key: state.pageKey,
-          child: MobileSendScreen(
-            useRouteSteps: true,
-            initialRecipient: extra is SendPrefillArgs
-                ? extra.address
-                : extra is String
-                ? extra
-                : null,
-            initialContactLabel: extra is SendPrefillArgs ? extra.label : null,
-            initialContactRecipient: extra is SendPrefillArgs
-                ? extra.contactRecipient
-                : null,
-          ),
+          child: extra == null
+              ? const FamiliarChooseRecipientScreen()
+              : MobileSendScreen(
+                  useRouteSteps: true,
+                  initialRecipient: extra is SendPrefillArgs
+                      ? extra.address
+                      : extra is String
+                      ? extra
+                      : null,
+                  initialContactLabel: extra is SendPrefillArgs
+                      ? extra.label
+                      : null,
+                  initialContactRecipient: extra is SendPrefillArgs
+                      ? extra.contactRecipient
+                      : null,
+                ),
         );
       },
     ),
@@ -618,13 +667,13 @@ class _MobileTab {
 const List<_MobileTab> _allMobileTabs = [
   _MobileTab(
     path: '/home',
-    item: AppMobileTabItem(iconName: AppIcons.home, label: 'Home'),
+    item: AppMobileTabItem(iconName: AppIcons.home, label: 'Wallet'),
     screen: MobileHomeScreen(),
   ),
   _MobileTab(
-    path: '/swap',
-    item: AppMobileTabItem(iconName: AppIcons.swapArrows, label: 'Swap'),
-    screen: MobileSwapScreen(),
+    path: '/people',
+    item: AppMobileTabItem(iconName: AppIcons.users, label: 'People'),
+    screen: FamiliarPeopleScreen(),
   ),
   _MobileTab(
     path: '/activity',
@@ -646,11 +695,7 @@ class _MobileTabShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final swapFeatureEnabled = ref.watch(swapFeatureEnabledProvider);
-    final visibleTabs = [
-      for (final tab in tabs)
-        if (swapFeatureEnabled || tab.path != '/swap') tab,
-    ];
+    final visibleTabs = tabs;
     final currentBranchIndex = navigationShell.currentIndex;
     final currentTab =
         currentBranchIndex >= 0 && currentBranchIndex < tabs.length

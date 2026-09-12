@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart' show Colors;
@@ -9,32 +8,21 @@ import 'package:go_router/go_router.dart';
 
 import '../../../main.dart' show log;
 import '../../providers/account_provider.dart';
-import '../../providers/app_security_provider.dart';
-import '../../providers/network_privacy_provider.dart';
 import '../../providers/privacy_mode_provider.dart';
 import '../../providers/receive_address_provider.dart';
-import '../../providers/sync_display_progress_provider.dart';
 import '../../providers/sync_provider.dart';
-import '../../providers/voting/voting_rounds_provider.dart';
-import '../../providers/voting/voting_submission_guard_provider.dart';
 import '../../rust/api/sync.dart' as rust_sync;
-import '../../features/migration/providers/ironwood_migration_announcement_provider.dart';
 import '../../features/migration/providers/ironwood_migration_coordinator_provider.dart';
-import '../../features/swap/models/swap_activity_navigation.dart';
-import '../../features/swap/providers/swap_state_provider.dart';
+import '../../features/migration/models/ironwood_migration_phases.dart';
 import '../config/network_config.dart';
-import '../config/swap_feature_config.dart';
-import '../formatting/number_format.dart';
 import '../formatting/zec_amount.dart';
 import '../privacy/privacy_mask.dart';
 import '../profile_pictures.dart';
-import '../formatting/sync_status_label.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_copy_feedback.dart';
 import '../widgets/app_icon.dart';
 import '../widgets/app_profile_picture.dart';
 import '../widgets/app_tappable.dart';
-import '../widgets/app_tooltip.dart';
 import '../widgets/app_toast.dart';
 import 'app_desktop_shell.dart';
 import 'desktop_sidebar_spacing.dart';
@@ -102,7 +90,6 @@ class AppMainSidebar extends ConsumerStatefulWidget {
 class _AppMainSidebarState extends ConsumerState<AppMainSidebar> {
   final LayerLink _accountMenuLink = LayerLink();
 
-  bool _isSigningOut = false;
   bool _isCopyingAddress = false;
   OverlayEntry? _accountMenuEntry;
 
@@ -132,21 +119,9 @@ class _AppMainSidebarState extends ConsumerState<AppMainSidebar> {
     super.dispose();
   }
 
-  bool _blockIfVotingSubmissionInProgress() {
-    final guards = ref.read(votingSubmissionGuardProvider);
-    if (guards.isEmpty) return false;
-    showAppToast(context, guards.first.message);
-    return true;
-  }
-
   void _navigateTo(String routePath) {
     if (widget.disabledRoutePaths.contains(routePath)) return;
-    if (_matches(routePath)) {
-      if (routePath == '/voting') {
-        ref.read(votingPollListRefreshRequestProvider.notifier).request();
-      }
-      return;
-    }
+    if (_matches(routePath)) return;
     context.go(routePath);
   }
 
@@ -161,45 +136,19 @@ class _AppMainSidebarState extends ConsumerState<AppMainSidebar> {
   }
 
   void _openActivity() {
-    if (_matchedLocation == '/activity') return;
+    if (widget.disabledRoutePaths.contains('/activity') ||
+        _matchedLocation == '/activity') {
+      return;
+    }
     context.go('/activity');
   }
 
   void _openSettings() {
-    if (_matchedLocation == '/settings') return;
-    context.go('/settings');
-  }
-
-  Future<void> _openPay() async {
-    if (_matches('/pay')) return;
-
-    final accountUuid = ref
-        .read(accountProvider)
-        .value
-        ?.activeAccountUuid
-        ?.trim();
-    if (accountUuid == null || accountUuid.isEmpty) return;
-
-    final router = GoRouter.of(context);
-    final entryPath = router.routerDelegate.currentConfiguration.uri.path;
-    final swapNotifier = ref.read(swapStateProvider.notifier);
-    final selectedAsset = await swapNotifier.resolvePaySelectedAssetForEntry(
-      accountUuid: accountUuid,
-    );
-    if (!mounted ||
-        selectedAsset == null ||
-        router.routerDelegate.currentConfiguration.uri.path != entryPath) {
+    if (widget.disabledRoutePaths.contains('/settings') ||
+        _matchedLocation == '/settings') {
       return;
     }
-    final prepared = swapNotifier.preparePayFromShieldedZec(
-      preferredAsset: selectedAsset,
-      expectedAccountUuid: accountUuid,
-    );
-    if (!prepared) return;
-    router.go(
-      '/pay',
-      extra: const PayComposerNavigationArgs(preservePreparedComposer: true),
-    );
+    context.go('/settings');
   }
 
   void _toggleAccountMenu({
@@ -238,8 +187,8 @@ class _AppMainSidebarState extends ConsumerState<AppMainSidebar> {
               link: _accountMenuLink,
               showWhenUnlinked: false,
               targetAnchor: Alignment.topLeft,
-              followerAnchor: Alignment.topLeft,
-              offset: const Offset(0, 48),
+              followerAnchor: Alignment.bottomLeft,
+              offset: const Offset(0, -8),
               child: _SidebarAccountsPopover(
                 accounts: accounts,
                 activeAccountUuid: activeAccountUuid,
@@ -375,33 +324,6 @@ class _AppMainSidebarState extends ConsumerState<AppMainSidebar> {
     }
   }
 
-  Future<void> _handleSignOut() async {
-    if (_isSigningOut) return;
-    if (_blockIfVotingSubmissionInProgress()) return;
-    final syncNotifier = ref.read(syncProvider.notifier);
-    final accountNotifier = ref.read(accountProvider.notifier);
-    final securityNotifier = ref.read(appSecurityProvider.notifier);
-
-    setState(() {
-      _isSigningOut = true;
-    });
-
-    try {
-      securityNotifier.lock();
-      accountNotifier.clearSensitiveStateForLock();
-      if (mounted) {
-        context.go('/unlock');
-      }
-      await syncNotifier.clearSensitiveStateForLock();
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSigningOut = false;
-        });
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final accountAsync = ref.watch(accountProvider);
@@ -421,7 +343,6 @@ class _AppMainSidebarState extends ConsumerState<AppMainSidebar> {
     }
     final accountName = activeAccount?.name ?? 'Username';
     final sync = ref.watch(syncProvider).value ?? SyncState();
-    final networkPrivacy = ref.watch(networkPrivacyProvider);
     final accountSync = sync.scopedToAccount(activeAccountUuid);
     final isImporting =
         activeAccountUuid != null &&
@@ -435,21 +356,6 @@ class _AppMainSidebarState extends ConsumerState<AppMainSidebar> {
       balanceText,
       privacyModeEnabled: privacyModeEnabled,
     );
-    final swapFeatureEnabled = ref.watch(swapFeatureEnabledProvider);
-    final ironwoodHomeMigrationPresentation = ref.watch(
-      ironwoodHomeMigrationPresentationProvider,
-    );
-    final ironwoodPostMigrationState = ref
-        .watch(ironwoodPostMigrationStateProvider)
-        .value;
-    final ironwoodVoteNavigationLocked =
-        ironwoodPostMigrationState?.locksNavigation ??
-        (ironwoodHomeMigrationPresentation.mode ==
-            IronwoodHomeMigrationCtaMode.start);
-    final payNavigationLocked =
-        ironwoodHomeMigrationPresentation.mode ==
-            IronwoodHomeMigrationCtaMode.resume &&
-        accountSync.ironwoodBalance <= BigInt.zero;
     final migrationCoordinator = ref.watch(
       ironwoodMigrationCoordinatorProvider,
     );
@@ -457,169 +363,161 @@ class _AppMainSidebarState extends ConsumerState<AppMainSidebar> {
         ? null
         : migrationCoordinator.statuses[activeAccountUuid];
 
-    return AppDesktopSidebarSurface(
-      glass: true,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxHeight < 640;
-          final topPadding = mainSidebarTopPadding(compact: compact);
-          final headerNavGap = compact ? AppSpacing.xs : AppSpacing.md;
-          final bottomPadding = compact ? AppSpacing.xs : AppSpacing.md;
-          final bottomSyncGap = compact ? AppSpacing.xs : AppSpacing.md;
+    return AppTheme(
+      data: AppThemeData.dark,
+      child: AppDesktopSidebarSurface(
+        backgroundColor: AppThemeData.dark.colors.background.window,
+        glass: false,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxHeight < 640;
+            final topPadding = mainSidebarTopPadding(compact: compact);
 
-          return Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(
-                  top: topPadding,
-                  left: AppSpacing.sm,
-                  right: AppSpacing.sm,
-                  bottom: bottomPadding,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    CompositedTransformTarget(
-                      link: _accountMenuLink,
-                      child: _SidebarAccountHeader(
-                        key: const ValueKey('sidebar_accounts_button'),
-                        accountName: accountName,
-                        profilePictureId:
-                            activeAccount?.profilePictureId ??
-                            kDefaultProfilePictureId,
-                        balanceLabel: balanceLabel,
-                        showsKeystone: activeAccount?.isHardware ?? false,
-                        privacyModeEnabled: privacyModeEnabled,
-                        onTogglePrivacyMode: () =>
-                            ref.read(privacyModeProvider.notifier).toggle(),
-                        onCopyAddress:
-                            activeAccountUuid == null || _isCopyingAddress
-                            ? null
-                            : () => unawaited(_copyShieldedAddress()),
-                        onTap: accounts.isEmpty
-                            ? null
-                            : () => _toggleAccountMenu(
-                                accounts: accounts,
-                                activeAccountUuid: activeAccountUuid,
+            final bottomPadding = compact ? AppSpacing.xs : AppSpacing.md;
+
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: topPadding,
+                    left: AppSpacing.sm,
+                    right: AppSpacing.sm,
+                    bottom: bottomPadding,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (!compact)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 12, 12, 38),
+                          child: Text(
+                            'sigil.',
+                            style: AppTypography.headlineLarge.copyWith(
+                              fontFamily: 'Young Serif',
+                              fontSize: 40,
+                              letterSpacing: -2,
+                              color: context.colors.text.primary,
+                            ),
+                          ),
+                        ),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if (migrationStatus?.activeRunId != null &&
+                                  migrationStatus?.phase !=
+                                      kIronwoodMigrationWaitingDenomConfirmationsPhase)
+                                _SidebarMigrationHomeSection(
+                                  status: migrationStatus!,
+                                  isHardware:
+                                      activeAccount?.isHardware ?? false,
+                                  orchardBalance:
+                                      accountSync.displayOrchardHoldingsBalance,
+                                  ironwoodBalance:
+                                      accountSync.displayIronwoodBalance +
+                                      accountSync.displayIronwoodPendingBalance,
+                                  privacyModeEnabled: privacyModeEnabled,
+                                  active: _homeShouldBeActive,
+                                  onHome: () => _navigateTo('/home'),
+                                  onMigration: () =>
+                                      _navigateTo('/migration/private/status'),
+                                )
+                              else
+                                AppSidebarItem(
+                                  key: const ValueKey('sidebar_home_button'),
+                                  label: isImporting
+                                      ? 'Importing...'
+                                      : 'Wallet',
+                                  iconName: isImporting
+                                      ? AppIcons.loader
+                                      : AppIcons.home,
+                                  iconAnimated: !isImporting,
+                                  active: _homeShouldBeActive,
+                                  onTap: isImporting
+                                      ? null
+                                      : () => _navigateTo('/home'),
+                                ),
+                              const SizedBox(height: AppSpacing.xs),
+                              AppSidebarItem(
+                                key: const ValueKey('sidebar_people_button'),
+                                label: 'People',
+                                iconName: AppIcons.users,
+                                active:
+                                    _routeShouldBeActive('/people') ||
+                                    _routeShouldBeActive('/contacts'),
+                                onTap:
+                                    widget.disabledRoutePaths.contains(
+                                      '/people',
+                                    )
+                                    ? null
+                                    : () => _navigateTo('/people'),
                               ),
+                              const SizedBox(height: AppSpacing.xs),
+                              AppSidebarItem(
+                                key: const ValueKey('sidebar_activity_button'),
+                                label: 'Activity',
+                                iconName: AppIcons.history,
+                                active: _routeShouldBeActive('/activity'),
+                                // Stays tappable on detail subroutes (tx/swap status)
+                                // as a way back to the main activity feed.
+                                onTap:
+                                    isImporting ||
+                                        widget.disabledRoutePaths.contains(
+                                          '/activity',
+                                        )
+                                    ? null
+                                    : _openActivity,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                    SizedBox(height: headerNavGap),
-                    if (migrationStatus?.activeRunId != null &&
-                        migrationStatus?.phase !=
-                            kIronwoodMigrationWaitingDenomConfirmationsPhase)
-                      _SidebarMigrationHomeSection(
-                        status: migrationStatus!,
-                        isHardware: activeAccount?.isHardware ?? false,
-                        orchardBalance:
-                            accountSync.displayOrchardHoldingsBalance,
-                        ironwoodBalance:
-                            accountSync.displayIronwoodBalance +
-                            accountSync.displayIronwoodPendingBalance,
-                        privacyModeEnabled: privacyModeEnabled,
-                        active: _homeShouldBeActive,
-                        onHome: () => _navigateTo('/home'),
-                        onMigration: () =>
-                            _navigateTo('/migration/private/status'),
-                      )
-                    else
-                      AppSidebarItem(
-                        key: const ValueKey('sidebar_home_button'),
-                        label: isImporting ? 'Importing...' : 'Home',
-                        iconName: isImporting ? AppIcons.loader : AppIcons.home,
-                        iconAnimated: !isImporting,
-                        active: _homeShouldBeActive,
-                        onTap: isImporting ? null : () => _navigateTo('/home'),
+                      CompositedTransformTarget(
+                        link: _accountMenuLink,
+                        child: _SidebarAccountHeader(
+                          key: const ValueKey('sidebar_accounts_button'),
+                          accountName: accountName,
+                          profilePictureId:
+                              activeAccount?.profilePictureId ??
+                              kDefaultProfilePictureId,
+                          balanceLabel: balanceLabel,
+                          showsKeystone: activeAccount?.isHardware ?? false,
+                          privacyModeEnabled: privacyModeEnabled,
+                          onTogglePrivacyMode: () =>
+                              ref.read(privacyModeProvider.notifier).toggle(),
+                          onCopyAddress:
+                              activeAccountUuid == null || _isCopyingAddress
+                              ? null
+                              : () => unawaited(_copyShieldedAddress()),
+                          onTap: accounts.isEmpty
+                              ? null
+                              : () => _toggleAccountMenu(
+                                  accounts: accounts,
+                                  activeAccountUuid: activeAccountUuid,
+                                ),
+                        ),
                       ),
-                    if (swapFeatureEnabled) ...[
-                      const SizedBox(height: AppSpacing.xs),
+                      const SizedBox(height: AppSpacing.sm),
                       AppSidebarItem(
-                        key: const ValueKey('sidebar_swap_button'),
-                        label: 'Swap',
-                        iconName: AppIcons.swapArrows,
-                        active: _routeShouldBeActive('/swap'),
-                        onTap:
-                            isImporting ||
-                                widget.disabledRoutePaths.contains('/swap')
+                        key: const ValueKey('sidebar_settings_button'),
+                        label: 'Settings',
+                        iconName: AppIcons.cog,
+                        active:
+                            _routeShouldBeActive('/settings') ||
+                            _routeShouldBeActive('/names'),
+                        onTap: widget.disabledRoutePaths.contains('/settings')
                             ? null
-                            : () => _navigateTo('/swap'),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      AppSidebarItem(
-                        key: const ValueKey('sidebar_pay_button'),
-                        label: 'Pay',
-                        iconName: AppIcons.paid,
-                        active: _routeShouldBeActive('/pay'),
-                        onTap:
-                            isImporting ||
-                                widget.disabledRoutePaths.contains('/pay') ||
-                                payNavigationLocked
-                            ? null
-                            : () => unawaited(_openPay()),
+                            : _openSettings,
                       ),
                     ],
-                    const SizedBox(height: AppSpacing.xs),
-                    AppSidebarItem(
-                      key: const ValueKey('sidebar_names_button'),
-                      label: 'Names', iconName: AppIcons.users,
-                      active: _routeShouldBeActive('/names'),
-                      onTap: isImporting || widget.disabledRoutePaths.contains('/names')
-                        ? null : () => _navigateTo('/names'),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    AppSidebarItem(
-                      key: const ValueKey('sidebar_voting_button'),
-                      label: 'Vote',
-                      iconName: AppIcons.vote,
-                      active: _routeShouldBeActive('/voting'),
-                      // Stays tappable while active: _navigateTo requests a
-                      // poll-list refresh when re-tapped on /voting.
-                      onTap:
-                          isImporting ||
-                              widget.disabledRoutePaths.contains('/voting') ||
-                              ironwoodVoteNavigationLocked
-                          ? null
-                          : () => _navigateTo('/voting'),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    AppSidebarItem(
-                      key: const ValueKey('sidebar_activity_button'),
-                      label: 'Activity',
-                      iconName: AppIcons.history,
-                      active: _routeShouldBeActive('/activity'),
-                      // Stays tappable on detail subroutes (tx/swap status)
-                      // as a way back to the main activity feed.
-                      onTap: isImporting ? null : _openActivity,
-                    ),
-                    const Spacer(),
-                    AppSidebarItem(
-                      key: const ValueKey('sidebar_settings_button'),
-                      label: 'Settings',
-                      iconName: AppIcons.cog,
-                      active: _routeShouldBeActive('/settings'),
-                      onTap: _openSettings,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    AppSidebarItem(
-                      label: 'Sign out',
-                      iconName: AppIcons.logOut,
-                      onTap: _isSigningOut ? null : _handleSignOut,
-                    ),
-                    SizedBox(height: bottomSyncGap),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: _SidebarSyncStatus(
-                        sync: sync,
-                        networkPrivacy: networkPrivacy,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -674,7 +572,7 @@ class _SidebarMigrationHomeSection extends StatelessWidget {
             top: 0,
             child: AppSidebarItem(
               key: ValueKey('sidebar_orchard_home_row'),
-              label: 'Home',
+              label: 'Wallet',
               iconName: AppIcons.home,
               onTap: onHome,
               trailing: Row(
@@ -1487,371 +1385,6 @@ class _SidebarPopoverHoverTargetState
           behavior: HitTestBehavior.opaque,
           onTap: widget.onTap,
           child: widget.builder(context, _hovered),
-        ),
-      ),
-    );
-  }
-}
-
-/// Sidebar sync status row. While syncing (and reduced-motion is off) a slow
-/// shimmer band sweeps the muted-green label up to the full synced green and a
-/// breathing glow pulses the indicator bar, so the row reads as "actively
-/// working". Synced / failed / reduced-motion render static.
-///
-/// The desktop color policy is preserved: the indicator stays the sync-success
-/// green while syncing (only failed differs); only the motion + glow are
-/// added. (The mobile top-nav has the same effect with its own colors; the
-/// small shimmer/motion helpers are intentionally duplicated rather than
-/// shared so the two surfaces ship as independent changes.)
-class _SidebarSyncStatus extends ConsumerStatefulWidget {
-  const _SidebarSyncStatus({required this.sync, required this.networkPrivacy});
-
-  final SyncState sync;
-  final NetworkPrivacyState networkPrivacy;
-
-  @override
-  ConsumerState<_SidebarSyncStatus> createState() => _SidebarSyncStatusState();
-}
-
-class _SidebarSyncStatusState extends ConsumerState<_SidebarSyncStatus>
-    with SingleTickerProviderStateMixin {
-  static const _height = 32.0;
-  static const _indicatorWidth = 5.0;
-  static const _indicatorHeight = 32.0;
-  static const _indicatorLeft = -AppSpacing.sm;
-  static const _textLeft = AppSpacing.xs;
-
-  AnimationController? _controller;
-
-  AnimationController get _activeController {
-    return _controller ??= AnimationController(
-      vsync: this,
-      duration: _SidebarSyncMotion.period,
-    );
-  }
-
-  bool get _isSyncing =>
-      SyncStatusLabel.from(
-        widget.sync,
-        networkPrivacy: widget.networkPrivacy,
-      ).kind ==
-      SyncStatusKind.syncing;
-
-  bool get _shouldAnimate {
-    if (!_isSyncing) {
-      return false;
-    }
-    return !(MediaQuery.maybeOf(context)?.disableAnimations ?? false);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _syncAnimation();
-  }
-
-  @override
-  void didUpdateWidget(covariant _SidebarSyncStatus oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _syncAnimation();
-  }
-
-  void _syncAnimation() {
-    if (_shouldAnimate) {
-      if (!_activeController.isAnimating) {
-        _activeController.repeat();
-      }
-    } else {
-      final controller = _controller;
-      if (controller != null) {
-        controller
-          ..stop()
-          ..value = 0;
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final status = SyncStatusLabel.from(
-      widget.sync,
-      displayWholePercentage: ref.watch(syncDisplayWholePercentageProvider),
-      networkPrivacy: widget.networkPrivacy,
-    );
-    final syncedHeight =
-        status.kind == SyncStatusKind.synced &&
-            widget.sync.isSyncComplete &&
-            widget.sync.scannedHeight > 0
-        ? widget.sync.scannedHeight
-        : null;
-    final label = status.kind == SyncStatusKind.synced
-        ? 'Synced'
-        : status.label;
-    final semanticsLabel = syncedHeight == null
-        ? (status.kind == SyncStatusKind.synced
-              ? 'Synced'
-              : status.semanticsLabel)
-        : 'Synced at block ${formatGroupedInteger(syncedHeight)}';
-    final textColor = switch (status.kind) {
-      SyncStatusKind.syncing => colors.sync.textSyncing,
-      SyncStatusKind.failed => colors.sync.textError,
-      SyncStatusKind.synced => colors.sync.text,
-    };
-    final indicatorColor = switch (status.kind) {
-      SyncStatusKind.syncing => colors.text.muted,
-      SyncStatusKind.failed => colors.sync.lightError,
-      SyncStatusKind.synced => colors.sync.lightSuccess,
-    };
-
-    final Widget body = _shouldAnimate
-        ? AnimatedBuilder(
-            animation: _activeController,
-            builder: (context, _) {
-              final t = _activeController.value;
-              return _row(
-                indicatorColor: indicatorColor,
-                glow: _SidebarSyncMotion.glowFor(t),
-                syncedHeight: syncedHeight,
-                text: _SidebarSyncShimmerLabel(
-                  key: const ValueKey('sidebar_sync_text'),
-                  label: label,
-                  baseColor: textColor,
-                  highlightColor: colors.sync.lightSuccess,
-                  progress: t,
-                ),
-              );
-            },
-          )
-        : _row(
-            indicatorColor: indicatorColor,
-            glow: _SidebarSyncMotion.staticGlow,
-            syncedHeight: syncedHeight,
-            text: _SidebarSyncStaticLabel(
-              label: label,
-              tooltipMessage: status.semanticsLabel,
-              showTooltipOnOverflow: status.kind == SyncStatusKind.failed,
-              style: AppTypography.labelLarge.copyWith(color: textColor),
-            ),
-          );
-
-    return SizedBox(
-      width: double.infinity,
-      height: _height,
-      child: Semantics(label: semanticsLabel, child: body),
-    );
-  }
-
-  Widget _row({
-    required Color indicatorColor,
-    required ({double blur, double alpha})? glow,
-    required int? syncedHeight,
-    required Widget text,
-  }) {
-    final colors = context.colors;
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Positioned(
-          left: _indicatorLeft,
-          top: (_height - _indicatorHeight) / 2,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: indicatorColor,
-              borderRadius: const BorderRadius.horizontal(
-                right: Radius.circular(AppRadii.full),
-              ),
-              boxShadow: glow == null
-                  ? null
-                  : [
-                      BoxShadow(
-                        color: indicatorColor.withValues(alpha: glow.alpha),
-                        blurRadius: glow.blur,
-                      ),
-                    ],
-            ),
-            child: const SizedBox(
-              key: ValueKey('sidebar_sync_indicator'),
-              width: _indicatorWidth,
-              height: _indicatorHeight,
-            ),
-          ),
-        ),
-        Positioned(
-          left: _textLeft,
-          right: AppSpacing.xs,
-          top: 0,
-          bottom: 0,
-          child: Row(
-            children: [
-              Expanded(
-                child: Align(alignment: Alignment.centerLeft, child: text),
-              ),
-              if (syncedHeight != null) ...[
-                const SizedBox(width: AppSpacing.s),
-                Text(
-                  formatGroupedInteger(syncedHeight),
-                  key: const ValueKey('sidebar_sync_height'),
-                  maxLines: 1,
-                  style: AppTypography.labelSmall.copyWith(
-                    color: colors.text.accent,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.xxs),
-                AppIcon(
-                  AppIcons.block,
-                  key: const ValueKey('sidebar_sync_block_icon'),
-                  size: AppIconSize.medium,
-                  color: colors.text.accent,
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SidebarSyncStaticLabel extends StatelessWidget {
-  const _SidebarSyncStaticLabel({
-    required this.label,
-    required this.tooltipMessage,
-    required this.showTooltipOnOverflow,
-    required this.style,
-  });
-
-  final String label;
-  final String tooltipMessage;
-  final bool showTooltipOnOverflow;
-  final TextStyle style;
-
-  @override
-  Widget build(BuildContext context) {
-    Widget labelText() => Text(
-      label,
-      key: const ValueKey('sidebar_sync_text'),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: style,
-    );
-
-    if (!showTooltipOnOverflow) return labelText();
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (!constraints.maxWidth.isFinite) return labelText();
-
-        final painter = TextPainter(
-          text: TextSpan(text: label, style: style),
-          textDirection: Directionality.of(context),
-          textScaler: MediaQuery.textScalerOf(context),
-          ellipsis: '...',
-          maxLines: 1,
-        )..layout(maxWidth: constraints.maxWidth);
-
-        final text = labelText();
-        if (!painter.didExceedMaxLines) return text;
-
-        return AppTooltip(
-          message: tooltipMessage,
-          excludeFromSemantics: true,
-          child: text,
-        );
-      },
-    );
-  }
-}
-
-/// Subtle/slow motion constants for the sidebar syncing affordance. One full
-/// glow breath and one shimmer sweep per [period]. (Mirrors the mobile
-/// top-nav values; duplicated to keep the two surfaces independent.)
-abstract final class _SidebarSyncMotion {
-  static const period = Duration(milliseconds: 1400);
-
-  /// Half-width of the shimmer highlight band as a gradient-stop fraction.
-  static const _bandHalf = 0.18;
-
-  /// Indicator glow breathing range (shadow blur radius + alpha). Kept gentle
-  /// so the syncing glow stays calm rather than vibrant.
-  static const _minGlowBlur = 8.0;
-  static const _maxGlowBlur = 13.0;
-  static const _minGlowAlpha = 0.2;
-  static const _maxGlowAlpha = 0.45;
-
-  /// Static indicator glow used for synced, failed, and reduced-motion states.
-  static const staticGlow = (blur: 12.0, alpha: 0.6);
-
-  /// 0 to 1 to 0 once per [period].
-  static double _breath(double t) => (1 - math.cos(2 * math.pi * t)) / 2;
-
-  static ({double blur, double alpha}) glowFor(double t) {
-    final e = _breath(t);
-    return (
-      blur: _lerp(_minGlowBlur, _maxGlowBlur, e),
-      alpha: _lerp(_minGlowAlpha, _maxGlowAlpha, e),
-    );
-  }
-
-  static double _lerp(double a, double b, double t) => a + (b - a) * t;
-}
-
-/// The sidebar sync label with a highlight band sweeping across it. A
-/// [ShaderMask] (`srcIn`) replaces the glyph pixels with a horizontal
-/// `base / highlight / base` gradient; sliding the gradient's mapping rect by
-/// [progress] travels the band left to right. The band fully exits both edges
-/// (pure [baseColor]) at the loop ends, so the repeat is seamless.
-class _SidebarSyncShimmerLabel extends StatelessWidget {
-  const _SidebarSyncShimmerLabel({
-    required this.label,
-    required this.baseColor,
-    required this.highlightColor,
-    required this.progress,
-    super.key,
-  });
-
-  final String label;
-  final Color baseColor;
-  final Color highlightColor;
-  final double progress;
-
-  @override
-  Widget build(BuildContext context) {
-    return ShaderMask(
-      blendMode: BlendMode.srcIn,
-      shaderCallback: (bounds) {
-        final shift = (progress * 2 - 1) * bounds.width;
-        final rect = Rect.fromLTWH(
-          bounds.left + shift,
-          bounds.top,
-          bounds.width,
-          bounds.height,
-        );
-        return LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [baseColor, highlightColor, baseColor],
-          stops: const [
-            0.5 - _SidebarSyncMotion._bandHalf,
-            0.5,
-            0.5 + _SidebarSyncMotion._bandHalf,
-          ],
-          tileMode: TileMode.clamp,
-        ).createShader(rect);
-      },
-      // Solid color so `srcIn` keeps the gradient over the full glyph.
-      child: Text(
-        label,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: AppTypography.labelLarge.copyWith(
-          color: const Color(0xFFFFFFFF),
         ),
       ),
     );

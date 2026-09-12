@@ -7,12 +7,11 @@ import '../primitives.dart';
 /// * [accent] — Active, selected, primary icons.
 /// * [regular] — Standard UI icons. (Named `regular` instead of `default`
 ///   because `default` is a reserved word in Dart.)
-/// * [muted] — Inactive, decorative icons. Theme-invariant.
+/// * [muted] — Inactive, decorative icons. Theme-aware.
 /// * [disabled] — Icons on disabled controls.
 /// * [inverse] — Icons on inverted surfaces.
 /// * [onPrimary] — Icons placed inside a primary button.
-/// * [warning] — Caution icons. Backed by the current gold utility token for
-///   compatibility with existing warning call sites.
+/// * [warning] — Caution icons. Uses the amber warning role.
 /// * [destructive] — Destructive-state icons.
 /// * [destructiveLight] — Softer destructive icon for secondary error affordances.
 /// * [success] — Positive / success utility icons.
@@ -45,30 +44,30 @@ class AppIconColors {
   final Color brandCrimson;
 
   static const dark = AppIconColors(
-    accent: Primitives.p800Dark,
-    regular: Primitives.p700Dark,
-    muted: Primitives.p500Dark,
-    disabled: Primitives.p300Dark,
-    inverse: Primitives.p0Dark,
-    onPrimary: Primitives.p0Dark,
-    warning: GoldPrimitives.p500Dark,
-    destructive: PlumPrimitives.p400Dark,
-    destructiveLight: PlumPrimitives.p300Dark,
-    success: GreenPrimitives.p300Dark,
-    brandCrimson: CrimsonPrimitives.p400Dark,
+    accent: FamiliarPrimitives.accentDark,
+    regular: FamiliarPrimitives.textDark,
+    muted: FamiliarPrimitives.mutedDark,
+    disabled: Color(0xFF7F9382),
+    inverse: FamiliarPrimitives.onAccentDark,
+    onPrimary: FamiliarPrimitives.onAccentDark,
+    warning: FamiliarPrimitives.warningDark,
+    destructive: FamiliarPrimitives.errorDark,
+    destructiveLight: FamiliarPrimitives.errorDark,
+    success: FamiliarPrimitives.accentDark,
+    brandCrimson: FamiliarPrimitives.accentDark,
   );
 
   static const light = AppIconColors(
-    accent: Primitives.p900Light,
-    regular: Primitives.p700Light,
-    muted: Primitives.p500Light,
-    disabled: Primitives.p300Light,
-    inverse: Primitives.p0Light,
-    onPrimary: Primitives.p0Light,
-    warning: GoldPrimitives.p300Light,
-    destructive: PlumPrimitives.p300Light,
-    destructiveLight: PlumPrimitives.p200Light,
-    success: GreenPrimitives.p500Light,
-    brandCrimson: CrimsonPrimitives.p300Light,
+    accent: FamiliarPrimitives.accentLight,
+    regular: FamiliarPrimitives.textLight,
+    muted: FamiliarPrimitives.mutedLight,
+    disabled: Color(0xFF899286),
+    inverse: FamiliarPrimitives.onAccentLight,
+    onPrimary: FamiliarPrimitives.onAccentLight,
+    warning: FamiliarPrimitives.warningLight,
+    destructive: FamiliarPrimitives.errorLight,
+    destructiveLight: FamiliarPrimitives.errorLight,
+    success: FamiliarPrimitives.accentLight,
+    brandCrimson: FamiliarPrimitives.accentLight,
   );
 }

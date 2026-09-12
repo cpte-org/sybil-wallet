@@ -44,8 +44,8 @@ class ConfirmAccessCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    final cardTextColor = colors.text.homeCard;
+    final palette = FamiliarPalette.of(context);
+    final cardTextColor = palette.ink;
     final hasError = errorText != null && errorText!.trim().isNotEmpty;
 
     return Container(
@@ -57,10 +57,10 @@ class ConfirmAccessCard extends StatelessWidget {
         AppSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: colors.background.homeCard,
-        borderRadius: BorderRadius.circular(AppRadii.large),
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: const Color(0x12FFFFFF),
+          color: palette.line,
           width: 1.5,
           strokeAlign: BorderSide.strokeAlignInside,
         ),

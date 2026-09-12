@@ -7,18 +7,17 @@ import '../primitives.dart';
 /// * [accent] — Titles, headings; max contrast.
 /// * [primary] — Default body text, paragraphs.
 /// * [secondary] — Subtitles, timestamps, metadata.
-/// * [muted] — Descriptions. Theme-invariant.
+/// * [muted] — Descriptions. Theme-aware.
 /// * [disabled] — Inactive, unavailable labels.
 /// * [inverse] — Text placed on inverted surfaces (e.g. dark text on a light
 ///   chip inside dark mode).
-/// * [warning] — Inline caution copy. Backed by the current gold utility
-///   token for compatibility with existing warning call sites.
+/// * [warning] — Inline caution copy. Uses the amber warning role.
 /// * [positiveStrong] — Positive-state copy backed by the green utility ramp.
 /// * [destructive] — Destructive utility copy.
 /// * [destructiveLight] — Softer destructive copy for secondary error text.
 /// * [success] — Positive / success utility copy.
 /// * [brandCrimson] — Brand-colored inline text accent.
-/// * [homeCard] — Exception text used on the home balance card. Theme-invariant.
+/// * [homeCard] — Exception text used on the home balance card. Theme-aware.
 class AppTextColors {
   const AppTextColors({
     required this.accent,
@@ -51,36 +50,34 @@ class AppTextColors {
   final Color homeCard;
 
   static const dark = AppTextColors(
-    accent: Primitives.p900Dark,
-    primary: Primitives.p700Dark,
-    secondary: Primitives.p600Dark,
-    muted: Primitives.p500Dark,
-    disabled: Primitives.p400Dark,
-    inverse: Primitives.p0Dark,
-    warning: GoldPrimitives.p500Dark,
-    positiveStrong: GreenPrimitives.p400Dark,
-    destructive: PlumPrimitives.p500Dark,
-    destructiveLight: PlumPrimitives.p400Dark,
-    success: GoldPrimitives.p500Dark,
-    brandCrimson: CrimsonPrimitives.p400Dark,
-    homeCard: Primitives.p800Dark,
+    accent: FamiliarPrimitives.inkDark,
+    primary: FamiliarPrimitives.textDark,
+    secondary: FamiliarPrimitives.mutedDark,
+    muted: FamiliarPrimitives.mutedDark,
+    disabled: Color(0xFF7F9382),
+    inverse: FamiliarPrimitives.onAccentDark,
+    warning: FamiliarPrimitives.warningDark,
+    positiveStrong: FamiliarPrimitives.accentDark,
+    destructive: FamiliarPrimitives.errorDark,
+    destructiveLight: FamiliarPrimitives.errorDark,
+    success: FamiliarPrimitives.accentDark,
+    brandCrimson: FamiliarPrimitives.accentDark,
+    homeCard: FamiliarPrimitives.navInk,
   );
 
   static const light = AppTextColors(
-    // Accent in light mode reaches the *opposite* extreme of the ladder
-    // (p900Light = near-black) rather than mirroring p800Dark's step.
-    accent: Primitives.p900Light,
-    primary: Primitives.p700Light,
-    secondary: Primitives.p600Light,
-    muted: Primitives.p500Light,
-    disabled: Primitives.p400Light,
-    inverse: Primitives.p0Light,
-    warning: GoldPrimitives.p400Light,
-    positiveStrong: GreenPrimitives.p500Light,
-    destructive: PlumPrimitives.p300Light,
-    destructiveLight: PlumPrimitives.p150Light,
-    success: GoldPrimitives.p400Light,
-    brandCrimson: CrimsonPrimitives.p300Light,
-    homeCard: Primitives.p0Light,
+    accent: FamiliarPrimitives.inkLight,
+    primary: FamiliarPrimitives.textLight,
+    secondary: FamiliarPrimitives.mutedLight,
+    muted: FamiliarPrimitives.mutedLight,
+    disabled: Color(0xFF899286),
+    inverse: FamiliarPrimitives.onAccentLight,
+    warning: FamiliarPrimitives.warningLight,
+    positiveStrong: FamiliarPrimitives.accentLight,
+    destructive: FamiliarPrimitives.errorLight,
+    destructiveLight: FamiliarPrimitives.errorLight,
+    success: FamiliarPrimitives.accentLight,
+    brandCrimson: FamiliarPrimitives.accentLight,
+    homeCard: FamiliarPrimitives.navInk,
   );
 }
