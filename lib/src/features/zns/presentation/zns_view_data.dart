@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../data/zns_build_defaults.dart';
 
 /// Presentation-only values. The wallet adapter owns validation, authorization,
 /// durable state, and all amounts; strings here are already formatted for display.
@@ -262,11 +263,11 @@ class ZnsOwnedNameView {
 @immutable
 class ZnsConfigurationInput {
   const ZnsConfigurationInput({
-    this.rpcUrl = 'https://mainnet.base.org',
-    this.registryAddress = '',
-    this.chainId = 8453,
-    this.tokenAddress = '0xB2000000000000000000008501b13360000cb2EC',
-    this.delegateAddress = '',
+    this.rpcUrl = znsDefaultRpc,
+    this.registryAddress = znsDefaultRegistry,
+    this.chainId = znsDefaultChainId,
+    this.tokenAddress = znsDefaultToken,
+    this.delegateAddress = znsDefaultDelegate,
   });
   final String rpcUrl;
   final String registryAddress;

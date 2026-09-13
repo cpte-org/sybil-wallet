@@ -1938,6 +1938,95 @@ fn truncate_wallet_with(
     }
 }
 
+/// A birthday checkpoint can exist without a corresponding scanned `blocks`
+/// row. The library then reports it as safe but rejects height-only truncation
+/// at that same height. Use its transactional chain-state API in that case.
+#[derive(Debug, PartialEq, Eq)]
+enum ScanRewind {
+    Truncated(BlockHeight),
+    NeedsChainState(BlockHeight),
+}
+
+fn plan_scan_rewind(
+    requested: BlockHeight,
+    conflict: BlockHeight,
+    mut truncate: impl FnMut(BlockHeight) -> Result<BlockHeight, SqliteClientError>,
+) -> Result<ScanRewind, SyncError> {
+    let failure = |e: SqliteClientError| {
+        if is_sqlite_lock_contention(&e) {
+            SyncError::other(format!("scan rewind: SQLite lock contention: {e}"))
+        } else {
+            SyncError::db(format!("scan rewind: {e}"))
+        }
+    };
+    validate_reorg_rewind_height(requested, conflict)?;
+    match truncate(requested) {
+        Ok(h) => validate_reorg_rewind_height(h, conflict).map(ScanRewind::Truncated),
+        Err(SqliteClientError::RequestedRewindInvalid {
+            safe_rewind_height: Some(safe),
+            ..
+        }) => {
+            validate_reorg_rewind_height(safe, conflict)?;
+            match truncate(safe) {
+                Ok(h) => validate_reorg_rewind_height(h, conflict).map(ScanRewind::Truncated),
+                Err(SqliteClientError::RequestedRewindInvalid {
+                    safe_rewind_height: Some(again),
+                    requested_height,
+                }) if again == safe && requested_height == safe => {
+                    Ok(ScanRewind::NeedsChainState(safe))
+                }
+                Err(e) => Err(failure(e)),
+            }
+        }
+        Err(e) => Err(failure(e)),
+    }
+}
+
+async fn rewind_scan_wallet(
+    client: &mut CompactTxStreamerClient<Channel>,
+    db: &mut WalletDatabase,
+    requested: BlockHeight,
+    conflict: BlockHeight,
+) -> Result<BlockHeight, SyncError> {
+    let plan = with_wallet_db_write_lock("sync_engine.truncate_to_height", || {
+        plan_scan_rewind(requested, conflict, |h| db.truncate_to_height(h))
+    })?;
+    let height = match plan {
+        ScanRewind::Truncated(height) => return Ok(height),
+        ScanRewind::NeedsChainState(height) => height,
+    };
+    let state = get_tree_state(client, u64::from(u32::from(height)))
+        .await?
+        .to_chain_state()
+        .map_err(|e| SyncError::parse(format!("parse rewind tree state: {e}")))?;
+    let hash = get_compact_block_hash(client, u64::from(u32::from(height))).await?;
+    validate_rewind_chain_state(&state, height, hash)?;
+    with_wallet_db_write_lock("sync_engine.truncate_to_chain_state.scan", || {
+        db.truncate_to_chain_state(state).map_err(|e| {
+            if is_sqlite_lock_contention(&e) {
+                SyncError::other(format!("chain-state rewind: SQLite lock contention: {e}"))
+            } else {
+                SyncError::db(format!("chain-state rewind to {height}: {e}"))
+            }
+        })
+    })?;
+    log::info!("sync: recovered unscanned checkpoint at {height} using chain-state rewind");
+    Ok(height)
+}
+
+fn validate_rewind_chain_state(
+    state: &chain::ChainState,
+    height: BlockHeight,
+    block_hash: BlockHash,
+) -> Result<(), SyncError> {
+    if state.block_height() != height || state.block_hash() != block_hash {
+        return Err(SyncError::net(format!(
+            "rewind tree state does not match compact block at {height}"
+        )));
+    }
+    Ok(())
+}
+
 fn validate_reorg_rewind_height(
     rewind_height: BlockHeight,
     fresh_tip_height: BlockHeight,
@@ -3475,76 +3564,16 @@ async fn run_sync_impl(
                         .rewind_target_for_attempt(rewind_attempt_index)
                         .unwrap_or(to_height);
                     *current_rewinds += 1;
-                    // `truncate_to_height` does NOT silently clamp to the
-                    // nearest checkpoint. If the requested height is below
-                    // the earliest available checkpoint it returns
-                    // `SqliteClientError::RequestedRewindInvalid` with
-                    // `safe_rewind_height: Option<BlockHeight>`. When
-                    // `safe_rewind_height` is `Some(h)` the library is
-                    // telling us the deepest checkpoint it can land on;
-                    // retry at that height so a reorg near genesis (or
-                    // right after a birthday-bounded import) still
-                    // recovers. When it's `None` there is genuinely
-                    // nowhere safe to rewind to, and we surface the
-                    // failure as fatal.
                     let target =
                         block_height_from_u64(requested_rewind_height, "scan rewind target")?;
-                    let actual_rewind_height = with_wallet_db_write_lock(
-                        "sync_engine.truncate_to_height",
-                        || -> Result<BlockHeight, SyncError> {
-                            match db.truncate_to_height(target) {
-                                Ok(h) => Ok(h),
-                                Err(SqliteClientError::RequestedRewindInvalid {
-                                    safe_rewind_height: Some(safe),
-                                    requested_height,
-                                }) => {
-                                    log::warn!(
-                                        "[{}] sync: {phase_name} rewind target {requested_height} \
-                                         below earliest checkpoint; retrying at safe_rewind_height={safe}",
-                                        elapsed(),
-                                    );
-                                    db.truncate_to_height(safe).map_err(|e| {
-                                        if is_sqlite_lock_contention(&e) {
-                                            SyncError::other(format!(
-                                                "truncate_to_height({safe}) retry: SQLite lock contention: {e}"
-                                            ))
-                                        } else {
-                                            SyncError::db(format!(
-                                                "truncate_to_height({safe}) retry after RequestedRewindInvalid: {e}"
-                                            ))
-                                        }
-                                    })
-                                }
-                                Err(SqliteClientError::RequestedRewindInvalid {
-                                    safe_rewind_height: None,
-                                    requested_height,
-                                }) => {
-                                    log::error!(
-                                        "[{}] sync: {phase_name} rewind to {requested_height} \
-                                         rejected and no safe_rewind_height is available; \
-                                         cannot recover from this reorg in-place",
-                                        elapsed(),
-                                    );
-                                    Err(SyncError::db(format!(
-                                        "truncate_to_height({requested_height}): no safe rewind height"
-                                    )))
-                                }
-                                Err(e) if is_sqlite_lock_contention(&e) => {
-                                    // Transient lock contention on the rewind. The
-                                    // outer retry wrapper will re-invoke run_sync_impl
-                                    // after a backoff, which re-detects the continuity
-                                    // error and triggers the rewind again. If the
-                                    // lock has cleared by then, the retry succeeds.
-                                    Err(SyncError::other(format!(
-                                        "truncate_to_height({requested_rewind_height}): SQLite lock contention: {e}"
-                                    )))
-                                }
-                                Err(e) => Err(SyncError::db(format!(
-                                    "truncate_to_height({requested_rewind_height}): {e}"
-                                ))),
-                            }
-                        },
-                    )?;
+                    let conflict_height = match &sync_err {
+                        SyncError::Continuity { at_height, .. } => {
+                            block_height_from_u64(*at_height, "continuity failure height")?
+                        }
+                        _ => unreachable!("only continuity errors request a rewind"),
+                    };
+                    let actual_rewind_height =
+                        rewind_scan_wallet(&mut client, &mut db, target, conflict_height).await?;
                     let current_tip = block_height_from_u64(
                         current_tip_height,
                         "current lightwalletd chain tip",
@@ -4472,6 +4501,67 @@ mod tests {
 
         assert_eq!(outcome, TransparentRefreshOutcome::Completed);
         assert_eq!(*commits.lock().unwrap(), vec![vec![0, 1, 2, 3], vec![5, 4]]);
+    }
+
+    #[test]
+    fn birthday_checkpoint_without_scanned_block_recovers_transactionally() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("birthday.db");
+        let path = path.to_str().unwrap();
+        keys::ensure_db_initialized(path, WalletNetwork::Test).unwrap();
+        let conn = rusqlite::Connection::open(path).unwrap();
+        // Synthetic empty trees matching the reported height layout; no user data.
+        for h in 4_340_597..=4_340_602 {
+            conn.execute("INSERT INTO blocks(height,hash,time,sapling_tree) VALUES (?1,zeroblob(32),0,X'000000')", [h]).unwrap();
+        }
+        for pool in ["sapling", "orchard", "ironwood"] {
+            for h in 4_340_596..=4_340_602 {
+                conn.execute(&format!("INSERT INTO {pool}_tree_checkpoints(checkpoint_id,position) VALUES (?1,NULL)"), [h]).unwrap();
+            }
+        }
+        drop(conn);
+        let mut db = open_db(path, WalletNetwork::Test).unwrap();
+        let height = BlockHeight::from_u32(4_340_596);
+        let plan = plan_scan_rewind(height - 3, height + 7, |h| db.truncate_to_height(h)).unwrap();
+        assert_eq!(plan, ScanRewind::NeedsChainState(height));
+        let state = chain::ChainState::empty(height, BlockHash([0; 32]));
+        db.truncate_to_chain_state(state).unwrap();
+        let conn = rusqlite::Connection::open(path).unwrap();
+        assert_eq!(
+            conn.query_row("SELECT COUNT(*) FROM blocks", [], |r| r.get::<_, u32>(0))
+                .unwrap(),
+            0
+        );
+        for pool in ["sapling", "orchard", "ironwood"] {
+            let max: u32 = conn
+                .query_row(
+                    &format!("SELECT MAX(checkpoint_id) FROM {pool}_tree_checkpoints"),
+                    [],
+                    |r| r.get(0),
+                )
+                .unwrap();
+            assert_eq!(max, u32::from(height));
+        }
+        db.update_chain_tip(height + 128).unwrap();
+    }
+
+    #[test]
+    fn birthday_rewind_rejects_nonrepairing_target_and_mismatched_state() {
+        let conflict = BlockHeight::from_u32(100);
+        let mut calls = 0;
+        assert!(plan_scan_rewind(conflict - 10, conflict, |h| {
+            calls += 1;
+            Err(SqliteClientError::RequestedRewindInvalid {
+                safe_rewind_height: Some(conflict),
+                requested_height: h,
+            })
+        })
+        .is_err());
+        assert_eq!(calls, 1);
+        let state = chain::ChainState::empty(conflict - 1, BlockHash([1; 32]));
+        assert!(validate_rewind_chain_state(&state, conflict - 2, BlockHash([1; 32])).is_err());
+        assert!(validate_rewind_chain_state(&state, conflict - 1, BlockHash([2; 32])).is_err());
+        assert!(validate_rewind_chain_state(&state, conflict - 1, BlockHash([1; 32])).is_ok());
     }
 
     #[test]

@@ -7,6 +7,7 @@ import '../../../providers/app_security_provider.dart';
 import '../../../providers/rpc_endpoint_failover_provider.dart';
 import '../../../rust/api/zns.dart' as rust;
 import '../data/zns_network_config.dart';
+import '../data/zns_build_defaults.dart';
 import '../domain/zns_operation.dart';
 import '../presentation/zns_view_data.dart';
 import 'zns_engine.dart';
@@ -110,7 +111,7 @@ class ZnsController extends Notifier<ZnsViewData> {
     try {
       if (!_unlocked || _uuid.isEmpty) return;
       final saved = await AppSecureStore.instance.readString(
-        'zns:configuration:v1',
+        znsConfigurationStorageKey,
       );
       if (saved != null) {
         final c = jsonDecode(saved) as Map<String, dynamic>;
@@ -451,7 +452,7 @@ class ZnsController extends Notifier<ZnsViewData> {
       }
       if (epoch != _epoch || !_unlocked) return;
       await AppSecureStore.instance.writeString(
-        'zns:configuration:v1',
+        znsConfigurationStorageKey,
         jsonEncode({
           'rpcUrl': input.rpcUrl,
           'chainId': input.chainId,

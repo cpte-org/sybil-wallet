@@ -54,14 +54,16 @@ String _errorText(Object error) {
 }
 
 SyncFailureKind _classifySyncFailureKind(String lower) {
+  // flutter_rust_bridge wraps Rust errors in release builds too. Inspect the
+  // inner typed prefix while keeping the complete raw message for diagnostics.
+  if (lower.startsWith('anyhowexception(') && lower.endsWith(')')) {
+    lower = lower.substring('anyhowexception('.length, lower.length - 1);
+  }
   if (_looksLikeEndpointFailure(lower)) {
     return SyncFailureKind.endpoint;
   }
   if (_looksLikeTorUnavailable(lower)) {
     return SyncFailureKind.torUnavailable;
-  }
-  if (_looksLikeChainRecoveryFailure(lower)) {
-    return SyncFailureKind.chainRecovery;
   }
   if (_looksLikeDatabaseBusy(lower)) {
     return SyncFailureKind.databaseBusy;
@@ -71,6 +73,11 @@ SyncFailureKind _classifySyncFailureKind(String lower) {
   }
   if (lower.startsWith('parse:')) {
     return SyncFailureKind.parseFatal;
+  }
+  // A failed database rewind can contain continuity-related words too.
+  // Preserve its actual failure category instead of claiming a reorg occurred.
+  if (_looksLikeChainRecoveryFailure(lower)) {
+    return SyncFailureKind.chainRecovery;
   }
   if (_looksLikeNetworkFailure(lower)) {
     return SyncFailureKind.network;
@@ -146,7 +153,7 @@ String _syncFailureUserMessage(SyncFailureKind kind) {
     SyncFailureKind.databaseFatal =>
       'Wallet data could not be read. Restart the app and retry sync.',
     SyncFailureKind.chainRecovery =>
-      "The chain changed while syncing. We'll keep trying to recover.",
+      'Sync could not reconcile the block history. Retry sync or check your endpoint.',
     SyncFailureKind.parseFatal =>
       'Sync data could not be processed. Retry sync or check your endpoint.',
     SyncFailureKind.unknown => 'Sync failed. Retry sync to continue.',

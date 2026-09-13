@@ -78,6 +78,26 @@ void main() {
     expect(failure.kind, SyncFailureKind.chainRecovery);
   });
 
+  test('failed database rewinds retain their recovery category', () {
+    expect(
+      classifySyncFailure(
+        'AnyhowException(db: truncate_to_height(4340596) retry after RequestedRewindInvalid: A rewind for your wallet may only target height 4340596 or greater; the requested height was 4340596.)',
+      ).kind,
+      SyncFailureKind.databaseFatal,
+    );
+    expect(
+      classifySyncFailure('db: truncate_to_height(123): no safe rewind height')
+          .kind,
+      SyncFailureKind.databaseFatal,
+    );
+    expect(
+      classifySyncFailure(
+        'other: truncate_to_height(123): SQLite lock contention: database is locked',
+      ).kind,
+      SyncFailureKind.databaseBusy,
+    );
+  });
+
   test('classifies unknown failures', () {
     final failure = classifySyncFailure(Exception('unexpected failure'));
 
