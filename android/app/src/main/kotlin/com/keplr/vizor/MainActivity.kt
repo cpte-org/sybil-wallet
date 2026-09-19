@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 package com.keplr.vizor
 
 import android.content.Intent
@@ -14,6 +15,7 @@ import java.security.MessageDigest
 
 // FlutterFragmentActivity: BiometricPrompt requires a FragmentActivity host.
 class MainActivity : FlutterFragmentActivity() {
+    private var simplexChannel: com.keplr.vizor.simplex.SimplexChannel? = null
     private lateinit var deviceOwnerAuthHandler: DeviceOwnerAuthHandler
     private lateinit var sensitiveClipboardHandler: SensitiveClipboardHandler
     private var incomingUriChannel: MethodChannel? = null
@@ -94,6 +96,8 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        simplexChannel?.dispose()
+        simplexChannel = com.keplr.vizor.simplex.SimplexChannel(this, flutterEngine.dartExecutor.binaryMessenger)
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             HAPTICS_CHANNEL
@@ -250,9 +254,21 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onResume() {
         super.onResume()
+        simplexChannel?.resume()
         if (::sensitiveClipboardHandler.isInitialized) {
             sensitiveClipboardHandler.retryExpiredClear()
         }
+    }
+
+    override fun onStop() {
+        simplexChannel?.background()
+        super.onStop()
+    }
+
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        simplexChannel?.dispose()
+        simplexChannel = null
+        super.cleanUpFlutterEngine(flutterEngine)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

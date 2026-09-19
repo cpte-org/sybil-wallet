@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'dart:async';
 
 import 'package:flutter/material.dart' show Scaffold;
@@ -8,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app_bootstrap.dart';
 import '../../../core/config/app_version_config.dart';
+import '../../../core/legal/sigil_licenses_button.dart';
 import '../../../core/layout/app_desktop_shell.dart';
 import '../../../core/layout/app_main_sidebar.dart';
 import '../../../core/layout/app_pane_scroll_scaffold.dart';
@@ -25,41 +27,37 @@ const _vizorWebsiteUrl = 'https://vizor.cash';
 
 const _aboutParagraphs = [
   _UtilityParagraphData(
-    heading: 'Built by the Keplr team',
+    heading: 'Independent fork of Vizor',
     body:
-        'We built Keplr, the wallet used by millions across Cosmos, Ethereum, '
-        'and Bitcoin. Vizor is our take on what a Zcash wallet should feel like.',
+        'Sigil is an independent fork of Vizor, originally developed by '
+        'Chainapsis, the team behind Keplr. Sigil is maintained separately '
+        'and is not an official Keplr product.',
   ),
   _UtilityParagraphData(
     heading: 'Designed for shielded Zcash',
     body:
-        'Vizor is built around shielded transactions, where the sender, '
+        'Sigil is built around shielded transactions, where the sender, '
         'recipient, and amount stay private. Transparent Zcash works too, but '
         'private is the default.',
   ),
   _UtilityParagraphData(
     heading: 'Open source, self-custodied',
     body:
-        'Vizor is Apache licensed. Your keys stay on your device.\n'
+        'Sigil is open source. See the repository license and notice files for '
+        'applicable license terms and bundled dependency attribution details. '
+        'Your keys stay on your device.\n'
         "We don't see your balances or your transactions.",
   ),
 ];
 
 const _legalPlaceholderParagraph = _UtilityParagraphData(
-  heading: 'From the team that brought you Keplr Wallet.',
+  heading: 'Not published yet',
   body:
-      'Unlike Bitcoin or Ethereum, shielded Zcash transactions hide the '
-      'sender, recipient, and amount.',
+      'This test build does not provide a finalized Sigil privacy policy or '
+      'terms of usage.',
 );
 
-const _legalParagraphs = [
-  _legalPlaceholderParagraph,
-  _legalPlaceholderParagraph,
-  _legalPlaceholderParagraph,
-  _legalPlaceholderParagraph,
-  _legalPlaceholderParagraph,
-  _legalPlaceholderParagraph,
-];
+const _legalParagraphs = [_legalPlaceholderParagraph];
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -126,7 +124,7 @@ class _AboutContent extends StatelessWidget {
         Opacity(opacity: 0.5, child: VizorWordmark(width: 74, height: 27.925)),
         SizedBox(height: AppSpacing.base),
         _UtilityPageTitle(
-          title: 'About Vizor Wallet',
+          title: 'About Sigil Wallet',
           subtitle: kVizorAboutVersionLabel,
         ),
         SizedBox(height: AppSpacing.base),
@@ -135,6 +133,8 @@ class _AboutContent extends StatelessWidget {
         ),
         SizedBox(height: AppSpacing.base),
         _AboutLinkRow(),
+        SizedBox(height: AppSpacing.sm),
+        SigilLicensesButton(),
       ],
     );
   }
@@ -422,15 +422,15 @@ class _AboutLinkRow extends StatelessWidget {
         runSpacing: AppSpacing.xs,
         children: [
           _AboutLinkButton(
-            label: 'Github',
+            label: 'Upstream GitHub',
             icon: AppIcons.github,
-            semanticsLabel: 'Open Vizor GitHub',
+            semanticsLabel: 'Open the upstream Chainapsis Vizor GitHub',
             url: _vizorGithubUrl,
           ),
           _AboutLinkButton(
-            label: 'Website',
+            label: 'Upstream website',
             icon: AppIcons.globe,
-            semanticsLabel: 'Open Vizor website',
+            semanticsLabel: 'Open upstream Vizor website',
             url: _vizorWebsiteUrl,
           ),
         ],

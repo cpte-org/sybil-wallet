@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart' show FontLoader, rootBundle;
@@ -57,14 +58,18 @@ void main() {
     await tester.pumpWidget(_routerHarness(router, _walletBootstrap('/about')));
     await tester.pumpAndSettle();
 
-    expect(find.text('About Vizor'), findsNothing);
-    expect(find.text('About Vizor Wallet'), findsOneWidget);
+    expect(find.text('About Sigil'), findsNothing);
+    expect(find.text('About Sigil Wallet'), findsOneWidget);
     expect(find.text('Version: 0.0.0 Public Beta'), findsOneWidget);
-    expect(find.text('Built by the Keplr team'), findsOneWidget);
+    expect(find.text('Independent fork of Vizor'), findsOneWidget);
     expect(find.text('Designed for shielded Zcash'), findsOneWidget);
     expect(find.text('Open source, self-custodied'), findsOneWidget);
-    expect(find.text('Github'), findsOneWidget);
-    expect(find.text('Website'), findsOneWidget);
+    expect(find.text('Upstream GitHub'), findsOneWidget);
+    expect(find.text('Upstream website'), findsOneWidget);
+    await tester.ensureVisible(find.text('Open-source licenses'));
+    await tester.tap(find.text('Open-source licenses'));
+    await tester.pumpAndSettle();
+    expect(find.byType(LicensePage), findsOneWidget);
   });
 
   testWidgets('About back link uses the standard Home target', (tester) async {
@@ -104,8 +109,8 @@ void main() {
     await tester.pumpWidget(_routerHarness(router, _walletBootstrap('/about')));
     await tester.pumpAndSettle();
 
-    expect(find.text('About Vizor'), findsNothing);
-    expect(find.text('About Vizor Wallet'), findsOneWidget);
+    expect(find.text('About Sigil'), findsNothing);
+    expect(find.text('About Sigil Wallet'), findsOneWidget);
     final backLink = find.byType(AppRouteBackLink);
     expect(
       find.descendant(of: backLink, matching: find.text('Home')),
@@ -146,7 +151,7 @@ void main() {
     _expectUtilityContentCentered(
       tester,
       titleText: 'Terms of Usage',
-      headingText: 'From the team that brought you Keplr Wallet.',
+      headingText: 'Not published yet',
     );
 
     await tester.pumpWidget(
@@ -165,16 +170,13 @@ void main() {
     _expectScrollbarFillsPaneEdge(tester, const Size(1280, 900));
     _expectUtilityContentCentered(
       tester,
-      titleText: 'About Vizor Wallet',
-      headingText: 'Built by the Keplr team',
+      titleText: 'About Sigil Wallet',
+      headingText: 'Independent fork of Vizor',
     );
   });
 
-  testWidgets('legal toolbar stays fixed while page content scrolls', (
-    tester,
-  ) async {
-    const viewport = Size(1280, 520);
-    await _setViewport(tester, viewport);
+  testWidgets('legal page shows one unpublished notice', (tester) async {
+    await _setDesktopViewport(tester);
 
     await tester.pumpWidget(
       _routerHarness(
@@ -189,28 +191,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    _expectScrollbarFillsPaneEdge(tester, viewport);
-
-    final backTopBeforeScroll = tester.getTopLeft(find.text('Welcome')).dy;
-    final headingTopBeforeScroll = tester
-        .getTopLeft(
-          find.text('From the team that brought you Keplr Wallet.').first,
-        )
-        .dy;
-    await tester.drag(
-      find.byType(SingleChildScrollView),
-      const Offset(0, -160),
+    expect(find.text('Not published yet'), findsOneWidget);
+    expect(
+      find.text(
+        'This test build does not provide a finalized Sigil privacy policy or '
+        'terms of usage.',
+      ),
+      findsOneWidget,
     );
-    await tester.pumpAndSettle();
-    final backTopAfterScroll = tester.getTopLeft(find.text('Welcome')).dy;
-    final headingTopAfterScroll = tester
-        .getTopLeft(
-          find.text('From the team that brought you Keplr Wallet.').first,
-        )
-        .dy;
-
-    expect(backTopAfterScroll, moreOrLessEquals(backTopBeforeScroll));
-    expect(headingTopAfterScroll, lessThan(headingTopBeforeScroll));
   });
 
   testWidgets('legal back link reuses shared back link style', (tester) async {
@@ -250,12 +238,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Terms of Usage'), findsOneWidget);
+    expect(find.text('Not published yet'), findsOneWidget);
     expect(find.text('Private money. By default.'), findsNothing);
 
     await tester.pumpWidget(_appHarness(_emptyBootstrap('/privacy')));
     await tester.pumpAndSettle();
 
     expect(find.text('Privacy Policy'), findsOneWidget);
+    expect(find.text('Not published yet'), findsOneWidget);
     expect(find.text('Private money. By default.'), findsNothing);
   });
 }
@@ -311,12 +301,12 @@ void _expectScrollbarFillsPaneEdge(WidgetTester tester, Size viewport) {
   final scrollbarRect = tester.getRect(
     find.byKey(AppPaneScrollScaffold.scrollbarKey),
   );
-  expect(scrollbarRect.top, moreOrLessEquals(AppSpacing.xs));
-  expect(scrollbarRect.right, moreOrLessEquals(viewport.width - AppSpacing.xs));
-  expect(
-    scrollbarRect.bottom,
-    moreOrLessEquals(viewport.height - AppSpacing.xs),
-  );
+  // The signed-in Sigil shell fills the window; pre-wallet utility pages
+  // retain their outer inset. The scrollbar must follow either pane edge.
+  final paneRect = tester.getRect(find.byType(AppDesktopPane));
+  expect(scrollbarRect.top, moreOrLessEquals(paneRect.top));
+  expect(scrollbarRect.right, moreOrLessEquals(paneRect.right));
+  expect(scrollbarRect.bottom, moreOrLessEquals(paneRect.bottom));
 
   // Figma Scrollbar component spec: 6px capsule thumb centered in an 18px
   // transparent track (6px insets), 12px end margins, solid theme thumb.

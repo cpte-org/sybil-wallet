@@ -72,7 +72,7 @@ class SecureContactRepository implements ContactRepository {
     try {
       if (book.quarantinedSigners.any((s) => s.identity == identity)) {
         throw const ContactFailure(
-          'This restored relationship key is inactive until recovery reconciliation is completed.',
+          'This restored relationship key stays inactive. Ask the other person for a new contact request and independently check your new receiving details.',
         );
       }
       final stored = book.signers

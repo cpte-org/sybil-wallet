@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'app_background_colors.dart';
 import 'app_border_colors.dart';
 import 'app_button_colors.dart';

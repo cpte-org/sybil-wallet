@@ -3,15 +3,22 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../application/contact_delivery_coordinator.dart';
+import '../application/contact_delivery_receiver.dart';
 import '../domain/contact_delivery.dart';
 import '../domain/contact_models.dart';
+import 'simplex_embedded_host.dart';
 
-/// Experimental desktop adapter. The dedicated native host has no listening
-/// socket and is killed on invalidation, taking its native key state with it.
-/// Android/iOS embedding is intentionally not claimed by this Linux adapter.
+/// Shared contact protocol over a dedicated Linux process or Android service.
+/// Native state is terminated on wallet, route, or lifecycle invalidation.
 class SimplexNativeTransport
     implements ContactPacketTransport, ContactChannelTransport {
-  SimplexNativeTransport({required this.scope, required this.networkAllowed});
+  SimplexNativeTransport({
+    required this.scope,
+    required this.networkAllowed,
+    SimplexEmbeddedHost? embeddedHost,
+  }) : _embeddedHost = embeddedHost;
+  final SimplexEmbeddedHost? _embeddedHost;
+  bool _opening = false;
   @override
   final ContactScope scope;
   final bool Function() networkAllowed;
@@ -22,6 +29,38 @@ class SimplexNativeTransport
   final _line = <int>[];
   bool _closed = false;
   int? _user;
+  ContactDeliveryReceiver? _receiver;
+  final _refreshes = StreamController<int>.broadcast();
+  int _revision = 0;
+  Future<void>? _reconciliation;
+  Stream<int> get refreshes => _refreshes.stream;
+
+  /// Start only after explicit transport activation, with the existing scoped
+  /// coordinator. Receiving only journals untrusted packets for later review.
+  void startReceiving(ContactDeliveryCoordinator coordinator) {
+    _check();
+    if (_receiver != null) return;
+    _receiver = ContactDeliveryReceiver(
+      allowed: () => !_closed && networkAllowed(),
+      reconcile: () async {
+        // Events are hints, not the inbox. Drain a bounded batch to keep the
+        // native output queue moving, then recover from durable chat history.
+        for (var i = 0; i < 32; i++) {
+          if ((await poll()).isEmpty) break;
+        }
+        await reconcile(coordinator);
+      },
+      onRefresh: () => _refreshes.add(++_revision),
+      onFailure: () {
+        _refreshes.addError(
+          const ContactFailure(
+            'Private inbox refresh stopped. Reopen private delivery to retry.',
+          ),
+        );
+        close();
+      },
+    )..start();
+  }
 
   void _check() {
     if (_closed || !networkAllowed()) {
@@ -38,13 +77,14 @@ class SimplexNativeTransport
     required String databasePath,
     required String databaseKey,
   }) async {
-    if (_process != null || _closed) {
+    if (_opening || _process != null || _closed) {
       throw const ContactFailure('Delivery is already open or closed.');
     }
     _check();
-    if (!Platform.isLinux ||
-        !hostPath.startsWith('/') ||
-        !libraryPath.startsWith('/') ||
+    if ((_embeddedHost == null &&
+            (!Platform.isLinux ||
+                !hostPath.startsWith('/') ||
+                !libraryPath.startsWith('/'))) ||
         !databasePath.startsWith('/') ||
         [databasePath, databaseKey].any(
           (v) => v.contains('\n') || v.contains('\r') || v.contains('\x00'),
@@ -56,50 +96,57 @@ class SimplexNativeTransport
         'The native delivery configuration is unavailable.',
       );
     }
-    final process = await Process.start(hostPath, [
-      libraryPath,
-    ], runInShell: false);
-    _process = process;
-    if (_closed || !networkAllowed()) {
-      close();
-      _check();
-    }
-    _output = process.stdout.listen(
-      (chunk) {
-        for (final byte in chunk) {
-          if (_line.length >= 1024 * 1024) {
-            close();
-            return;
-          }
-          if (byte == 10) {
-            try {
-              final value = jsonDecode(utf8.decode(_line));
-              final response = _response;
-              _response = null;
-              if (value is! Map<String, dynamic> || response == null) {
+    _opening = true;
+    try {
+      Map<String, dynamic> initialized;
+      if (_embeddedHost case final host?) {
+        initialized = await host.open(databasePath, databaseKey);
+        _check();
+      } else {
+        final process = await Process.start(hostPath, [
+          libraryPath,
+        ], runInShell: false);
+        _process = process;
+        if (_closed || !networkAllowed()) {
+          close();
+          _check();
+        }
+        _output = process.stdout.listen(
+          (chunk) {
+            for (final byte in chunk) {
+              if (_line.length >= 1024 * 1024) {
                 close();
                 return;
               }
-              response.complete(value);
-            } catch (_) {
-              close();
-              return;
+              if (byte == 10) {
+                try {
+                  final value = jsonDecode(utf8.decode(_line));
+                  final response = _response;
+                  _response = null;
+                  if (value is! Map<String, dynamic> || response == null) {
+                    close();
+                    return;
+                  }
+                  response.complete(value);
+                } catch (_) {
+                  close();
+                  return;
+                }
+                _line.clear();
+              } else {
+                _line.add(byte);
+              }
             }
-            _line.clear();
-          } else {
-            _line.add(byte);
-          }
-        }
-      },
-      onError: (_) => close(),
-      onDone: close,
-    );
-    // Never put core diagnostics (which can contain connection details) into
-    // application logs. Unexpected process exit surfaces a generic error.
-    _errors = process.stderr.listen((_) {}, onError: (_) => close());
-    unawaited(process.exitCode.then((_) => close()));
-    try {
-      final initialized = await _request('$databasePath\n$databaseKey');
+          },
+          onError: (_) => close(),
+          onDone: close,
+        );
+        // Never put core diagnostics (which can contain connection details) into
+        // application logs. Unexpected process exit surfaces a generic error.
+        _errors = process.stderr.listen((_) {}, onError: (_) => close());
+        unawaited(process.exitCode.then((_) => close()));
+        initialized = await _request('$databasePath\n$databaseKey');
+      }
       if (initialized['type'] != 'ok') {
         throw const ContactFailure(
           'The encrypted delivery database could not be opened.',
@@ -141,6 +188,20 @@ class SimplexNativeTransport
 
   Future<Map<String, dynamic>> _request(String line) async {
     _check();
+    if (_embeddedHost case final host?) {
+      try {
+        final result = line == 'POLL'
+            ? await host.poll()
+            : await host.command(line.substring(4));
+        _check();
+        return result;
+      } catch (_) {
+        close();
+        throw const ContactFailure(
+          'Private delivery disconnected. The saved packet can be retried.',
+        );
+      }
+    }
     final process = _process;
     if (process == null || _response != null) {
       throw const ContactFailure('Private delivery is busy.');
@@ -255,7 +316,12 @@ class SimplexNativeTransport
   /// Reconcile durable native history rather than relying on transient events.
   /// Walk all pages so crashes between native receipt and wallet save
   /// cannot silently drop messages. Journal tombstones make this idempotent.
-  Future<void> reconcile(ContactDeliveryCoordinator coordinator) async {
+  Future<void> reconcile(ContactDeliveryCoordinator coordinator) =>
+      _reconciliation ??= _reconcile(coordinator).whenComplete(() {
+        _reconciliation = null;
+      });
+
+  Future<void> _reconcile(ContactDeliveryCoordinator coordinator) async {
     for (final peer in await peers()) {
       int? before;
       for (var page = 0; ; page++) {
@@ -334,6 +400,9 @@ class SimplexNativeTransport
 
   void close() {
     _closed = true;
+    unawaited(_embeddedHost?.close());
+    _receiver?.stop();
+    unawaited(_refreshes.close());
     _process?.kill(ProcessSignal.sigkill);
     _process = null;
     unawaited(_output?.cancel());

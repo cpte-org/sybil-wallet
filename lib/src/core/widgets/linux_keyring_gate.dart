@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'dart:async' show unawaited;
 
 import 'package:flutter/material.dart';
@@ -140,7 +141,7 @@ class _LinuxKeyringStartupHostState extends State<LinuxKeyringStartupHost> {
     if (_app case final app?) return app;
 
     return MaterialApp(
-      title: 'Vizor',
+      title: 'Sigil',
       debugShowCheckedModeBanner: false,
       builder: (context, child) => AppTheme(
         data: MediaQuery.platformBrightnessOf(context) == Brightness.dark
@@ -165,7 +166,7 @@ class _LinuxKeyringStartupHostState extends State<LinuxKeyringStartupHost> {
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
-                    _failed ? 'Unable to open Vizor' : 'Opening Vizor',
+                    _failed ? 'Unable to open Sigil' : 'Opening Sigil',
                     style: AppTypography.headlineLarge.copyWith(
                       color: context.colors.text.accent,
                     ),
@@ -174,7 +175,7 @@ class _LinuxKeyringStartupHostState extends State<LinuxKeyringStartupHost> {
                   if (_failed) ...[
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      'Quit and restart Vizor to try again.',
+                      'Quit and restart Sigil to try again.',
                       style: AppTypography.bodyMedium.copyWith(
                         color: context.colors.text.secondary,
                       ),
@@ -247,19 +248,19 @@ class _LinuxKeyringNoticeState extends State<_LinuxKeyringNotice> {
     };
     final body = switch (phase) {
       LinuxKeyringPhase.outcomeUnknown =>
-        'Vizor could not confirm whether your changes were saved. '
-            'Quit and restart Vizor before continuing.',
+        'Sigil could not confirm whether your changes were saved. '
+            'Quit and restart Sigil before continuing.',
       LinuxKeyringPhase.serviceUnavailable =>
-        'Vizor cannot connect to the system keyring. '
-            'Try again, or quit and restart Vizor.',
+        'Sigil cannot connect to the system keyring. '
+            'Try again, or quit and restart Sigil.',
       LinuxKeyringPhase.storageCorrupt =>
-        'Vizor could not read the data in your system keyring. '
-            'Retry after restoring access, or quit Vizor.',
+        'Sigil could not read the data in your system keyring. '
+            'Retry after restoring access, or quit Sigil.',
       LinuxKeyringPhase.keyringLocked =>
-        'Vizor cannot access your system keyring. '
+        'Sigil cannot access your system keyring. '
             'Unlock the keyring, then choose Retry. '
             'A system prompt may ask for your keyring password.',
-      _ => 'Complete any system keyring prompt to continue in Vizor.',
+      _ => 'Complete any system keyring prompt to continue in Sigil.',
     };
 
     return FocusScope(

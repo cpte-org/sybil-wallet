@@ -1,10 +1,11 @@
-# Experimental Linux SimpleX transport
+# Experimental Linux and Android SimpleX transport
 
-This is a local test integration, not a production distribution. The user approved
-an AGPL-compatible Anomaly distribution on 2026-09-11. Preserve upstream notices
-and prepare corresponding sources/build instructions for the combined release;
-the private-process boundary is not a licensing exemption. Do not remove or
-replace the wallet's existing Apache notices.
+This is a local test integration, not a production distribution. **Anomaly** was
+the former internal working name for this experiment; it is not a vendor or a
+separate distribution. Preserve upstream notices and prepare corresponding
+sources/build instructions for the combined release; the private-process
+boundary is not a licensing exemption. Do not remove or replace the wallet's
+existing Apache notices.
 
 ## Pinned native runtime
 
@@ -23,12 +24,27 @@ completed license/SBOM/corresponding-source release package.
 
 ## Build
 
+The ARM64 Android test build includes the pinned runtime automatically:
+
+```sh
+bash scripts/build-sigil-testnet.sh android
+```
+
+The script verifies the official APK checksum before extracting its three
+native transport libraries. Gradle reads `SIMPLEX_ANDROID_LIBS_DIR` for the
+generated `jniLibs/` directory and rejects missing libraries. The private
+`:simplex` service loads them in a separate process. Builds without this
+optional runtime retain QR/copy-and-paste exchange. See
+[Android embedding](ANDROID-EMBEDDING.md) for pinned inputs and qualification.
+
+Linux:
+
 From the wallet repository, using FVM:
 
 ```sh
 SIMPLEX_LIBS_DIR=/absolute/path/to/extracted/libs fvm flutter build linux \
   --debug --no-pub --dart-define=ZCASH_CONTACTS_EXPERIMENT=true \
-  --dart-define=ZCASH_DEFAULT_NETWORK=testnet
+  --dart-define=ZCASH_DEFAULT_NETWORK=test
 ```
 
 CMake builds `simplex-host` from `native_host.c` and installs the optional library
@@ -55,8 +71,8 @@ absolute overrides are `SIMPLEX_NATIVE_HOST` and `SIMPLEX_NATIVE_LIBRARY` Dart
 defines.
 
 Turn on advanced contact tools in Contact settings, then open Private delivery.
-Create or open a connection code with a second disposable wallet, then refresh
-connections and the inbox. Open a contact code produced by the existing contact
+Create or open a connection code with a second disposable wallet. Connections
+and the inbox refresh while private delivery is open in the foreground. Open a contact code produced by the existing contact
 workflow and approve sending it. The recipient opens the received code in that
 existing workflow for review.
 This temporary manual handoff deliberately does not grant trust to a transport
@@ -65,13 +81,18 @@ as a contact by the other person.
 
 ## Boundary and lifecycle
 
-- The wallet communicates over inherited stdin/stdout pipes, with no local TCP
-  control server, shell, Node runtime, seed phrase, or spending keys.
+- Linux communicates over inherited stdin/stdout pipes; Android uses bounded,
+  session-scoped Binder calls to a non-exported service in a separate process.
+  Neither uses a local TCP control server, shell, Node runtime, seed phrase or
+  spending keys.
 - The SimpleX database has an independently random encryption key kept in the
   wallet's existing encrypted account/network-scoped secure store.
 - The host disables core dumps; lock/account/network/background lifecycle stops
   terminate its process. Dart strings are managed memory, so this does not claim
   guaranteed zeroization of every copy of the database key in the parent VM.
+  Android also links the parent Binder's death and removes its service binding
+  before termination. Replacement opens wait for confirmed process death.
+  Returning from the background requires explicit reopening.
 - Direct networking is available only while the wallet privacy state is settled
   to Tor off. Tor and its transitions disable delivery. The native core uses
   `smp-proxy=always smp-proxy-fallback=no` before starting network activity.
@@ -125,13 +146,24 @@ Eligible outgoing reviews with a known recipient identity select the saved
 connection automatically. Every bound send and queued retry checks that the
 contact is still accepted, its identity and saved mapping are unchanged, and the
 native security code still matches. Forgetting a mapping blocks its queued sends.
-Unknown recipients and unmapped contacts retain explicit manual selection;
-inbox refresh remains manual. Sending still requires explicit approval.
+Unknown recipients and unmapped contacts retain explicit manual selection.
+An activated foreground session drains bounded native event batches and
+reconciles durable history every five seconds after the previous pass completes.
+Lock, account/network change, background, privacy-route changes, disposal or a
+refresh failure stop it. Failures expose a manual retry; scans never overlap,
+and sends are never retried automatically. Sending still requires explicit approval.
 
 Contact exchange → Contact backup now provides a seed-unlocked portable encrypted
 text archive. It restores into a fresh contact scope, blocks payments until fresh
 independent verification, and retains restored relationship keys as inactive.
 It does not back up SimpleX databases or resume their ratchets. Signing-key
-reconciliation, automatic hosted backups, mobile transport embedding, Tor support,
+reconciliation, automatic hosted backups, iOS transport embedding, Tor support,
 background notifications, and automatic handoff to contact review are not yet
 implemented by this adapter.
+
+Android ARM64 delivery is included by the test-build script; see
+[the native embedding record](ANDROID-EMBEDDING.md) for upstream artifacts,
+lifecycle boundaries and validation limits.
+The contact archive cannot repair a lost SimpleX database key or restore its
+ratchets; the missing-key path preserves the encrypted database and offers
+manual contact code exchange.

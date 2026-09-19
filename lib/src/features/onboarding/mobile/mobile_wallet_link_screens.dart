@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'dart:async';
 
 import 'package:flutter/material.dart'
@@ -113,8 +114,8 @@ class _DesktopLinkSteps extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     const steps = [
-      'Open & unlock your Vizor desktop app',
-      'Go to Settings → Link Vizor Mobile',
+      'Open & unlock your Sigil desktop app',
+      'Go to Settings → Link Sigil Mobile',
       'Scan the QR code on your desktop from the next screen.',
     ];
     return Column(
@@ -285,7 +286,7 @@ class _WalletLinkScanCardState extends State<_WalletLinkScanCard> {
       return MobileAddressScanCardContent(
         status: forced,
         cameraHeight: widget.cameraHeight,
-        caption: 'Scan the Vizor desktop QR',
+        caption: 'Scan the Sigil desktop QR',
         permissionBuilder:
             (context, status, unavailableDescription, onRetry, onClose) =>
                 MobileKeystoneScanPermissionCard(
@@ -306,8 +307,8 @@ class _WalletLinkScanCardState extends State<_WalletLinkScanCard> {
           : null,
       forceActiveForTesting: forced == AddressQrCameraStatus.active,
       cameraHeight: widget.cameraHeight,
-      caption: widget.loading ? 'Reading link...' : 'Scan the Vizor desktop QR',
-      permissionTitle: 'Scan the Vizor desktop QR',
+      caption: widget.loading ? 'Reading link...' : 'Scan the Sigil desktop QR',
+      permissionTitle: 'Scan the Sigil desktop QR',
       unavailableDescription:
           'Desktop link scanning needs a camera on this device.',
       closeEnabled: !widget.loading,
@@ -349,7 +350,7 @@ class _WalletLinkScanErrorCard extends StatelessWidget {
 
   String get _body => switch (error) {
     MobileWalletLinkScanError.invalid =>
-      "The code you scanned isn't a Vizor desktop link. On your computer, open Settings → Link Vizor Mobile.",
+      "The code you scanned isn't a Sigil desktop link. On your computer, open Settings → Link Sigil Mobile.",
     MobileWalletLinkScanError.expired =>
       'The code on your computer timed out. On desktop, choose Generate new code and scan it again.',
     MobileWalletLinkScanError.failed =>

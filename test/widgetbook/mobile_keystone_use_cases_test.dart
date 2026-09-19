@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 @Tags(['mobile'])
 library;
 
@@ -231,7 +232,7 @@ void main() {
     expect(find.text('2. Prepare to connect'), findsOneWidget);
     expect(find.text('On your Keystone'), findsOneWidget);
     expect(find.text('Unlock it.'), findsNothing);
-    expect(find.text('On Vizor'), findsOneWidget);
+    expect(find.text('On Sigil'), findsOneWidget);
     expect(find.text('Continue'), findsOneWidget);
   });
 

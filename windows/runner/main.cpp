@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
 #include <roapi.h>
@@ -34,9 +35,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     if (!ActivateExistingInstance(single_instance.activation_message())) {
       ::MessageBoxW(
           nullptr,
-          L"Vizor is already running. It may be starting, not responding, or "
+          L"Sigil is already running. It may be starting, not responding, or "
           L"running in another Windows session.",
-          L"Vizor", MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND);
+          L"Sigil", MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND);
     } else if (!initial_payment_uris.empty()) {
       // The running instance answered the activation but never accepted the
       // payment URI. Say so instead of dropping the link silently -- but do
@@ -45,18 +46,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
       // to Vizor themselves.
       ::MessageBoxW(
           nullptr,
-          L"Vizor could not open this payment link because Vizor is already "
-          L"running. Switch to Vizor and open the link again.",
-          L"Vizor", MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND);
+          L"Sigil could not open this payment link because Sigil is already "
+          L"running. Switch to Sigil and open the link again.",
+          L"Sigil", MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND);
     }
     return EXIT_SUCCESS;
   }
   if (instance_result == SingleInstanceAcquireResult::kError) {
     const std::wstring error_message =
-        L"Vizor could not establish its single-instance lock and will close "
+        L"Sigil could not establish its single-instance lock and will close "
         L"to protect wallet data.\n\nWindows error: " +
         std::to_wstring(single_instance.last_error());
-    ::MessageBoxW(nullptr, error_message.c_str(), L"Vizor",
+    ::MessageBoxW(nullptr, error_message.c_str(), L"Sigil",
                   MB_OK | MB_ICONERROR | MB_SETFOREGROUND);
     return EXIT_FAILURE;
   }
@@ -83,7 +84,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                        std::move(initial_payment_uris));
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(1095, 726);
-  if (!window.Create(L"Vizor", origin, size)) {
+  if (!window.Create(L"Sigil", origin, size)) {
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);

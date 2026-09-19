@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
@@ -80,7 +81,7 @@ class MobileKeystoneIntroScreen extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xxs),
                 for (final (i, step) in const [
                   'Tap ••• (top right), then Connect software wallet.',
-                  'Select Vizor (or ZODL)',
+                  'Select Sigil (or ZODL)',
                 ].indexed)
                   _NumberedStep(
                     index: i + 1,
@@ -88,7 +89,7 @@ class MobileKeystoneIntroScreen extends StatelessWidget {
                     isFirstInGroup: i == 0,
                   ),
                 const SizedBox(height: AppSpacing.sm),
-                const _StepGroupHeading('On Vizor'),
+                const _StepGroupHeading('On Sigil'),
                 const SizedBox(height: AppSpacing.xxs),
                 const _NumberedStep(
                   index: 3,

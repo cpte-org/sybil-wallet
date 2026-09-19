@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'dart:async';
 
 import 'package:flutter/material.dart' show Scaffold;
@@ -5,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/app_version_config.dart';
+import '../../../../core/legal/sigil_licenses_button.dart';
 import '../../../../core/layout/mobile/mobile_top_nav.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_icon.dart';
@@ -14,7 +16,7 @@ import '../../../onboarding/shared/onboarding_welcome_art.dart'
 import '../../about_content.dart';
 
 /// Mobile About — Figma `About` (4654:55218): wordmark, version line,
-/// the shared paragraphs on a surface card, and the Github / Website
+/// the shared paragraphs on a surface card, and the upstream GitHub / website
 /// links. Copy comes from `about_content.dart` (shared with desktop).
 class MobileAboutScreen extends StatelessWidget {
   const MobileAboutScreen({super.key});
@@ -28,7 +30,7 @@ class MobileAboutScreen extends StatelessWidget {
         child: Column(
           children: [
             MobileTopNav.back(
-              title: 'About Vizor Wallet',
+              title: 'About Sigil Wallet',
               onBack: () => context.pop(),
             ),
             Expanded(
@@ -62,18 +64,20 @@ class MobileAboutScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       _LinkButton(
-                        label: 'Github',
+                        label: 'Upstream GitHub',
                         iconName: AppIcons.link,
                         url: kVizorGithubUrl,
                       ),
                       const SizedBox(width: AppSpacing.md),
                       _LinkButton(
-                        label: 'Website',
+                        label: 'Upstream website',
                         iconName: AppIcons.endpoint,
                         url: kVizorWebsiteUrl,
                       ),
                     ],
                   ),
+                  const SizedBox(height: AppSpacing.sm),
+                  const SigilLicensesButton(),
                 ],
               ),
             ),

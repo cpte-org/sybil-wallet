@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 // ignore_for_file: unused_element, unused_field
 
 import 'dart:async';

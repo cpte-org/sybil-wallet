@@ -1,0 +1,63 @@
+Sigil wallet third-party attribution addendum
+
+This file records attribution information for the wallet distribution. It does
+not replace the license of the repository or of any component. Where Apache
+License 2.0 section 4(d) applies, preserve the applicable readable attribution
+notices in this file in derivative distributions. See LICENSE for the
+repository-level Apache License 2.0 and see
+docs/SIGIL-LICENSING.md for the evidence, scope, and release checklist.
+
+The wallet tree is derived from the Chainapsis Vizor wallet. Where Apache
+License 2.0 section 4(c) applies, preserve the applicable copyright, patent,
+trademark, and attribution notices that accompany upstream source when
+distributing a derivative work:
+https://github.com/chainapsis/vizor-wallet
+
+Zcash lightwalletd protocol definitions retain their upstream MIT notices in
+protos/compact_formats.proto and protos/service.proto. Those notices identify
+The Zcash developers and point to the MIT license.
+
+Vendored components:
+
+* rust_builder/cargokit/LICENSE contains the Cargokit MIT and Apache License
+  2.0 texts, including its original copyright notice.
+* third_party/flutter_secure_storage_windows/LICENSE contains the BSD 3-Clause
+  license and original copyright notice for the vendored Windows plugin. The
+  local fork is described in third_party/flutter_secure_storage_windows/
+  VIZOR_FORK.md.
+
+Bundled font software:
+
+* assets/fonts/Inter-*.ttf: Copyright (c) 2016 The Inter Project Authors,
+  https://github.com/rsms/inter
+* assets/fonts/Geist-*.ttf and assets/fonts/GeistMono-*.ttf: Copyright 2024
+  The Geist Project Authors, https://github.com/vercel/geist-font
+* assets/fonts/YoungSerif-Regular.ttf: Copyright 2023 The Young Serif Project
+  Authors, https://github.com/noirblancrouge/YoungSerif
+
+These font files carry SIL Open Font License 1.1 metadata. The standard text
+and the font-specific notices are also recorded in
+third_party/fonts/OFL-1.1.txt. Inter is a Reserved Font Name; check each
+upstream font's current OFL notices before modifying or renaming any font.
+
+The Flutter bundle carries byte-for-byte copies of the root legal files at
+assets/legal/LICENSE, assets/legal/NOTICE, and
+assets/legal/fonts/OFL-1.1.txt. The application registers these files with
+Flutter's legal-notices registry through
+lib/src/core/legal/sigil_legal_notices.dart.
+
+The pinned desktop_window_bootstrap package currently carries the upstream
+placeholder text "TODO: Add your license here." and is not represented here as
+Apache-licensed. Resolve that upstream license before distributing a target
+that includes the package.
+
+Optional Linux SimpleX component:
+
+The SimpleX Chat v7.0.2 runtime is separately licensed under the GNU Affero
+General Public License, version 3. It is installed only when the Linux build
+is configured with a non-empty SIMPLEX_LIBS_DIR. It is not part of this source
+repository. See docs/SIGIL-LICENSING.md before distributing a bundle that
+contains it; that bundle must carry the upstream notices and provide the
+corresponding source through a conveyance method required by AGPL section 6.
+The optional AGPL component does not change the wallet's repository-level
+Apache License 2.0.

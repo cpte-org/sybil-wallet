@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -21,7 +22,45 @@ class _Journal implements ContactDeliveryRepository {
   }
 }
 
+class _DelayedHistoryTransport extends SimplexNativeTransport {
+  _DelayedHistoryTransport()
+    : super(
+        scope: const ContactScope(
+          accountUuid: 'disposable',
+          network: 'regtest',
+        ),
+        networkAllowed: () => true,
+      );
+  final pending = Completer<void>();
+  int reads = 0;
+  @override
+  Future<List<({String id, String label})>> peers() async {
+    reads++;
+    await pending.future;
+    return [];
+  }
+}
+
 void main() {
+  test(
+    'manual and foreground reconciliation share one in-flight scan',
+    () async {
+      final transport = _DelayedHistoryTransport();
+      final coordinator = ContactDeliveryCoordinator(
+        scope: () => transport.scope,
+        repository: _Journal(),
+      );
+      final first = transport.reconcile(coordinator);
+      final second = transport.reconcile(coordinator);
+      expect(identical(first, second), isTrue);
+      expect(transport.reads, 1);
+      transport.pending.complete();
+      await Future.wait([first, second]);
+      await transport.reconcile(coordinator);
+      expect(transport.reads, 2);
+      transport.close();
+    },
+  );
   test(
     'carrier accepts only bounded incoming direct packets for this network',
     () {

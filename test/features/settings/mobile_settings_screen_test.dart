@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 @Tags(['mobile'])
 library;
 
@@ -312,12 +313,12 @@ void main() {
               ),
               findsNothing,
             );
-            expect(find.text('About Vizor'), findsNothing);
+            expect(find.text('About Sigil'), findsNothing);
             final semantics = tester.ensureSemantics();
             try {
               await tester.pump();
               expect(
-                find.bySemanticsLabel('Vizor, version $kVizorReleaseVersion'),
+                find.bySemanticsLabel('Sigil, version $kVizorReleaseVersion'),
                 findsOneWidget,
               );
             } finally {
@@ -790,7 +791,7 @@ void main() {
       findsOneWidget,
     );
     // The About entry stays hidden until the legal documents are ready.
-    expect(find.text('About Vizor'), findsNothing);
+    expect(find.text('About Sigil'), findsNothing);
     // Endpoint shows the live RPC host:port.
     expect(
       find.text(defaultRpcEndpointConfig('main').hostPort),
@@ -826,7 +827,7 @@ void main() {
 
     // Mobile keeps its own pieces and never offers to link to itself.
     expect(find.text('Syncing'), findsOneWidget);
-    expect(find.textContaining('Link Vizor'), findsNothing);
+    expect(find.textContaining('Link Sigil'), findsNothing);
   });
 
   testWidgets('theme row opens the sheet and applies the selection', (

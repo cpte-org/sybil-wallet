@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 // ignore_for_file: depend_on_referenced_packages
 // widgetbook is dev-only; see `widgetbook.dart` for the boundary.
 
@@ -29,7 +30,7 @@ const _displayRows = <_TypographyRow>[
   _TypographyRow(
     name: 'displayMedium',
     style: AppTypography.displayMedium,
-    sample: 'Welcome to Vizor',
+    sample: 'Welcome to Sigil',
   ),
   _TypographyRow(
     name: 'displaySmall',

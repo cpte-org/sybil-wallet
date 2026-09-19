@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -140,7 +141,7 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(find.text('Reset Vizor'));
+    await tester.tap(find.text('Reset Sigil'));
     await tester.pump();
 
     expect(auth.calls, 1);
@@ -174,7 +175,7 @@ void main() {
     );
     expect(tester.takeException(), isNull);
 
-    await tester.tap(find.text('Reset Vizor'));
+    await tester.tap(find.text('Reset Sigil'));
     await tester.pump();
 
     expect(auth.calls, 1);
@@ -211,7 +212,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Reset Vizor'));
+    await tester.tap(find.text('Reset Sigil'));
     await tester.pumpAndSettle();
 
     // The OS prompt is never invoked, and the reset still proceeds.
@@ -248,7 +249,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Reset Vizor'));
+    await tester.tap(find.text('Reset Sigil'));
     await tester.pumpAndSettle();
 
     expect(auth.calls, 1);
@@ -293,7 +294,7 @@ void main() {
     );
     expect(find.text('This cannot be undone.'), findsNothing);
     final resetButton = tester.widget<AppButton>(
-      find.widgetWithText(AppButton, 'Reset Vizor'),
+      find.widgetWithText(AppButton, 'Reset Sigil'),
     );
     expect(resetButton.onPressed, isNotNull);
     expect(tester.takeException(), isNull);
@@ -361,7 +362,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Reset Vizor'));
+    await tester.tap(find.text('Reset Sigil'));
     await tester.pumpAndSettle();
 
     // Whole sentence, no ellipsis: this is the longest status the screen
@@ -471,12 +472,12 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Reset Vizor'));
+    await tester.tap(find.text('Reset Sigil'));
     await tester.pumpAndSettle();
 
     expect(auth.calls, 1);
     expect(auth.lastReason, kWalletResetDeviceAuthReason);
-    expect(find.text('Confirm reset Vizor'), findsNothing);
+    expect(find.text('Confirm reset Sigil'), findsNothing);
     expect(resetCalls, 1);
   });
 }

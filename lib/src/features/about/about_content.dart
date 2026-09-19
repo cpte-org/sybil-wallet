@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'dart:async';
 
 import 'package:url_launcher/url_launcher.dart';
@@ -16,42 +17,37 @@ const kVizorWebsiteUrl = 'https://vizor.cash';
 
 const kAboutParagraphs = [
   AboutParagraph(
-    heading: 'Built by the Keplr team',
+    heading: 'Independent fork of Vizor',
     body:
-        'We built Keplr, the wallet used by millions across Cosmos, Ethereum, '
-        'and Bitcoin. Vizor is our take on what a Zcash wallet should feel '
-        'like.',
+        'Sigil is an independent fork of Vizor, originally developed by '
+        'Chainapsis, the team behind Keplr. Sigil is maintained separately '
+        'and is not an official Keplr product.',
   ),
   AboutParagraph(
     heading: 'Designed for shielded Zcash',
     body:
-        'Vizor is built around shielded transactions, where the sender, '
+        'Sigil is built around shielded transactions, where the sender, '
         'recipient, and amount stay private. Transparent Zcash works too, but '
         'private is the default.',
   ),
   AboutParagraph(
     heading: 'Open source, self-custodied',
     body:
-        "Vizor is Apache licensed. Your keys stay on your device.\n"
+        'Sigil is open source. See the repository license and notice files for '
+        'applicable license terms and bundled dependency attribution details. '
+        'Your keys stay on your device.\n'
         "We don't see your balances or your transactions.",
   ),
 ];
 
 const _legalPlaceholderParagraph = AboutParagraph(
-  heading: 'From the team that brought you Keplr Wallet.',
+  heading: 'Not published yet',
   body:
-      'Unlike Bitcoin or Ethereum, shielded Zcash transactions hide the '
-      'sender, recipient, and amount.',
+      'This test build does not provide a finalized Sigil privacy policy or '
+      'terms of usage.',
 );
 
-const kLegalParagraphs = [
-  _legalPlaceholderParagraph,
-  _legalPlaceholderParagraph,
-  _legalPlaceholderParagraph,
-  _legalPlaceholderParagraph,
-  _legalPlaceholderParagraph,
-  _legalPlaceholderParagraph,
-];
+const kLegalParagraphs = [_legalPlaceholderParagraph];
 
 Future<void> launchAboutUrl(String url) async {
   try {

@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import '../../contacts/domain/contact_models.dart';
 import 'dart:async';
 

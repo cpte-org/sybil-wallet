@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 package com.keplr.vizor
 
 import android.app.Activity
@@ -34,7 +35,7 @@ class DeviceOwnerAuthHandler(private val activity: FragmentActivity) {
             // Fallback mirrors the Dart canonical kWalletResetDeviceAuthReason;
             // the Dart side always sends "reason", so this default is defensive only.
             "verify" -> verify(
-                call.argument<String>("reason") ?: "Confirm reset Vizor",
+                call.argument<String>("reason") ?: "Confirm reset Sigil",
                 result
             )
             else -> result.notImplemented()

@@ -1,5 +1,5 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'package:flutter/widgets.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/theme/app_theme.dart';
 
@@ -25,11 +25,9 @@ class OnboardingWelcomeBackdrop extends StatelessWidget {
 
 const _vizorWordmarkFrameWidth = 140.0;
 const _vizorWordmarkFrameHeight = 52.83;
-const _vizorWordmarkArtworkWidth = 127.748;
-const _vizorWordmarkArtworkHeight = 36.758;
 
 class VizorWordmark extends StatelessWidget {
-  /// Figma frame is 140×52.83; the centered SVG artwork is 127.748×36.758.
+  /// Retains the upstream layout API while matching the Sigil sidebar wordmark.
   const VizorWordmark({
     super.key,
     this.width = _vizorWordmarkFrameWidth,
@@ -47,15 +45,19 @@ class VizorWordmark extends StatelessWidget {
     return SizedBox(
       width: width,
       height: height,
-      child: Center(
-        child: SvgPicture.asset(
-          'assets/icons/vizor_logo.svg',
-          width: width * _vizorWordmarkArtworkWidth / _vizorWordmarkFrameWidth,
-          height:
-              height * _vizorWordmarkArtworkHeight / _vizorWordmarkFrameHeight,
-          colorFilter: ColorFilter.mode(
-            color ?? colors.text.accent,
-            BlendMode.srcIn,
+      child: Semantics(
+        label: 'Sigil',
+        excludeSemantics: true,
+        child: FittedBox(
+          fit: BoxFit.contain,
+          child: Text(
+            'sigil.',
+            style: TextStyle(
+              fontFamily: 'Young Serif',
+              fontSize: 40,
+              letterSpacing: -2,
+              color: color ?? colors.text.accent,
+            ),
           ),
         ),
       ),

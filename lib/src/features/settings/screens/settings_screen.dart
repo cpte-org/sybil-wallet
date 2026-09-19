@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'package:flutter/material.dart' show ExpansionTile;
 import 'dart:async';
 import 'package:flutter/foundation.dart'
@@ -538,7 +539,7 @@ class _SettingsList extends StatelessWidget {
             ),
             _SettingsRow(
               iconName: AppIcons.link,
-              label: 'Link Vizor mobile',
+              label: 'Link Sigil mobile',
               onTap: onLinkMobile,
             ),
           ],
@@ -591,7 +592,7 @@ class _SettingsList extends StatelessWidget {
             _SettingsRow(
               iconName: AppIcons.vizor,
               iconGlyphSize: 16.5,
-              label: 'About Vizor',
+              label: 'About Sigil',
               onTap: onAbout,
             ),
             if (onDonation != null)
@@ -651,7 +652,7 @@ class _SettingsList extends StatelessWidget {
         _SettingsRow(
           iconName: AppIcons.vizor,
           iconGlyphSize: 16.5,
-          label: 'About Vizor',
+          label: 'About Sigil',
           onTap: onAbout,
         ),
         if (onDonation != null)
@@ -670,7 +671,7 @@ class _SettingsList extends StatelessWidget {
             rows: [
               _SettingsRow(
                 iconName: AppIcons.trash,
-                label: 'Uninstall Vizor',
+                label: 'Uninstall Sigil',
                 destructive: true,
                 onTap: onUninstall!,
               ),
@@ -977,14 +978,14 @@ class _WindowsUpdateModal extends ConsumerWidget {
     }
     return switch (state.status) {
       WindowsUpdateStatus.checking => 'Checking for updates.',
-      WindowsUpdateStatus.noUpdate => 'Vizor is up to date.',
+      WindowsUpdateStatus.noUpdate => 'Sigil is up to date.',
       WindowsUpdateStatus.available =>
         'Version ${state.availableVersion} is available.',
       WindowsUpdateStatus.downloading =>
         'Downloading ${state.downloadProgress}%.',
       WindowsUpdateStatus.ready =>
         'Version ${state.availableVersion} is ready.',
-      WindowsUpdateStatus.applying => 'Restarting Vizor.',
+      WindowsUpdateStatus.applying => 'Restarting Sigil.',
       WindowsUpdateStatus.failed =>
         state.message.trim().isEmpty
             ? "Couldn't complete the update. Try again."

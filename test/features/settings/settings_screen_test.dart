@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'dart:typed_data';
 import 'dart:ui' show PointerDeviceKind;
 
@@ -199,7 +200,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('Remove this app'), findsNothing);
-      expect(find.text('Uninstall Vizor'), findsNothing);
+      expect(find.text('Uninstall Sigil'), findsNothing);
     } finally {
       _resetPlatformOverride();
     }
@@ -284,14 +285,14 @@ void main() {
     }
   });
 
-  testWidgets('settings hides legal links while keeping About Vizor', (
+  testWidgets('settings hides legal links while keeping About Sigil', (
     tester,
   ) async {
     await tester.pumpWidget(_settingsHarness());
     await _openNetworkOptions(tester);
     await tester.pump();
 
-    expect(find.text('About Vizor'), findsOneWidget);
+    expect(find.text('About Sigil'), findsOneWidget);
     expect(find.text('Privacy policy'), findsNothing);
     expect(find.text('Terms of usage'), findsNothing);
     expect(find.text('Use Tor'), findsOneWidget);
@@ -634,7 +635,7 @@ void main() {
         await tester.pump();
 
         expect(find.text('Remove this app'), findsOneWidget);
-        expect(find.text('Uninstall Vizor'), findsOneWidget);
+        expect(find.text('Uninstall Sigil'), findsOneWidget);
       }
     } finally {
       _resetPlatformOverride();

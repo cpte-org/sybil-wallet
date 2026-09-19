@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -123,7 +124,7 @@ void main() {
     expect(events, ['disable']);
     expect(find.text("Couldn't turn off Tor"), findsOneWidget);
     expect(
-      find.textContaining('Tor remains on, so Vizor kept the update blocked.'),
+      find.textContaining('Tor remains on, so Sigil kept the update blocked.'),
       findsOneWidget,
     );
     expect(downloadsFrom(events), isEmpty);

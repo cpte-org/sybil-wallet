@@ -47,6 +47,8 @@ class _ControlsState extends ConsumerState<ContactPacketDeliveryControls>
   String? _peer, _notice;
   ContactConnectionBinding? _binding;
   bool _active = false, _busy = false;
+  bool _refreshing = false, _refreshAgain = false;
+  bool _refreshPaused = false;
   int _epoch = 0;
   @override
   void initState() {
@@ -80,6 +82,8 @@ class _ControlsState extends ConsumerState<ContactPacketDeliveryControls>
     _binding = null;
     _notice = null;
     _active = false;
+    _refreshAgain = false;
+    _refreshPaused = false;
   }
 
   @override
@@ -126,10 +130,18 @@ class _ControlsState extends ConsumerState<ContactPacketDeliveryControls>
       }
     } finally {
       if (mounted) setState(() => _busy = false);
+      if (mounted && epoch == _epoch && _refreshAgain) {
+        _refreshAgain = false;
+        unawaited(_refreshInbox());
+      }
     }
   }
 
   Future<void> _load(ContactScope scope, int epoch) async {
+    if (_refreshPaused) {
+      _refreshPaused = false;
+      ref.invalidate(simplexNativeTransportProvider);
+    }
     final transport = await ref.read(simplexNativeTransportProvider.future);
     _check(scope, epoch);
     if (widget.packet != null) {
@@ -169,7 +181,49 @@ class _ControlsState extends ConsumerState<ContactPacketDeliveryControls>
                 widget.kinds.contains(contactPacketKind(r.packet)),
           )
           .toList();
-      if (_records.isEmpty) _notice = 'No matching packets received yet.';
+      if (_records.isEmpty && !_refreshPaused) {
+        _notice = 'Waiting for a reply. This inbox updates while open.';
+      }
+    }
+  }
+
+  Future<void> _refreshInbox() async {
+    if (!_active || widget.packet != null) return;
+    if (_busy || _refreshing) {
+      _refreshAgain = true;
+      return;
+    }
+    final scope = ref.read(contactDeliveryScopeProvider);
+    if (scope == null) return;
+    final epoch = _epoch;
+    _refreshing = true;
+    try {
+      final records = await ref
+          .read(contactDeliveryCoordinatorProvider)
+          .overview();
+      _check(scope, epoch);
+      setState(() {
+        _records = records
+            .where(
+              (r) =>
+                  r.state == ContactDeliveryState.received &&
+                  widget.kinds.contains(contactPacketKind(r.packet)),
+            )
+            .toList();
+        if (!_refreshPaused) {
+          _notice = _records.isEmpty
+              ? 'Waiting for a reply. This inbox updates while open.'
+              : null;
+        }
+      });
+    } catch (_) {
+      // A stale read must never repopulate a cleared or changed account's inbox.
+    } finally {
+      _refreshing = false;
+      if (mounted && epoch == _epoch && _refreshAgain) {
+        _refreshAgain = false;
+        unawaited(_refreshInbox());
+      }
     }
   }
 
@@ -183,6 +237,22 @@ class _ControlsState extends ConsumerState<ContactPacketDeliveryControls>
     if (scope == null) return const SizedBox.shrink();
     // Keep the auto-disposed native session alive only after a user action.
     if (_active) ref.watch(simplexNativeTransportProvider);
+    if (_active) {
+      ref.listen(contactDeliveryRefreshProvider, (_, next) {
+        if (next.isLoading) return;
+        if (next.hasError) {
+          setState(() {
+            _refreshPaused = true;
+            _refreshAgain = false;
+            _notice = widget.packet == null
+                ? 'Inbox updates paused. Load the inbox again to retry.'
+                : 'Private delivery paused. Prepare the connection again to retry.';
+          });
+        } else if (next.hasValue && widget.packet == null) {
+          unawaited(_refreshInbox());
+        }
+      });
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -223,7 +293,7 @@ class _ControlsState extends ConsumerState<ContactPacketDeliveryControls>
           ),
           AppButton(
             constrainContent: true,
-            onPressed: _busy || _peer == null
+            onPressed: _busy || _refreshPaused || _peer == null
                 ? null
                 : () => unawaited(
                     _run((scope, epoch) async {
@@ -251,7 +321,7 @@ class _ControlsState extends ConsumerState<ContactPacketDeliveryControls>
                       _peer = null;
                     }),
                   ),
-            child: const Text('Approve and send packet'),
+            child: const Text('Approve and send'),
           ),
         ],
         for (final record in _records)
@@ -267,7 +337,7 @@ class _ControlsState extends ConsumerState<ContactPacketDeliveryControls>
                     }),
                   ),
             child: Text(
-              'Review ${contactPacketKind(record.packet)!.name} · connection ${record.peer}',
+              'Review ${_packetLabel(contactPacketKind(record.packet)!)} · connection ${record.peer}',
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -276,3 +346,12 @@ class _ControlsState extends ConsumerState<ContactPacketDeliveryControls>
     );
   }
 }
+
+String _packetLabel(ContactPacketKind kind) => switch (kind) {
+  ContactPacketKind.ask => 'introduction request',
+  ContactPacketKind.offer => 'introduction offer',
+  ContactPacketKind.consent => 'approved introduction',
+  ContactPacketKind.delivery => 'introduction',
+  ContactPacketKind.request => 'invitation',
+  ContactPacketKind.response => 'reply',
+};

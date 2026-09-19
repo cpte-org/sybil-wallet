@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -19,9 +20,9 @@ void main() {
     await _pumpUpdateNotice(tester, torEnabled: false);
 
     expect(find.byType(UnlockScreen), findsOneWidget);
-    expect(find.text('Vizor 1.2.3 is available.'), findsOneWidget);
+    expect(find.text('Upstream Vizor 1.2.3 is available.'), findsOneWidget);
     expect(find.text('View release'), findsOneWidget);
-    expect(find.textContaining('outside Vizor’s Tor connection'), findsNothing);
+    expect(find.textContaining('outside Sigil’s Tor connection'), findsNothing);
   });
 
   testWidgets('warns about the external browser while Tor is on', (
@@ -31,8 +32,8 @@ void main() {
 
     expect(
       find.text(
-        'Vizor 1.2.3 is available. The release page opens in your browser, '
-        'outside Vizor’s Tor connection.',
+        'Upstream Vizor 1.2.3 is available. The release page opens in your browser, '
+        'outside Sigil’s Tor connection.',
       ),
       findsOneWidget,
     );

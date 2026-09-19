@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import java.net.URI
 import java.util.Base64
 
@@ -89,6 +90,8 @@ if (
     )
 }
 
+val splitPerAbi = providers.gradleProperty("split-per-abi").orNull?.toBoolean() ?: false
+
 android {
     namespace = "com.keplr.vizor"
     // Keep the Android toolchain explicit so upstream and F-Droid builds do
@@ -96,6 +99,21 @@ android {
     compileSdk = 36
     buildToolsVersion = "36.0.0"
     ndkVersion = "28.2.13676358"
+
+    testBuildType = providers.gradleProperty("simplexTestBuildType").orElse("debug").get()
+
+    externalNativeBuild {
+        cmake { path = file("src/main/cpp/CMakeLists.txt") }
+    }
+    packaging { jniLibs { useLegacyPackaging = true } }
+    System.getenv("SIMPLEX_ANDROID_LIBS_DIR")?.let { libraryPath ->
+        val libraries = file(libraryPath)
+        val abi = libraries.resolve("arm64-v8a")
+        require(listOf("libapp-lib.so", "libsimplex.so", "libsupport.so").all { abi.resolve(it).isFile }) {
+            "SIMPLEX_ANDROID_LIBS_DIR must contain verified v7.0.2 arm64-v8a libraries. Fetch and verify the pinned Android artifacts first."
+        }
+        sourceSets.getByName("main").jniLibs.srcDir(libraries)
+    }
 
     dependenciesInfo {
         // APK channels cannot use the Play-encrypted dependency block. Keep
@@ -119,6 +137,15 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.keplr.vizor"
+        // CMake otherwise adds wrapper-only ABIs to an ARM64 Flutter APK,
+        // causing Android to choose an ABI with no Flutter/native core.
+        providers.gradleProperty("target-platform").orNull?.let { platforms ->
+            val mapping = mapOf("android-arm" to "armeabi-v7a", "android-arm64" to "arm64-v8a", "android-x64" to "x86_64")
+            if (!splitPerAbi) {
+                ndk.abiFilters.clear()
+                ndk.abiFilters.addAll(platforms.split(",").map { mapping[it] ?: error("Unsupported Android target platform: $it") })
+            }
+        }
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 24
@@ -142,6 +169,19 @@ android {
     }
 
     buildTypes {
+        providers.gradleProperty("target-platform").orNull?.let { platforms ->
+            val mapping = mapOf("android-arm" to "armeabi-v7a", "android-arm64" to "arm64-v8a", "android-x64" to "x86_64")
+            val requestedAbis = platforms.split(",").map { mapping[it] ?: error("Unsupported Android target platform: $it") }
+            configureEach {
+                // Flutter installs build-type defaults, which override defaultConfig.
+                if (!splitPerAbi) {
+                    ndk.abiFilters.clear()
+                    ndk.abiFilters.addAll(requestedAbis)
+                }
+                externalNativeBuild.cmake.abiFilters.clear()
+                externalNativeBuild.cmake.abiFilters.addAll(requestedAbis)
+            }
+        }
         release {
             signingConfig = if (hasAndroidReleaseSigning) {
                 signingConfigs.getByName("release")

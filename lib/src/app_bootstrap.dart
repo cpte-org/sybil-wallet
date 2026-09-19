@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show kDebugMode, visibleForTesting;
@@ -386,7 +387,7 @@ Future<AppBootstrapState> loadAppBootstrap() async {
     return AppBootstrapState.blocked(
       failureKind: AppBootstrapFailureKind.secureStorageUnavailable,
       failureMessage:
-          'Vizor needs access to secure storage before it can open your wallet.',
+          'Sigil needs access to secure storage before it can open your wallet.',
     );
   } catch (e) {
     log('bootstrap: failed, blocking startup: $e');
@@ -395,7 +396,7 @@ Future<AppBootstrapState> loadAppBootstrap() async {
     );
     return AppBootstrapState.blocked(
       failureKind: AppBootstrapFailureKind.startupFailure,
-      failureMessage: 'Vizor could not load its startup state.',
+      failureMessage: 'Sigil could not load its startup state.',
     );
   }
 }

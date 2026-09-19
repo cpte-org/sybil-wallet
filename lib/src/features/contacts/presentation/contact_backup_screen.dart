@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/clipboard/sensitive_clipboard.dart';
 import '../../../core/widgets/app_button.dart';
 import '../application/contact_backup_coordinator.dart';
@@ -19,19 +20,33 @@ class _ContactBackupScreenState extends ConsumerState<ContactBackupScreen>
     with WidgetsBindingObserver {
   final _input = TextEditingController();
   ContactBackupReview? _review;
+  ContactRecoveryProgress? _recovery;
   String? _archive, _notice;
   bool _busy = false, _approved = false;
   int _epoch = 0;
+  bool _foreground = true, _refreshPending = false;
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _queueRecoveryRefresh();
+  }
+
+  void _queueRecoveryRefresh() {
+    _refreshPending = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_foreground || _busy || !_refreshPending) return;
+      _refreshPending = false;
+      unawaited(_refreshRecovery());
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
   }
 
   void _clear() {
     _epoch++;
     _input.clear();
     _review = null;
+    _recovery = null;
     _archive = null;
     _approved = false;
     _notice = null;
@@ -49,7 +64,11 @@ class _ContactBackupScreenState extends ConsumerState<ContactBackupScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.hidden ||
         state == AppLifecycleState.paused) {
+      _foreground = false;
       setState(_clear);
+    } else if (state == AppLifecycleState.resumed) {
+      _foreground = true;
+      _queueRecoveryRefresh();
     }
   }
 
@@ -79,15 +98,50 @@ class _ContactBackupScreenState extends ConsumerState<ContactBackupScreen>
             : 'The backup could not be verified. Check the wallet recovery phrase, BIP39 passphrase, account index and network.';
       }
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        setState(() => _busy = false);
+        if (_refreshPending) _queueRecoveryRefresh();
+      }
     }
+  }
+
+  Future<void> _refreshRecovery() => _run((coordinator, check) async {
+    final progress = await coordinator.recoveryProgress();
+    check();
+    _recovery = progress;
+  });
+
+  Future<void> _openRecovery({String? contactId}) async {
+    await _run((_, check) async {
+      final controller = ref.read(contactExchangeProvider.notifier);
+      // The provider schedules its initial reload in a microtask. Let that
+      // start before this explicit reload so it cannot invalidate our request.
+      await Future<void>.value();
+      check();
+      controller.cancelTransient();
+      await controller.reload();
+      check();
+      if (contactId != null) {
+        await controller.startRequest(contactId: contactId);
+        check();
+        final state = ref.read(contactExchangeProvider);
+        if (state.request?.contactId != contactId) {
+          throw ContactFailure(state.error ?? 'Reload contacts and try again.');
+        }
+      }
+      if (mounted) await context.push('/contacts/exchange');
+    });
+    if (mounted) await _refreshRecovery();
   }
 
   @override
   Widget build(BuildContext context) {
     final scope = ref.watch(contactScopeProvider);
     ref.watch(contactBackupCoordinatorProvider);
-    ref.listen(contactScopeProvider, (_, _) => _clear());
+    ref.listen(contactScopeProvider, (_, _) {
+      _clear();
+      _queueRecoveryRefresh();
+    });
     return Scaffold(
       appBar: AppBar(title: const Text('Connection backup')),
       body: SafeArea(
@@ -95,11 +149,24 @@ class _ContactBackupScreenState extends ConsumerState<ContactBackupScreen>
           padding: const EdgeInsets.all(24),
           children: [
             const Text(
-              'Keep this encrypted archive with your wallet backup. Restore it using the same recovery phrase, BIP39 passphrase, account index and network. The wallet password may be different.',
+              'Save an encrypted copy of your connections outside this device.',
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'This saves connected contacts and relationship keys. Manually saved addresses, notes, pins, SimpleX connections and pending exchanges are not included. Restored contacts need a fresh address check. Restored signing keys stay inactive until recovery reconciliation is implemented.',
+            const ExpansionTile(
+              title: Text('What this backup includes'),
+              childrenPadding: EdgeInsets.only(bottom: 16),
+              children: [
+                Text(
+                  'Includes connected contacts and relationship keys. Manually saved addresses, notes, pins, SimpleX connections and pending exchanges are not included.',
+                ),
+                SizedBox(height: 12),
+                Text(
+                  'Restore into a fresh account using the same recovery phrase, BIP39 passphrase, account index and network. The wallet password and database account ID may be different. Existing contact data will not be overwritten.',
+                ),
+                SizedBox(height: 12),
+                Text(
+                  'Restored contacts need a fresh address check. Old signing keys stay inactive because another device may still use them. To receive again, exchange new receiving details and independently compare them. No hosted backup is made.',
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             AppButton(
@@ -193,12 +260,54 @@ class _ContactBackupScreenState extends ConsumerState<ContactBackupScreen>
                           _review = null;
                           _input.clear();
                           _approved = false;
+                          _recovery = await coordinator.recoveryProgress();
+                          check();
                           _notice =
                               'Contacts restored. Request and independently verify a fresh address response before paying each contact.';
                         }),
                       ),
                 child: const Text('Restore contacts'),
               ),
+            ],
+            const SizedBox(height: 24),
+            const Text('Continue recovery'),
+            const Text(
+              'First, check each restored contact before sending. This verifies their current receiving details without reactivating your old signing keys.',
+            ),
+            AppButton(
+              onPressed: _busy || scope == null
+                  ? null
+                  : () => unawaited(_refreshRecovery()),
+              child: const Text('Refresh recovery progress'),
+            ),
+            if (_recovery case final progress?) ...[
+              Text(
+                '${progress.pendingContacts.length} contacts need a fresh check.',
+              ),
+              for (final contact in progress.pendingContacts)
+                AppButton(
+                  onPressed: _busy || scope == null
+                      ? null
+                      : () => unawaited(_openRecovery(contactId: contact.id)),
+                  child: Text('Check ${contact.label}'),
+                ),
+              if (progress.inactiveKeyCount > 0) ...[
+                Text(
+                  '${progress.inactiveKeyCount} old relationship keys remain inactive.',
+                ),
+                const Text(
+                  'To receive again, ask the other person to create a new contact request, not an update to your old identity. Open the exchange below and reply to that request to create new receiving details. Compare the new identity and address through a trusted channel before they save it. Ask them to suspend your old contact after checking the new one. If both people restored a backup, both need this new exchange.',
+                ),
+                AppButton(
+                  onPressed: _busy || scope == null
+                      ? null
+                      : () => unawaited(_openRecovery()),
+                  child: const Text('Reconnect for receiving'),
+                ),
+                const Text(
+                  'Fresh address checks do not retire keys on another device. Automatic key rotation and hosted backup recovery are not available. Keep your encrypted archive.',
+                ),
+              ],
             ],
             if (_notice != null) Text(_notice!),
           ],

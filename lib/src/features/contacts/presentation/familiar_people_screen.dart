@@ -9,6 +9,7 @@ import '../../../core/widgets/app_toast.dart';
 import '../../../core/widgets/familiar_widgets.dart';
 import '../../send/models/send_prefill_args.dart';
 import '../application/contact_exchange_controller.dart';
+import 'contact_availability.dart';
 import '../application/familiar_people_metadata_provider.dart';
 import '../data/familiar_people_metadata_repository.dart';
 import '../domain/contact_models.dart';
@@ -93,6 +94,7 @@ class FamiliarPeopleScreen extends ConsumerWidget {
           ? state
           : ContactExchangeState(
               unavailableReason:
+                  ref.watch(contactUnavailableMessageProvider) ??
                   state.unavailableReason ??
                   'People is available for enabled, unlocked software accounts on testnet or regtest.',
             ),

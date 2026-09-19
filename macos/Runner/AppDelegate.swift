@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import Cocoa
 import FlutterMacOS
 #if SPARKLE_ENABLED
@@ -229,7 +230,7 @@ private final class TorUpdateFeedDelegate: NSObject, SPUUpdaterDelegate {
     let alert = NSAlert()
     alert.alertStyle = .informational
     alert.messageText = "Use Tor for this update?"
-    alert.informativeText = "Updating over Tor may take longer. Turning Tor off switches all Vizor network requests to a direct connection."
+    alert.informativeText = "Updating over Tor may take longer. Turning Tor off switches all Sigil network requests to a direct connection."
     alert.addButton(withTitle: "Continue with Tor")
     alert.addButton(withTitle: "Turn off Tor and update")
     alert.addButton(withTitle: "Cancel")

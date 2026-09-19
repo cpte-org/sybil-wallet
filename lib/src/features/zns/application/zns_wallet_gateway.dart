@@ -260,12 +260,12 @@ class ZnsWalletGateway implements ZnsEngineGateway {
     BigInt requiredWei, {
     required bool dry,
   }) async {
-    await rpc.verifyProtocol();
-    if (scope.zcashNetwork != 'mainnet' || config.chainId != 8453) {
+    if (!scope.supportsLiveZecFunding || config.chainId != scope.chainId) {
       throw StateError(
         'Live ZEC funding requires Zcash and Base mainnet. Fund the test account separately.',
       );
     }
+    await rpc.verifyProtocol();
     final plan = await funding.quoteExactOutput(
       accountUuid: accountUuid,
       baseOwner: scope.owner,
@@ -300,6 +300,11 @@ class ZnsWalletGateway implements ZnsEngineGateway {
     Map<String, dynamic> quote, {
     required void Function() ensureAuthorized,
   }) async {
+    if (!scope.supportsLiveZecFunding || config.chainId != scope.chainId) {
+      throw const ZnsFundingNotSent(
+        'Live ZEC funding requires Zcash and Base mainnet. No payment was signed.',
+      );
+    }
     final plan = _plan(quote);
     final feeLimit = BigInt.parse(quote['zecFee'] as String);
     final totalLimit = BigInt.parse(quote['maxZatoshi'] as String);

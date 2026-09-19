@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'src/features/contacts/presentation/familiar_add_person_screen.dart';
 import 'src/features/contacts/presentation/familiar_choose_recipient_screen.dart';
 import 'dart:async';
@@ -19,6 +20,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'src/app_bootstrap.dart';
 import 'src/core/config/swap_feature_config.dart';
 import 'src/core/config/network_config.dart';
+import 'src/core/legal/sigil_legal_notices.dart';
 import 'src/core/layout/app_layout.dart';
 import 'src/core/navigation/mobile_exit_back_guard.dart';
 import 'src/core/navigation/mobile_onboarding_routes.dart';
@@ -142,6 +144,7 @@ void log(String message) => debugPrint('[zcash] $message');
 
 Future<void> initializeZcashWalletRuntime() async {
   WidgetsFlutterBinding.ensureInitialized();
+  registerSigilLegalNotices();
   await SecureStorageDiagnostics.instance.initialize();
   log('runtime: initializing RustLib');
   await RustLib.init();
@@ -1281,7 +1284,7 @@ class ZcashWalletApp extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
-      title: 'Vizor',
+      title: 'Sigil',
       debugShowCheckedModeBanner: false,
       theme: buildLegacyLightTheme(),
       darkTheme: buildLegacyDarkTheme(),
@@ -2174,7 +2177,7 @@ class _WindowsUpdatePrompt extends StatelessWidget {
         'Update ${state.availableVersion} available',
       WindowsUpdateStatus.downloading => 'Downloading update',
       WindowsUpdateStatus.ready => 'Update ready',
-      WindowsUpdateStatus.applying => 'Restarting Vizor',
+      WindowsUpdateStatus.applying => 'Restarting Sigil',
       WindowsUpdateStatus.failed => 'Update failed',
       _ => 'Update available',
     };
@@ -2186,7 +2189,7 @@ class _WindowsUpdatePrompt extends StatelessWidget {
       WindowsUpdateStatus.downloading =>
         '${state.downloadProgress}% downloaded.',
       WindowsUpdateStatus.ready => 'Restart when you are ready.',
-      WindowsUpdateStatus.applying => 'Applying after Vizor closes.',
+      WindowsUpdateStatus.applying => 'Applying after Sigil closes.',
       WindowsUpdateStatus.failed =>
         state.message.trim().isEmpty
             ? "Couldn't complete the update. Try again."
@@ -2319,10 +2322,10 @@ class _LinuxUpdateNoticeListener extends ConsumerWidget {
           SnackBar(
             content: Text(
               torEnabled
-                  ? 'Vizor ${update.assetVersion} is available. The release '
-                        'page opens in your browser, outside Vizor’s Tor '
+                  ? 'Upstream Vizor ${update.assetVersion} is available. The release '
+                        'page opens in your browser, outside Sigil’s Tor '
                         'connection.'
-                  : 'Vizor ${update.assetVersion} is available.',
+                  : 'Upstream Vizor ${update.assetVersion} is available.',
             ),
             duration: const Duration(seconds: 8),
             action: SnackBarAction(

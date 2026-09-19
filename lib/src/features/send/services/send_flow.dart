@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 /// The shared send pipeline: proposal lifecycle and broadcast,
 /// extracted from the desktop send screens so the mobile wizard drives
 /// the exact same code. The PROPOSAL_STORE invariants live here in one

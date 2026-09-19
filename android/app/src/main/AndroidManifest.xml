@@ -1,14 +1,18 @@
+<!-- Apache-2.0 section 4(b): modified from upstream by the Sigil fork. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.CAMERA" />
     <application
-        android:label="Vizor"
+        android:label="Sigil"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:allowBackup="false"
+        android:extractNativeLibs="true"
         android:dataExtractionRules="@xml/data_extraction_rules">
+        <service android:name=".simplex.SimplexService" android:process=":simplex"
+            android:exported="false" android:stopWithTask="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

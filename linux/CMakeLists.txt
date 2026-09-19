@@ -5,7 +5,7 @@ project(runner LANGUAGES CXX)
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
 set(APP_IDENTIFIER "vizor")
-set(APP_DISPLAY_NAME "Vizor")
+set(APP_DISPLAY_NAME "Sigil")
 # Flutter tool reads BINARY_NAME without evaluating CMake variable expansion
 # when launching `flutter run`, so keep the default executable name literal.
 set(BINARY_NAME "vizor")

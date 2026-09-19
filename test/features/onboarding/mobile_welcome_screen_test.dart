@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 @Tags(['mobile'])
 library;
 
@@ -129,7 +130,7 @@ void main() {
       expect(find.byType(MobileMethodSelectionScreen), findsOneWidget);
       expect(find.text('Create Wallet'), findsOneWidget);
       expect(find.text('Import Wallet'), findsOneWidget);
-      expect(find.text('Link Vizor Desktop'), findsOneWidget);
+      expect(find.text('Link Sigil Desktop'), findsOneWidget);
       expect(find.text('Connect Keystone'), findsOneWidget);
       expect(_stepsProgress(tester), closeTo(60 / 196, 0.0001));
       expect(find.textContaining('you agree to our'), findsNothing);
@@ -250,7 +251,7 @@ void main() {
       _cardIconColor(tester, const ValueKey('mobile_welcome_import')),
       colors.text.homeCard,
     );
-    expect(_textColor(tester, 'Link Vizor Desktop'), colors.text.homeCard);
+    expect(_textColor(tester, 'Link Sigil Desktop'), colors.text.homeCard);
     expect(
       _cardIconColor(tester, const ValueKey('mobile_welcome_link_desktop')),
       colors.text.homeCard,
@@ -300,7 +301,7 @@ void main() {
       _cardIconColor(tester, const ValueKey('mobile_welcome_import')),
       colors.text.homeCard,
     );
-    expect(_textColor(tester, 'Link Vizor Desktop'), colors.text.homeCard);
+    expect(_textColor(tester, 'Link Sigil Desktop'), colors.text.homeCard);
     expect(
       _cardIconColor(tester, const ValueKey('mobile_welcome_link_desktop')),
       colors.text.homeCard,
@@ -353,7 +354,7 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('Go to Settings → Link Vizor Mobile'), findsOneWidget);
+    expect(find.text('Go to Settings → Link Sigil Mobile'), findsOneWidget);
     expect(
       find.text('Scan the QR code on your desktop from the next screen.'),
       findsOneWidget,

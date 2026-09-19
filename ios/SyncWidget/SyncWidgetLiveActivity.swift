@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 //
 //  SyncWidgetLiveActivity.swift
 //  SyncWidget
@@ -43,7 +44,7 @@ struct SyncWidgetLiveActivity: Widget {
             HStack {
                 Image(systemName: "shield.checkered")
                     .foregroundColor(.yellow)
-                Text("Vizor Sync")
+                Text("Sigil Sync")
                     .font(.headline)
                     .foregroundColor(.white)
                 Spacer()

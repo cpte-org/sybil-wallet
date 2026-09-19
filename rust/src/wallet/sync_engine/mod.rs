@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 use std::collections::{BTreeSet, HashSet, VecDeque};
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};

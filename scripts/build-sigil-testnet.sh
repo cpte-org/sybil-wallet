@@ -14,7 +14,11 @@ defines=(
   --dart-define=ZCASH_CONTACTS_EXPERIMENT=true
 )
 if [[ "$target" == android || "$target" == both ]]; then
-  fvm flutter build apk --release --target-platform android-arm64 \
+  simplex_android_runtime="${SIMPLEX_ANDROID_DEST_DIR:-$PWD/build/simplex-android/v7.0.2}"
+  bash tools/simplex/fetch-android.sh --dest "$simplex_android_runtime"
+  simplex_android_libs="$(cd "$simplex_android_runtime/jniLibs" && pwd)"
+  SIMPLEX_ANDROID_LIBS_DIR="$simplex_android_libs" \
+    fvm flutter build apk --release --target-platform android-arm64 \
     --dart-define=VIZOR_FORM_FACTOR=mobile "${defines[@]}"
   cp build/app/outputs/flutter-apk/app-release.apk \
     build/app/outputs/flutter-apk/sigil-testnet-arm64.apk

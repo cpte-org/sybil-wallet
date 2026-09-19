@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'package:zcash_wallet/src/features/contacts/presentation/familiar_choose_recipient_screen.dart';
 import 'dart:ui' show PointerDeviceKind;
 

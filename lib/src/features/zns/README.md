@@ -1,4 +1,4 @@
-# Public Zcash names in Vizor
+# Public Zcash names in Sigil
 
 The wallet uses a single `.zec` namespace. Public lookup says that identity has
 not been checked. Saving a public result stores its reviewed Zcash address as an

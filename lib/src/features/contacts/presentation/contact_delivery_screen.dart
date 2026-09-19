@@ -18,13 +18,48 @@ import '../domain/contact_models.dart';
 import 'contact_connection_binding_panel.dart';
 import 'contact_code_widgets.dart';
 
-class ContactDeliveryScreen extends ConsumerWidget {
+class ContactDeliveryScreen extends ConsumerStatefulWidget {
   const ContactDeliveryScreen({super.key});
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ContactDeliveryScreen> createState() =>
+      _ContactDeliveryScreenState();
+}
+
+class _ContactDeliveryScreenState extends ConsumerState<ContactDeliveryScreen>
+    with WidgetsBindingObserver {
+  bool _paused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused) {
+      setState(() => _paused = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final advanced =
         ref.watch(contactAdvancedToolsProvider).asData?.value == true;
     final scope = advanced ? ref.watch(contactDeliveryScopeProvider) : null;
+    final unavailable = advanced
+        ? ref.watch(contactDeliveryUnavailableReasonProvider)
+        : null;
+    ref.listen(contactDeliveryScopeProvider, (previous, next) {
+      if (previous != null && previous != next) _paused = true;
+    });
     final content = !advanced
         ? const _DeliveryUnavailable(
             title: 'Connection tools',
@@ -32,12 +67,28 @@ class ContactDeliveryScreen extends ConsumerWidget {
                 'Advanced contact tools are off. You can still connect '
                 'with someone by exchanging a contact code.',
           )
+        : unavailable != null
+        ? _DeliveryUnavailable(
+            title: 'Private delivery isn’t available',
+            message: unavailable,
+          )
         : scope == null
         ? const _DeliveryUnavailable(
             title: 'Private delivery is paused',
             message:
-                'This feature needs an unlocked Linux test account and '
+                'This feature needs an unlocked supported test account and '
                 'a direct network connection.',
+          )
+        : _paused
+        ? _DeliveryUnavailable(
+            title: 'Private delivery is paused',
+            message:
+                'Reopen private delivery when you are ready to connect again.',
+            retryLabel: 'Reopen private delivery',
+            onRetry: () {
+              ref.invalidate(simplexNativeTransportProvider);
+              setState(() => _paused = false);
+            },
           )
         : _DeliveryView(key: ValueKey(scope));
     if (kAppFormFactor == AppFormFactor.mobile) {
@@ -73,12 +124,14 @@ class _DeliveryUnavailable extends StatelessWidget {
     required this.title,
     required this.message,
     this.onRetry,
+    this.retryLabel = 'Try again',
     this.loading = false,
   });
 
   final String title;
   final String message;
   final VoidCallback? onRetry;
+  final String retryLabel;
   final bool loading;
 
   @override
@@ -116,7 +169,7 @@ class _DeliveryUnavailable extends StatelessWidget {
                     AppButton(
                       variant: AppButtonVariant.secondary,
                       onPressed: onRetry,
-                      child: const Text('Try again'),
+                      child: Text(retryLabel),
                     ),
                   AppButton(
                     variant: AppButtonVariant.ghost,
@@ -172,6 +225,7 @@ class _DeliveryViewState extends ConsumerState<_DeliveryView>
   List<ContactDelivery> _records = [];
   String? _peer, _invitation, _notice;
   bool _busy = false;
+  bool _refreshing = false;
   int _epoch = 0;
   @override
   void initState() {
@@ -201,9 +255,6 @@ class _DeliveryViewState extends ConsumerState<_DeliveryView>
         _peer = null;
         _peers = [];
       });
-    }
-    if (state == AppLifecycleState.resumed) {
-      ref.invalidate(simplexNativeTransportProvider);
     }
   }
 
@@ -239,11 +290,11 @@ class _DeliveryViewState extends ConsumerState<_DeliveryView>
     }
   }
 
-  Future<void> _refresh(int epoch) async {
+  Future<void> _refresh(int epoch, {bool reconcile = true}) async {
     final transport = await ref.read(simplexNativeTransportProvider.future);
     _check(epoch);
     final coordinator = ref.read(contactDeliveryCoordinatorProvider);
-    await transport.reconcile(coordinator);
+    if (reconcile) await transport.reconcile(coordinator);
     _check(epoch);
     final peers = await transport.peers();
     _check(epoch);
@@ -252,6 +303,24 @@ class _DeliveryViewState extends ConsumerState<_DeliveryView>
     _peers = peers;
     _records = records;
     if (!peers.any((p) => p.id == _peer)) _peer = null;
+  }
+
+  Future<void> _receiveRefresh() async {
+    if (_busy || _refreshing) return;
+    _refreshing = true;
+    final epoch = _epoch;
+    try {
+      await _refresh(epoch, reconcile: false);
+      if (mounted && epoch == _epoch) setState(() {});
+    } catch (_) {
+      if (mounted && epoch == _epoch && !_busy) {
+        setState(() {
+          _notice = 'The inbox could not be refreshed. Try refreshing again.';
+        });
+      }
+    } finally {
+      _refreshing = false;
+    }
   }
 
   Future<void> _copyCode(String value) async {
@@ -268,7 +337,7 @@ class _DeliveryViewState extends ConsumerState<_DeliveryView>
     await transport.connect(invitation);
     _check(epoch);
     _link.clear();
-    _notice = 'Connection requested. Refresh after the other person connects.';
+    _notice = 'Connection requested. Waiting for the other person to connect.';
   }
 
   Future<void> _send(int epoch) async {
@@ -297,13 +366,19 @@ class _DeliveryViewState extends ConsumerState<_DeliveryView>
   @override
   Widget build(BuildContext context) {
     final native = ref.watch(simplexNativeTransportProvider);
+    final refresh = ref.watch(contactDeliveryRefreshProvider);
+    ref.listen(contactDeliveryRefreshProvider, (_, next) {
+      if (next.hasValue && !next.hasError) unawaited(_receiveRefresh());
+    });
     ref.watch(contactDeliveryCoordinatorProvider);
-    if (native.hasError) {
+    if (native.hasError || refresh.hasError) {
+      final error = native.error ?? refresh.error;
       return _DeliveryUnavailable(
         title: 'Private delivery isn’t available',
-        message:
-            'You can still exchange contact codes. Try private delivery '
-            'again when the connection is ready.',
+        message: error is ContactFailure
+            ? error.message
+            : 'You can still exchange contact codes. Try private delivery '
+                  'again when the connection is ready.',
         onRetry: _busy
             ? null
             : () => ref.invalidate(simplexNativeTransportProvider),

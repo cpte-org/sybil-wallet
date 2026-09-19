@@ -1,5 +1,6 @@
 import '../../../providers/rpc_endpoint_failover_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -14,6 +15,7 @@ import '../../../rust/api/sync.dart' as rust_sync;
 import '../../address_book/models/address_book_contact.dart';
 import '../../address_book/providers/address_book_provider.dart';
 import '../application/contact_exchange_controller.dart';
+import 'contact_availability.dart';
 
 final familiarAddressValidatorProvider =
     Provider<Future<bool> Function(String)>(
@@ -98,6 +100,38 @@ class _FamiliarAddPersonScreenState
   bool _manual = false, _busy = false, _loaded = false;
   String? _error;
   int _sessionGeneration = 0;
+
+  Future<void> _pasteAddress() async {
+    final generation = _sessionGeneration;
+    final account = ref.read(accountProvider).value?.activeAccountUuid;
+    try {
+      final text = (await Clipboard.getData(
+        Clipboard.kTextPlain,
+      ))?.text?.trim();
+      if (!mounted ||
+          generation != _sessionGeneration ||
+          !ref.read(appSecurityProvider).isUnlocked ||
+          ref.read(accountProvider).value?.activeAccountUuid != account) {
+        return;
+      }
+      setState(() {
+        if (text == null || text.isEmpty) {
+          _error = 'Copy their Zcash address first, then paste it here.';
+        } else {
+          _address.text = text;
+          _error = null;
+        }
+      });
+    } catch (_) {
+      if (mounted && generation == _sessionGeneration) {
+        setState(
+          () => _error =
+              'Could not read the clipboard. Enter the address instead.',
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _name.dispose();
@@ -184,6 +218,9 @@ class _FamiliarAddPersonScreenState
   Widget build(BuildContext context) {
     final palette = FamiliarPalette.of(context);
     final connectedAvailable = ref.watch(contactExchangeAvailableProvider);
+    final unavailableMessage = connectedAvailable
+        ? null
+        : ref.watch(contactUnavailableMessageProvider);
     final book = ref.watch(addressBookProvider);
     final account = ref.watch(accountProvider).value?.activeAccountUuid;
     final unlocked = ref.watch(appSecurityProvider).isUnlocked;
@@ -258,10 +295,10 @@ class _FamiliarAddPersonScreenState
                         ? () => context.push('/contacts/exchange')
                         : null,
                   ),
-                  if (!connectedAvailable)
-                    const Text(
-                      'Private connections are available in the software-account test experiment.',
-                      style: TextStyle(fontSize: 12),
+                  if (unavailableMessage != null)
+                    Text(
+                      unavailableMessage,
+                      style: const TextStyle(fontSize: 12),
                     ),
                 ],
               ),
@@ -289,9 +326,14 @@ class _FamiliarAddPersonScreenState
                     minLines: 2,
                     maxLines: 5,
                     autocorrect: false,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Zcash receiving address',
                       hintText: 'Paste their address',
+                      suffixIcon: IconButton(
+                        tooltip: 'Paste address',
+                        onPressed: ready ? _pasteAddress : null,
+                        icon: const Icon(Icons.content_paste, size: 20),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),

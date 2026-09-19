@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import Flutter
 import Foundation
 import LocalAuthentication
@@ -215,7 +216,7 @@ final class DeviceOwnerAuthHandler {
       let args = call.arguments as? [String: Any]
       // Fallback mirrors the Dart canonical `kWalletResetDeviceAuthReason`; the
       // Dart side always sends `reason`, so this default is defensive only.
-      let reason = (args?["reason"] as? String) ?? "Confirm reset Vizor"
+      let reason = (args?["reason"] as? String) ?? "Confirm reset Sigil"
       verify(reason: reason, result: result)
     default:
       result(FlutterMethodNotImplemented)

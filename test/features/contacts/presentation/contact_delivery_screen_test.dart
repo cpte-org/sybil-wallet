@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -47,6 +49,9 @@ class _Repository implements ContactDeliveryRepository {
 class _Transport extends SimplexNativeTransport {
   _Transport() : super(scope: _scope, networkAllowed: () => true);
   int sends = 0;
+  final updates = StreamController<int>.broadcast();
+  @override
+  Stream<int> get refreshes => updates.stream;
   @override
   Future<List<({String id, String label})>> peers() async => [
     (id: 'connection-1', label: 'Unverified label'),
@@ -65,6 +70,7 @@ Future<void> _show(
   ContactScope? scope = _scope,
   required Future<SimplexNativeTransport> Function() open,
   _Repository? repository,
+  String? unavailable,
 }) async {
   tester.view.physicalSize = const Size(1200, 1000);
   tester.view.devicePixelRatio = 1;
@@ -125,6 +131,7 @@ Future<void> _show(
           _Preferences(advanced),
         ),
         contactDeliveryScopeProvider.overrideWithValue(scope),
+        contactDeliveryUnavailableReasonProvider.overrideWithValue(unavailable),
         contactDeliveryCoordinatorProvider.overrideWithValue(coordinator),
         simplexNativeTransportProvider.overrideWith((_) => open()),
       ],
@@ -139,6 +146,108 @@ Future<void> _show(
 }
 
 void main() {
+  testWidgets('background requires explicit reopen before reconnecting', (
+    tester,
+  ) async {
+    var opens = 0;
+    final transports = <_Transport>[];
+    addTearDown(() async {
+      for (final transport in transports) {
+        await transport.updates.close();
+      }
+    });
+    await _show(
+      tester,
+      advanced: true,
+      open: () async {
+        opens++;
+        final transport = _Transport();
+        transports.add(transport);
+        return transport;
+      },
+    );
+    expect(opens, 1);
+    for (final state in [
+      AppLifecycleState.inactive,
+      AppLifecycleState.hidden,
+      AppLifecycleState.paused,
+      AppLifecycleState.hidden,
+      AppLifecycleState.inactive,
+      AppLifecycleState.resumed,
+    ]) {
+      tester.binding.handleAppLifecycleStateChanged(state);
+      await tester.pumpAndSettle();
+    }
+    expect(opens, 1);
+    expect(find.text('Reopen private delivery'), findsOneWidget);
+    await tester.tap(find.text('Reopen private delivery'));
+    await tester.pumpAndSettle();
+    expect(opens, 2);
+  });
+
+  testWidgets(
+    'Android availability explains manual exchange without opening transport',
+    (tester) async {
+      var opens = 0;
+      const reason =
+          'Private delivery is not bundled on Android yet. Exchange contact codes with QR or copy and paste.';
+      await _show(
+        tester,
+        advanced: true,
+        unavailable: reason,
+        open: () async {
+          opens++;
+          return _Transport();
+        },
+      );
+      expect(opens, 0);
+      expect(find.text(reason), findsOneWidget);
+      expect(find.text('Exchange a contact code'), findsOneWidget);
+    },
+  );
+
+  testWidgets('foreground receive refresh updates inbox without sending', (
+    tester,
+  ) async {
+    final transport = _Transport(), repository = _Repository();
+    addTearDown(transport.updates.close);
+    await _show(
+      tester,
+      advanced: true,
+      repository: repository,
+      open: () async => transport,
+    );
+    expect(find.text('Delivery activity'), findsNothing);
+    repository.journal = ContactDeliveryJournal([
+      ContactDelivery(
+        id: 'abcdefghijklmnopqrstuvwx',
+        peer: 'connection-1',
+        packet: 'untrusted packet',
+        state: ContactDeliveryState.received,
+      ),
+    ]);
+    transport.updates.add(1);
+    await tester.pumpAndSettle();
+    expect(find.text('Delivery activity'), findsOneWidget);
+    expect(transport.sends, 0);
+    expect(
+      repository.journal.records.single.state,
+      ContactDeliveryState.received,
+    );
+    transport.updates.addError(
+      const ContactFailure(
+        'Private inbox refresh stopped. Reopen private delivery to retry.',
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        'Private inbox refresh stopped. Reopen private delivery to retry.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Try again'), findsOneWidget);
+  });
   testWidgets(
     'advanced tools off never opens transport and offers code exchange',
     (tester) async {

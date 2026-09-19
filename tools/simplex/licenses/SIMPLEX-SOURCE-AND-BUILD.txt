@@ -1,0 +1,39 @@
+SimpleX Chat native transport in Sigil test builds
+
+Copyright and licensing: preserve the upstream notices in the accompanying
+SimpleX-Chat-v7.0.2-LICENSE. SimpleX Chat is licensed under AGPL-3.0.
+The wallet's Apache and other component notices remain applicable.
+
+Pinned source:
+https://github.com/simplex-chat/simplex-chat/tree/v7.0.2
+https://github.com/simplex-chat/simplex-chat/blob/v7.0.2/flake.nix
+https://github.com/simplex-chat/simplex-chat/blob/v7.0.2/flake.lock
+https://github.com/simplex-chat/simplex-chat/blob/v7.0.2/scripts/android/build-android.sh
+
+Android ARM64 input:
+https://github.com/simplex-chat/simplex-chat/releases/download/v7.0.2/simplex-aarch64.apk
+SHA-256: 0a3a0bb7ca1e2411854883ba1ae352b15b11146fe0e137395671fff9ed839871
+Bytes: 87466500
+Sigil uses the unmodified libsimplex.so, libsupport.so and libapp-lib.so
+from that verified APK, with its own app-private process and JNI adapter.
+Other SimpleX application UI and camera libraries are not bundled by Sigil.
+
+Linux x86_64 input:
+https://github.com/simplex-chat/simplex-chat-libs/releases/download/v7.0.2/simplex-chat-libs-linux-x86_64.zip
+SHA-256: 235e8afc1942f098e6ad27b7e2947eced0a670e2ed35f064d802b71bbcfc1610
+
+Local source and build entry points in this Sigil checkout:
+tools/simplex/fetch-android.sh
+tools/simplex/ANDROID-EMBEDDING.md
+tools/simplex/native_host.c
+android/app/src/main/cpp/
+android/app/src/main/kotlin/com/keplr/vizor/simplex/
+lib/src/features/contacts/data/simplex_embedded_host.dart
+lib/src/features/contacts/data/simplex_native_transport.dart
+scripts/build-sigil-testnet.sh
+
+These references identify the test-build inputs and adapter sources. They are
+not a written source offer or a complete corresponding-source/dependency
+package for public distribution. The public-release package is tracked in
+docs/SIGIL-LICENSING.md and must include the applicable component notices,
+complete corresponding sources, modifications and build inputs.

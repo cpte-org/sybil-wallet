@@ -1,6 +1,6 @@
-# ZNS in Vizor
+# ZNS in Sigil
 
-Vizor includes a Names screen for registering, resolving and managing Zcash names through a Base registry. The integration supports software accounts and has desktop and mobile layouts; Linux is the first build target qualified in this work. Hardware-account signing is not implemented.
+Sigil includes a Names screen for registering, resolving and managing Zcash names through a Base registry. The integration supports software accounts and has desktop and mobile layouts; Linux is the first build target qualified in this work. Hardware-account signing is not implemented.
 
 **Current policy checkpoint: 12 September 2026.** The tiered bond schedule is defined, but no production registry or funded ZEC → ETH → cbZEC registration route is qualified. The existing Base Sepolia deployment uses older economics and is incompatible with the current signing policy. The Base mainnet fork test was declined and was not run. See the current [Names feature notes](lib/src/features/zns/README.md) for pricing, recovery and signing bounds.
 
@@ -40,7 +40,7 @@ Open **Settings → Public Zcash names**. Unlock a software account and enter th
 | cbZEC token address | Base requires `0xB2000000000000000000008501b13360000cb2EC`, with eight decimals. Test deployments require their own eight-decimal token. |
 | Delegated executor address | Optional. Leave empty for ordinary transactions. A configured executor must match the compiled `ZnsBatchAccount` runtime. |
 
-Select **Verify & save settings**. Deployment settings are local; there are no `ZNS_*` build defines. The client verifies chain, protocol ID, registry/token compatibility and canonical snapshot blocks. Test accounts need test ETH/tokens supplied separately; live funding requires Zcash and Base mainnet.
+Select **Verify & save settings**. Deployment settings are saved locally. The test-build script sets `ZCASH_DEFAULT_NETWORK=test` and `ZNS_BASE_SEPOLIA=true` to select the published Base Sepolia preset without overwriting another deployment’s settings. The client verifies chain, protocol ID, registry/token compatibility and canonical snapshot blocks. Test accounts need test ETH/tokens supplied separately; live funding requires Zcash and Base mainnet.
 
 A review identifies when the cbZEC minimum floor applies and shows the minimum bond, optional extra, maximum cbZEC deposit and pricing mode, existing balances to use, gas reserve and maximum ZEC/ETH budgets. One unlocked-session confirmation authorizes the bounded sequence: fund native Base ETH through the 1Click adapter if needed, commit, wait, acquire the cbZEC shortfall through Kyber, and register. Each registration signature gets a fresh ten-minute execution deadline. A pricing-mode change or higher required bond needs another review. Optional EIP-7702 execution batches destination calls; delegation persists. Cross-chain funding remains separate. RPC and quote requests follow wallet network policy, including Tor, without a direct-network fallback.
 

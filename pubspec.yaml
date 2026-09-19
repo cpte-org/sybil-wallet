@@ -111,6 +111,13 @@ flutter:
   uses-material-design: true
 
   assets:
+    # Keep the repository license, attribution notices, and bundled-font
+    # license readable from every Flutter target's legal-notices view.
+    - assets/legal/LICENSE
+    - assets/legal/NOTICE
+    - assets/legal/fonts/OFL-1.1.txt
+    - tools/simplex/licenses/SimpleX-Chat-v7.0.2-LICENSE
+    - tools/simplex/licenses/SIMPLEX-SOURCE-AND-BUILD.txt
     - assets/illustrations/
     - assets/illustrations/payment_links/
     - assets/profile_pictures/

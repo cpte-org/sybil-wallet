@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'dart:io' show Platform;
 
 import 'package:desktop_window_bootstrap/desktop_window_bootstrap.dart';
@@ -81,12 +82,12 @@ Future<void> initializeDesktopWindow({
   await windowManager.ensureInitialized();
 
   final options = Platform.isWindows
-      ? WindowOptions(title: 'Vizor')
+      ? WindowOptions(title: 'Sigil')
       : WindowOptions(
           size: initialMode.defaultSize,
           minimumSize: initialMode.minimumSize,
           center: true,
-          title: 'Vizor',
+          title: 'Sigil',
         );
 
   await windowManager.waitUntilReadyToShow(options);

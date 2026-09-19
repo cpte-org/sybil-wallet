@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -531,7 +532,7 @@ class _DisableBiometricSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'You will use your passcode to unlock Vizor. You can turn '
+            'You will use your passcode to unlock Sigil. You can turn '
             '${kind.inlineUnlockFeatureLabel} back on in settings anytime.',
             style: _bodyStyle.copyWith(color: colors.text.accent),
           ),
@@ -569,7 +570,7 @@ class _SettingsVersionFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Vizor, version $kVizorReleaseVersion',
+      label: 'Sigil, version $kVizorReleaseVersion',
       excludeSemantics: true,
       child: Center(
         child: Row(

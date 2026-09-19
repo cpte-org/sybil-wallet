@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'package:flutter/widgets.dart';
 
 import '../../../core/layout/mobile/app_mobile_sheet.dart';
@@ -57,7 +58,7 @@ class MobileImportBirthdayUnknownHeightSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'If you continue without a wallet birthday, Vizor will scan from '
+            'If you continue without a wallet birthday, Sigil will scan from '
             'the earliest supported shielded height. This is safe, but the '
             'first sync can take a very long time.',
             style: AppTypography.bodyMedium.copyWith(color: colors.text.accent),

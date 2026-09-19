@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'package:flutter/material.dart' show Colors, Scaffold;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -175,7 +176,7 @@ class DesktopUnlockContent extends StatelessWidget {
     this.autofocus = false,
     this.showForgotPassword = true,
     this.reserveForgotPasswordSpace = false,
-    this.descriptionText = 'Enter your password to open Vizor.',
+    this.descriptionText = 'Enter your password to open Sigil.',
     super.key,
   });
 
@@ -274,7 +275,7 @@ class DesktopUnlockContent extends StatelessWidget {
                   onPressed: canSubmit ? onSubmit : null,
                   variant: AppButtonVariant.primary,
                   minWidth: _buttonWidth,
-                  child: const Text('Unlock Vizor'),
+                  child: const Text('Unlock Sigil'),
                 ),
                 if (showForgotPassword) ...[
                   const SizedBox(height: AppSpacing.s),

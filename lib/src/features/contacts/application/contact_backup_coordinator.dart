@@ -19,6 +19,20 @@ class ContactBackupReview {
   int get keyCount => book.quarantinedSigners.length;
 }
 
+/// Public recovery progress only. Never exposes restored signing material.
+class ContactRecoveryProgress {
+  ContactRecoveryProgress({
+    required List<VerifiedContact> contacts,
+    required this.inactiveKeyCount,
+  }) : pendingContacts = List.unmodifiable(
+         contacts.where(
+           (contact) => contact.status == ContactTrustStatus.restored,
+         ),
+       );
+  final List<VerifiedContact> pendingContacts;
+  final int inactiveKeyCount;
+}
+
 class ContactBackupCoordinator {
   ContactBackupCoordinator({
     required this.scope,
@@ -57,6 +71,20 @@ class ContactBackupCoordinator {
       return work(current, epoch);
     }, mutation: mutation);
   }
+
+  Future<ContactRecoveryProgress> recoveryProgress() =>
+      _run((current, epoch) async {
+        final book = await store.snapshot(current);
+        try {
+          _check(current, epoch);
+          return ContactRecoveryProgress(
+            contacts: book.contacts,
+            inactiveKeyCount: book.quarantinedSigners.length,
+          );
+        } finally {
+          book.clearSecrets();
+        }
+      });
 
   Future<String> export() => _run((current, epoch) async {
     final book = await store.snapshot(current);

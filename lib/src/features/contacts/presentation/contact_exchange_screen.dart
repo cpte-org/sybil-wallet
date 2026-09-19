@@ -23,6 +23,7 @@ import '../application/contact_exchange_controller.dart';
 import '../domain/contact_models.dart';
 import '../domain/contact_packet_kind.dart';
 import 'contact_packet_delivery_controls.dart';
+import 'contact_availability.dart';
 
 export '../domain/contact_models.dart';
 
@@ -66,6 +67,7 @@ class ContactExchangeScreen extends ConsumerWidget {
           ? state
           : ContactExchangeState(
               unavailableReason:
+                  ref.watch(contactUnavailableMessageProvider) ??
                   state.unavailableReason ??
                   'Contact exchange is available only for unlocked software accounts on testnet or regtest.',
             ),

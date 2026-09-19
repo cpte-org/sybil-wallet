@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
@@ -65,7 +66,7 @@ abstract final class AppBackResolver {
     '/settings/names': 'Public Zcash names',
     '/settings/contacts': 'Contact options',
     '/settings/explorer': 'Explorer',
-    '/settings/uninstall': 'Uninstall Vizor',
+    '/settings/uninstall': 'Uninstall Sigil',
     '/onboarding/keystone': 'Connect Keystone',
     '/voting': 'Vote',
     '/voting/poll/:roundId': 'Voting round',

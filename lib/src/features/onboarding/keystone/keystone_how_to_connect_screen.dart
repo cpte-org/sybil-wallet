@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
@@ -348,7 +349,7 @@ class _ConnectionSteps extends StatelessWidget {
 
   static const _keystoneSteps = [
     'Tap ••• (top right), then Connect software wallet.',
-    'Select Vizor (or ZODL)',
+    'Select Sigil (or ZODL)',
   ];
   static const _vizorSteps = ['Scan the dynamic QR code on your Keystone.'];
 
@@ -367,7 +368,7 @@ class _ConnectionSteps extends StatelessWidget {
         ),
         SizedBox(height: AppSpacing.sm),
         _ConnectionStepGroup(
-          title: 'On Vizor',
+          title: 'On Sigil',
           startIndex: 3,
           steps: _vizorSteps,
         ),

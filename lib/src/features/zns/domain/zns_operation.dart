@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../../core/config/network_config.dart';
 
 final znsRewardScale = BigInt.from(10).pow(24);
 const znsHoldingSeconds = 365 * 24 * 60 * 60;
@@ -72,6 +73,8 @@ class ZnsScope {
   final int chainId;
   final String registry;
   final String owner;
+  bool get supportsLiveZecFunding =>
+      zcashNetwork == ZcashNetwork.mainnet.name && chainId == 8453;
   String get key =>
       'zns:v1:$zcashNetwork:$chainId:${registry.toLowerCase()}:${owner.toLowerCase()}';
   Map<String, Object> toJson() => {

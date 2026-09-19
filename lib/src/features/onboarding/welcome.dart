@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'package:flutter/material.dart' show Colors, Scaffold;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -438,7 +439,7 @@ class _TitleBlock extends StatelessWidget {
         SizedBox(
           width: 218,
           child: Text(
-            'Get started\nwith Vizor',
+            'Get started\nwith Sigil',
             style: AppTypography.headlineLarge.copyWith(
               color: colors.text.accent,
               height: 33 / 32,

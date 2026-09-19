@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -39,7 +40,7 @@ void main() {
     var appBuilds = 0;
     Future<Widget> loadApp() {
       loadCalls++;
-      expect(find.text('Opening Vizor'), findsOneWidget);
+      expect(find.text('Opening Sigil'), findsOneWidget);
       expect(
         SchedulerBinding.instance.schedulerPhase,
         SchedulerPhase.postFrameCallbacks,
@@ -94,7 +95,7 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.text('Unable to open Vizor'), findsOneWidget);
+      expect(find.text('Unable to open Sigil'), findsOneWidget);
       expect(find.textContaining('Private native'), findsNothing);
       expect(find.text('Quit'), findsOneWidget);
       await tester.pump(const Duration(minutes: 5));

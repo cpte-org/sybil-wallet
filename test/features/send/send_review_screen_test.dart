@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 // path_provider / plugin platform fakes back the Keystone PCZT preparation
 // flow (wallet DB path + Sapling params status).
 // ignore_for_file: depend_on_referenced_packages

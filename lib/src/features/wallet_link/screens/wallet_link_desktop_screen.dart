@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -221,7 +222,7 @@ class _WalletLinkConfirmAccessScreen extends StatelessWidget {
         onBack: onBack,
         child: Center(
           child: ConfirmAccessCard(
-            subtitle: 'To link Vizor Mobile.',
+            subtitle: 'To link Sigil Mobile.',
             controller: controller,
             errorText: errorText,
             isSubmitting: isSubmitting,
@@ -348,9 +349,9 @@ class _InitialContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _ContentColumn(
-      title: 'Link Vizor Mobile',
+      title: 'Link Sigil Mobile',
       body:
-          'Connect this wallet to your Vizor mobile app by scanning a one-time QR code.',
+          'Connect this wallet to your Sigil mobile app by scanning a one-time QR code.',
       visual: const _EncryptedPlaceholder(),
       action: AppButton(
         onPressed: preparing ? null : onStart,
@@ -376,8 +377,8 @@ class _ReadyContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _ContentColumn(
-      title: 'Scan with Vizor mobile',
-      body: 'Open Vizor on your phone → Add a wallet → Link Vizor Desktop',
+      title: 'Scan with Sigil mobile',
+      body: 'Open Sigil on your phone → Add a wallet → Link Sigil Desktop',
       visual: _QrTransferCard(
         qrPayload: state.qrPayload ?? '',
         remaining: state.remaining,
@@ -413,7 +414,7 @@ class _LinkedContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _ResultContentColumn(
-      title: 'Vizor Mobile linked successfully',
+      title: 'Sigil Mobile linked successfully',
       body: _linkedBody(state),
       titleMaxWidth: 264,
       bodyMaxWidth: 212,
@@ -437,7 +438,7 @@ class _LinkedContent extends StatelessWidget {
 
   String _linkedBody(WalletLinkState state) {
     if (!state.actualImportCounts) {
-      return 'Vizor Mobile was linked to this wallet.';
+      return 'Sigil Mobile was linked to this wallet.';
     }
     final accountLabel = state.accountCount == 1 ? 'account' : 'accounts';
     final contactLabel = state.contactCount == 1 ? 'contact' : 'contacts';

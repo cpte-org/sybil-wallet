@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'package:flutter/material.dart' show MaterialApp;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -75,9 +76,9 @@ void main() {
   ) async {
     await _pumpAccountsUseCase(tester, buildAboutUtilityUseCase);
     expect(tester.takeException(), isNull);
-    expect(find.text('About Vizor Wallet'), findsOneWidget);
-    expect(find.text('Github'), findsOneWidget);
-    expect(find.text('Website'), findsOneWidget);
+    expect(find.text('About Sigil Wallet'), findsOneWidget);
+    expect(find.text('Upstream GitHub'), findsOneWidget);
+    expect(find.text('Upstream website'), findsOneWidget);
 
     await _pumpAccountsUseCase(tester, buildTermsUtilityUseCase);
     expect(tester.takeException(), isNull);

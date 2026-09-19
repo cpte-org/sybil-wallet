@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 @Tags(['mobile'])
 library;
 
@@ -343,7 +344,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Forgot Passcode?'), findsOneWidget);
-    expect(find.text('Continue to reset Vizor'), findsOneWidget);
+    expect(find.text('Continue to reset Sigil'), findsOneWidget);
 
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
@@ -371,7 +372,7 @@ void main() {
       find.text(kWalletResetInFlightGiftCardWarningMessage),
       findsOneWidget,
     );
-    expect(find.text('Continue to reset Vizor'), findsOneWidget);
+    expect(find.text('Continue to reset Sigil'), findsOneWidget);
   });
 
   testWidgets('a refused reset reads as a Gift Card wait, not a failure', (
@@ -427,13 +428,13 @@ void main() {
 
     await tester.tap(find.bySemanticsLabel('Passcode help'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Continue to reset Vizor'));
+    await tester.tap(find.text('Continue to reset Sigil'));
     await tester.pumpAndSettle();
 
     // The second sheet arms after a deliberate countdown.
     await tester.pump(kForgotPasscodeLastWarningArmDelay);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Reset Vizor'));
+    await tester.tap(find.text('Reset Sigil'));
     await tester.pumpAndSettle();
 
     expect(accountNotifier.resets, 1);

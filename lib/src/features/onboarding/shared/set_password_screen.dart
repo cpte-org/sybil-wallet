@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -455,7 +456,7 @@ class _SetPasswordTitle extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'Set password for signing in to Vizor wallet.',
+          'Set password for signing in to Sigil wallet.',
           style: AppTypography.bodyMediumStrong.copyWith(
             color: colors.text.accent,
           ),

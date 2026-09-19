@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.22.1)
+project(sigil_simplex LANGUAGES C)
+add_library(sigil_simplex SHARED simplex_jni.c)
+target_compile_options(sigil_simplex PRIVATE -Wall -Wextra -Werror -fvisibility=hidden)
+target_link_options(sigil_simplex PRIVATE "-Wl,-z,max-page-size=16384")
+target_link_libraries(sigil_simplex dl)

@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 #include "flutter_window.h"
 
 #include <flutter/standard_method_codec.h>
@@ -226,9 +227,9 @@ void PromptForWindowsPassword(HWND window,
     CREDUI_INFOW ui_info = {};
     ui_info.cbSize = sizeof(ui_info);
     ui_info.hwndParent = window;
-    ui_info.pszCaptionText = L"Confirm reset Vizor";
+    ui_info.pszCaptionText = L"Confirm reset Sigil";
     ui_info.pszMessageText =
-        L"Enter your Windows account password to reset Vizor.";
+        L"Enter your Windows account password to reset Sigil.";
 
     ULONG auth_package = 0;
     LPVOID auth_buffer = nullptr;
@@ -328,7 +329,7 @@ void VerifyDeviceOwner(
   }
 
   if (reason.empty()) {
-    reason = L"Confirm reset Vizor";
+    reason = L"Confirm reset Sigil";
   }
 
   ScopedHString message(reason);

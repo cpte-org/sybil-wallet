@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
 import 'package:flutter/material.dart' show MaterialApp;
 import 'package:flutter/services.dart' show FontLoader, rootBundle;
 import 'package:flutter/widgets.dart';
@@ -156,7 +157,7 @@ void main() {
     );
 
     _expectNoCrash(errors);
-    expect(find.text('Uninstall Vizor'), findsWidgets);
+    expect(find.text('Uninstall Sigil'), findsWidgets);
     expect(find.text('This cannot be undone.'), findsOneWidget);
   });
 
@@ -184,7 +185,7 @@ void main() {
     );
 
     _expectNoCrash(errors);
-    expect(find.text('Link Vizor Mobile'), findsOneWidget);
+    expect(find.text('Link Sigil Mobile'), findsOneWidget);
     expect(find.text('Start linking'), findsOneWidget);
   });
 
@@ -198,7 +199,7 @@ void main() {
 
     _expectNoCrash(errors);
     expect(find.text('Confirm access'), findsOneWidget);
-    expect(find.text('To link Vizor Mobile.'), findsOneWidget);
+    expect(find.text('To link Sigil Mobile.'), findsOneWidget);
   });
 
   testWidgets('settings wallet link QR use case renders the timer', (
@@ -210,9 +211,9 @@ void main() {
     );
 
     _expectNoCrash(errors);
-    expect(find.text('Scan with Vizor mobile'), findsOneWidget);
+    expect(find.text('Scan with Sigil mobile'), findsOneWidget);
     expect(
-      find.text('Open Vizor on your phone → Add a wallet → Link Vizor Desktop'),
+      find.text('Open Sigil on your phone → Add a wallet → Link Sigil Desktop'),
       findsOneWidget,
     );
     expect(find.text('Expires in 0:59'), findsOneWidget);
@@ -227,7 +228,7 @@ void main() {
     );
 
     _expectNoCrash(errors);
-    expect(find.text('Vizor Mobile linked successfully'), findsOneWidget);
+    expect(find.text('Sigil Mobile linked successfully'), findsOneWidget);
     expect(
       find.text('6 accounts and 20 contacts were imported on mobile.'),
       findsOneWidget,

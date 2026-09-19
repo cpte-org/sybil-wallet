@@ -2,6 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zcash_wallet/src/features/contacts/application/contact_exchange_controller.dart';
+import 'package:zcash_wallet/src/features/contacts/data/contact_gateway.dart';
+import 'contact_test_fakes.dart' show FakeContactGateway;
 import 'package:zcash_wallet/src/core/storage/app_secure_store.dart';
 import 'package:zcash_wallet/src/features/contacts/data/contact_repository.dart';
 import 'package:zcash_wallet/src/features/contacts/application/contact_backup_coordinator.dart';
@@ -147,6 +151,90 @@ void main() {
       coordinator.invalidate();
     },
   );
+  test(
+    'restored peer check completes without activating archived signing keys',
+    () async {
+      final storage = FixtureStore();
+      final secure = SecureContactBackupStore(store: storage);
+      final coordinator = ContactBackupCoordinator(
+        scope: () => targetScope,
+        store: secure,
+        crypto: crypto,
+      );
+      addTearDown(coordinator.invalidate);
+      final review = await coordinator.prepare(await exporter.export());
+      await coordinator.restore(review, approved: true);
+      final direct = SecureContactRepository(store: storage);
+      final gateway = FakeContactGateway();
+      final container = ProviderContainer(
+        overrides: [
+          contactScopeProvider.overrideWithValue(targetScope),
+          contactRepositoryProvider.overrideWithValue(direct),
+          contactGatewayProvider.overrideWithValue(gateway),
+          contactClockProvider.overrideWithValue(() => testContactNow),
+        ],
+      );
+      addTearDown(container.dispose);
+      final controller = container.read(contactExchangeProvider.notifier);
+      await pumpEventQueue();
+      expect(
+        (await coordinator.recoveryProgress()).pendingContacts,
+        hasLength(1),
+      );
+      await controller.startRequest(contactId: 'alice');
+      // A validly signed but older revision must not complete recovery.
+      gateway.endpoint = ContactWireEndpoint(
+        identity: testContact().identity,
+        address: 'older-address',
+        sequence: 4,
+        expiresAt: testContactNow.add(const Duration(minutes: 5)),
+      );
+      await controller.previewResponse('older-response');
+      expect(container.read(contactExchangeProvider).candidate, isNull);
+      expect(
+        (await coordinator.recoveryProgress()).pendingContacts,
+        hasLength(1),
+      );
+      gateway.endpoint = FakeContactGateway().endpoint;
+      await controller.previewResponse('fresh-response');
+      await controller.acceptResponse(
+        label: 'Alice',
+        independentlyVerified: false,
+      );
+      expect(
+        (await coordinator.recoveryProgress()).pendingContacts,
+        hasLength(1),
+      );
+      // An interrupted review cannot be accepted later.
+      controller.cancelTransient();
+      await controller.acceptResponse(
+        label: 'Alice',
+        independentlyVerified: true,
+      );
+      expect(
+        (await coordinator.recoveryProgress()).pendingContacts,
+        hasLength(1),
+      );
+      await controller.startRequest(contactId: 'alice');
+      await controller.previewResponse('fresh-response');
+      await controller.acceptResponse(
+        label: 'Alice',
+        independentlyVerified: true,
+      );
+      final progress = await coordinator.recoveryProgress();
+      expect(progress.pendingContacts, isEmpty);
+      expect(progress.inactiveKeyCount, 1);
+      expect((await direct.load(targetScope)).single.canPay, isTrue);
+      await expectLater(
+        direct.loadSigner(targetScope, testContact().identity),
+        throwsA(isA<ContactFailure>()),
+      );
+      // The consumed proof has no pending request to authorize a second update.
+      await controller.previewResponse('fresh-response');
+      expect(container.read(contactExchangeProvider).candidate, isNull);
+    },
+  );
+
   test('portable export includes legacy direct signing records', () async {
     final storage = FixtureStore();
     final direct = SecureContactRepository(store: storage);
