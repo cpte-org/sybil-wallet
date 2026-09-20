@@ -312,7 +312,7 @@ class _SettingsBaseKeyScreenState extends ConsumerState<SettingsBaseKeyScreen>
               width: ConfirmAccessCard.width,
               child: Text(
                 'Import this key as a separate account in MetaMask. '
-                'Importing your Sigil seed may produce a different address. '
+                'Importing your Sybil seed may produce a different address. '
                 'Both wallets will control this account. The key is cleared '
                 'from this screen after one minute or when you leave it. '
                 'Your system clipboard may retain copied keys.',

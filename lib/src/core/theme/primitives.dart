@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/painting.dart';
 
 /// Raw color primitives from the Zcash design system Figma spec.
@@ -363,9 +363,9 @@ abstract final class GreenPrimitives {
   static const p900Alpha65Light = Color(0xA6001E0A);
 }
 
-/// Familiar's warm paper and forest palette, shared by semantic tokens.
-/// The light and dark faces match sigil-24-big-2's authored colour roles.
-abstract final class FamiliarPrimitives {
+/// Sybil's warm paper and forest palette, shared by semantic tokens.
+/// The light and dark faces match sybil-24-big-2's authored colour roles.
+abstract final class SybilPrimitives {
   static const paperLight = Color(0xFFF7F6EF);
   static const surfaceLight = Color(0xFFFFFEF9);
   static const softLight = Color(0xFFEEEEE4);

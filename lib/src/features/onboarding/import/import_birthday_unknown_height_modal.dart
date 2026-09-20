@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/widgets.dart';
 
 import '../../../core/layout/app_desktop_shell.dart';
@@ -74,7 +74,7 @@ class ImportBirthdayUnknownHeightModal extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'If you continue without a wallet birthday, Sigil will '
+                    'If you continue without a wallet birthday, Sybil will '
                     'scan from the earliest supported shielded height. This '
                     'is safe, but the first sync can take a very long time.',
                     style: AppTypography.bodyMedium.copyWith(

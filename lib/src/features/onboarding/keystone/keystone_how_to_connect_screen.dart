@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
@@ -349,7 +349,7 @@ class _ConnectionSteps extends StatelessWidget {
 
   static const _keystoneSteps = [
     'Tap ••• (top right), then Connect software wallet.',
-    'Select Sigil (or ZODL)',
+    'Select Sybil (or ZODL)',
   ];
   static const _vizorSteps = ['Scan the dynamic QR code on your Keystone.'];
 
@@ -368,7 +368,7 @@ class _ConnectionSteps extends StatelessWidget {
         ),
         SizedBox(height: AppSpacing.sm),
         _ConnectionStepGroup(
-          title: 'On Sigil',
+          title: 'On Sybil',
           startIndex: 3,
           steps: _vizorSteps,
         ),

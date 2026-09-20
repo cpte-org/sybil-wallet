@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/painting.dart';
 
 import '../primitives.dart';
@@ -22,20 +22,20 @@ class AppSyncColors {
   final Color lightError;
 
   static const dark = AppSyncColors(
-    text: FamiliarPrimitives.textDark,
-    textSyncing: FamiliarPrimitives.mutedDark,
-    textError: FamiliarPrimitives.errorDark,
-    glow: FamiliarPrimitives.sageDark,
-    lightSuccess: FamiliarPrimitives.accentDark,
-    lightError: FamiliarPrimitives.errorDark,
+    text: SybilPrimitives.textDark,
+    textSyncing: SybilPrimitives.mutedDark,
+    textError: SybilPrimitives.errorDark,
+    glow: SybilPrimitives.sageDark,
+    lightSuccess: SybilPrimitives.accentDark,
+    lightError: SybilPrimitives.errorDark,
   );
 
   static const light = AppSyncColors(
-    text: FamiliarPrimitives.textLight,
-    textSyncing: FamiliarPrimitives.mutedLight,
-    textError: FamiliarPrimitives.errorLight,
-    glow: FamiliarPrimitives.sageLight,
-    lightSuccess: FamiliarPrimitives.accentLight,
-    lightError: FamiliarPrimitives.errorLight,
+    text: SybilPrimitives.textLight,
+    textSyncing: SybilPrimitives.mutedLight,
+    textError: SybilPrimitives.errorLight,
+    glow: SybilPrimitives.sageLight,
+    lightSuccess: SybilPrimitives.accentLight,
+    lightError: SybilPrimitives.errorLight,
   );
 }

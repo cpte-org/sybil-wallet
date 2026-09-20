@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/widgets/app_button.dart';
 import '../application/contact_delivery_providers.dart';
@@ -49,6 +50,8 @@ class _ControlsState extends ConsumerState<ContactPacketDeliveryControls>
   bool _active = false, _busy = false;
   bool _refreshing = false, _refreshAgain = false;
   bool _refreshPaused = false;
+  bool _connectionsLoaded = false;
+  bool _inboxHasConnections = false;
   int _epoch = 0;
   @override
   void initState() {
@@ -84,6 +87,8 @@ class _ControlsState extends ConsumerState<ContactPacketDeliveryControls>
     _active = false;
     _refreshAgain = false;
     _refreshPaused = false;
+    _connectionsLoaded = false;
+    _inboxHasConnections = false;
   }
 
   @override
@@ -138,6 +143,7 @@ class _ControlsState extends ConsumerState<ContactPacketDeliveryControls>
   }
 
   Future<void> _load(ContactScope scope, int epoch) async {
+    _connectionsLoaded = false;
     if (_refreshPaused) {
       _refreshPaused = false;
       ref.invalidate(simplexNativeTransportProvider);
@@ -148,6 +154,7 @@ class _ControlsState extends ConsumerState<ContactPacketDeliveryControls>
       _peers = [];
       _peer = null;
       _binding = null;
+      _connectionsLoaded = false;
       if (widget.contactId != null && widget.recipientIdentity != null) {
         final binding = await ref
             .read(contactBindingCoordinatorProvider)
@@ -161,12 +168,14 @@ class _ControlsState extends ConsumerState<ContactPacketDeliveryControls>
           _binding = binding;
           _peer = binding.peer;
           _peers = [(id: binding.peer, label: 'Checked contact connection')];
+          _connectionsLoaded = true;
           return;
         }
       }
       final peers = await transport.peers();
       _check(scope, epoch);
       _peers = peers;
+      _connectionsLoaded = true;
       if (!_peers.any((p) => p.id == _peer)) _peer = null;
     } else {
       final coordinator = ref.read(contactDeliveryCoordinatorProvider);
@@ -181,11 +190,21 @@ class _ControlsState extends ConsumerState<ContactPacketDeliveryControls>
                 widget.kinds.contains(contactPacketKind(r.packet)),
           )
           .toList();
+      if (_records.isEmpty) {
+        final peers = await transport.peers();
+        _check(scope, epoch);
+        _inboxHasConnections = peers.isNotEmpty;
+        _connectionsLoaded = true;
+      }
       if (_records.isEmpty && !_refreshPaused) {
-        _notice = 'Waiting for a reply. This inbox updates while open.';
+        _notice = _inboxWaitingMessage;
       }
     }
   }
+
+  String get _inboxWaitingMessage => _connectionsLoaded && !_inboxHasConnections
+      ? 'No private delivery connections yet.'
+      : 'Waiting for a reply. This inbox updates while open.';
 
   Future<void> _refreshInbox() async {
     if (!_active || widget.packet != null) return;
@@ -211,9 +230,7 @@ class _ControlsState extends ConsumerState<ContactPacketDeliveryControls>
             )
             .toList();
         if (!_refreshPaused) {
-          _notice = _records.isEmpty
-              ? 'Waiting for a reply. This inbox updates while open.'
-              : null;
+          _notice = _records.isEmpty ? _inboxWaitingMessage : null;
         }
       });
     } catch (_) {
@@ -267,6 +284,36 @@ class _ControlsState extends ConsumerState<ContactPacketDeliveryControls>
                 : 'Prepare contact delivery',
           ),
         ),
+        if (_connectionsLoaded &&
+            (widget.packet != null ? _peers.isEmpty : !_inboxHasConnections))
+          Text(
+            widget.packet == null
+                ? 'Connect privately to receive contact invitations and replies. '
+                      'You can also exchange a contact code.'
+                : 'Connect with this person first. Your contact code stays ready '
+                      'here while you set up private delivery.',
+          ),
+        if (_connectionsLoaded && _binding == null)
+          AppButton(
+            constrainContent: true,
+            variant: AppButtonVariant.secondary,
+            onPressed: _busy
+                ? null
+                : () => unawaited(
+                    _run((scope, epoch) async {
+                      await context.push('/contacts/delivery');
+                      _check(scope, epoch);
+                      await _load(scope, epoch);
+                    }),
+                  ),
+            child: Text(
+              (widget.packet != null ? _peers.isNotEmpty : _inboxHasConnections)
+                  ? 'Connect with someone new'
+                  : widget.packet == null
+                  ? 'Connect with someone'
+                  : 'Connect with this person',
+            ),
+          ),
         if (_peers.isNotEmpty) ...[
           Text(
             _binding == null

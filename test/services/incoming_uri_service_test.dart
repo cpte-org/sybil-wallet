@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -19,7 +20,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   const channel = MethodChannel(kIncomingUriChannelName);
-  const coldStartUri = 'https://link.vizor.cash/payment-links/open#v1=cold';
+  const coldStartUri = 'https://sybil.cash/payment-links/open#v1=cold';
   late List<String> nativeCalls;
 
   void mockNative({List<String> pending = const [coldStartUri]}) {
@@ -121,10 +122,10 @@ void main() {
     await service.initialize();
 
     await pushNative(<String>[
-      'https://link.vizor.cash/payment-links/open#v1=warm',
+      'https://sybil.cash/payment-links/open#v1=warm',
     ]);
 
-    expect(received.last, 'https://link.vizor.cash/payment-links/open#v1=warm');
+    expect(received.last, 'https://sybil.cash/payment-links/open#v1=warm');
   });
 
   test('a cold-start batch keeps native order', () async {

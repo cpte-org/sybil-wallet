@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Inventory upstream files that changed in a Sigil fork.
+"""Inventory upstream files that changed in a Sybil fork.
 
 This is a review aid for Apache License 2.0 section 4(b).  It reports the
 files changed from an upstream tree, including tracked working changes by
@@ -49,7 +49,7 @@ GENERATED_PATH_MARKERS = {
     "frb_generated": "generated",
     "generated_plugin": "generated",
 }
-SECTION_4B_MARKER = "Apache-2.0 section 4(b): modified from upstream by the Sigil fork."
+SECTION_4B_MARKER = "Apache-2.0 section 4(b): modified from upstream by the Sybil fork."
 
 
 def git(*args: str) -> str:
@@ -156,12 +156,12 @@ def render_markdown(base: str, head: str, rows: list[tuple[str, str]]) -> str:
         "",
         "## Source modification-notice coverage",
         "",
-        "The table reports the exact Sigil modification marker in each source file.",
+        "The table reports the exact Sybil modification marker in each source file.",
         "Recheck the list after future upstream integration; files may be generated, vendored,",
         "or excluded from a particular target, and every existing upstream notice",
         "must be preserved. Inventory mode does not modify these files.",
         "",
-        "| Path | Sigil modification marker in first 40 lines |",
+        "| Path | Sybil modification marker in first 40 lines |",
         "| --- | --- |",
     ]
     for path in source_modified:

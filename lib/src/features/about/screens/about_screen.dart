@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 
 import 'package:flutter/material.dart' show Scaffold;
@@ -9,7 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app_bootstrap.dart';
 import '../../../core/config/app_version_config.dart';
-import '../../../core/legal/sigil_licenses_button.dart';
+import '../../../core/legal/sybil_licenses_button.dart';
 import '../../../core/layout/app_desktop_shell.dart';
 import '../../../core/layout/app_main_sidebar.dart';
 import '../../../core/layout/app_pane_scroll_scaffold.dart';
@@ -22,38 +22,38 @@ import '../../../providers/wallet_provider.dart';
 import '../../onboarding/shared/onboarding_welcome_art.dart';
 
 const _utilityContentWidth = 420.0;
-const _vizorGithubUrl = 'https://github.com/chainapsis/vizor-wallet/';
-const _vizorWebsiteUrl = 'https://vizor.cash';
+const _sybilGithubUrl = 'https://github.com/cpte-org/sybil-wallet';
+const _sybilWebsiteUrl = 'https://sybil.cash';
 
 const _aboutParagraphs = [
   _UtilityParagraphData(
     heading: 'Independent fork of Vizor',
     body:
-        'Sigil is an independent fork of Vizor, originally developed by '
-        'Chainapsis, the team behind Keplr. Sigil is maintained separately '
+        'Sybil is an independent fork of Vizor, originally developed by '
+        'Chainapsis, the team behind Keplr. Sybil is maintained separately '
         'and is not an official Keplr product.',
   ),
   _UtilityParagraphData(
     heading: 'Designed for shielded Zcash',
     body:
-        'Sigil is built around shielded transactions, where the sender, '
+        'Sybil is built around shielded transactions, where the sender, '
         'recipient, and amount stay private. Transparent Zcash works too, but '
         'private is the default.',
   ),
   _UtilityParagraphData(
     heading: 'Open source, self-custodied',
     body:
-        'Sigil is open source. See the repository license and notice files for '
+        'Sybil is open source. See the repository license and notice files for '
         'applicable license terms and bundled dependency attribution details. '
-        'Your keys stay on your device.\n'
-        "We don't see your balances or your transactions.",
+        'Your signing keys stay on your device. Network providers process '
+        'requests needed to sync, swap and use public names.',
   ),
 ];
 
 const _legalPlaceholderParagraph = _UtilityParagraphData(
   heading: 'Not published yet',
   body:
-      'This test build does not provide a finalized Sigil privacy policy or '
+      'This beta does not provide a finalized Sybil privacy policy or '
       'terms of usage.',
 );
 
@@ -124,7 +124,7 @@ class _AboutContent extends StatelessWidget {
         Opacity(opacity: 0.5, child: VizorWordmark(width: 74, height: 27.925)),
         SizedBox(height: AppSpacing.base),
         _UtilityPageTitle(
-          title: 'About Sigil Wallet',
+          title: 'About Sybil Beta',
           subtitle: kVizorAboutVersionLabel,
         ),
         SizedBox(height: AppSpacing.base),
@@ -134,7 +134,7 @@ class _AboutContent extends StatelessWidget {
         SizedBox(height: AppSpacing.base),
         _AboutLinkRow(),
         SizedBox(height: AppSpacing.sm),
-        SigilLicensesButton(),
+        SybilLicensesButton(),
       ],
     );
   }
@@ -422,16 +422,16 @@ class _AboutLinkRow extends StatelessWidget {
         runSpacing: AppSpacing.xs,
         children: [
           _AboutLinkButton(
-            label: 'Upstream GitHub',
+            label: 'Sybil source',
             icon: AppIcons.github,
-            semanticsLabel: 'Open the upstream Chainapsis Vizor GitHub',
-            url: _vizorGithubUrl,
+            semanticsLabel: 'Open Sybil source on GitHub',
+            url: _sybilGithubUrl,
           ),
           _AboutLinkButton(
-            label: 'Upstream website',
+            label: 'Sybil website',
             icon: AppIcons.globe,
-            semanticsLabel: 'Open upstream Vizor website',
-            url: _vizorWebsiteUrl,
+            semanticsLabel: 'Open Sybil website',
+            url: _sybilWebsiteUrl,
           ),
         ],
       ),

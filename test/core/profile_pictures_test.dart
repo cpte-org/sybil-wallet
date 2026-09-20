@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zcash_wallet/src/core/profile_pictures.dart';
 
@@ -24,21 +25,21 @@ void main() {
         'pfp-15',
       ]);
       expect(kProfilePictureOptions.map((option) => option.label), [
-        'Knight',
-        'Viking',
-        'Samurai',
-        'Monarch',
-        'Iron helm',
-        'Ronin',
-        'Skull knight',
-        'Seer',
-        'Berserker',
-        'Rogue',
-        'Mage',
-        'Masked cat',
-        'Warden',
-        'Bronze helm',
-        'Fish knight',
+        'Orbit',
+        'Chevron',
+        'Nested arcs',
+        'Prism',
+        'Facets',
+        'Crosshair',
+        'Rising bars',
+        'Four points',
+        'Half moon',
+        'Steps',
+        'Wave',
+        'Wedge',
+        'Diamond',
+        'Frame',
+        'Signal',
       ]);
       expect(
         kProfilePictureOptions.first.assetPath,
@@ -52,7 +53,7 @@ void main() {
 
     expect(option, isNotNull);
     expect(option!.id, 'pfp-02');
-    expect(option.label, 'Viking');
+    expect(option.label, 'Chevron');
     expect(option.assetPath, 'assets/profile_pictures/profile_picture_02.png');
   });
 

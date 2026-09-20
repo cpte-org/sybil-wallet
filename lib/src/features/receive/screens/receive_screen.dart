@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -17,7 +17,7 @@ import '../../../core/widgets/app_copy_feedback.dart';
 import '../../../core/widgets/app_back_link.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_icon.dart';
-import '../../../core/widgets/familiar_widgets.dart';
+import '../../../core/widgets/sybil_widgets.dart';
 import '../../../core/widgets/app_pane_modal_overlay.dart';
 import '../../../core/widgets/app_toast.dart';
 import '../../../providers/account_provider.dart';
@@ -675,7 +675,7 @@ class _ReceiveContentLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = FamiliarPalette.of(context);
+    final palette = SybilPalette.of(context);
     final qr = AnimatedSwitcher(
       duration: const Duration(milliseconds: 160),
       child: isLoading
@@ -768,12 +768,12 @@ class _ReceiveContentLayout extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              FamiliarPageHeader(
+              SybilPageHeader(
                 title: 'Receive $kZcashDefaultCurrencyTicker',
                 eyebrow: 'Let it come to you',
               ),
               const SizedBox(height: AppSpacing.md),
-              FamiliarCard(
+              SybilCard(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     if (constraints.maxWidth < 560) {

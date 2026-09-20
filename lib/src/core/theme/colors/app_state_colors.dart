@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/painting.dart';
 
 import '../primitives.dart';
@@ -44,28 +44,28 @@ class AppStateColors {
   final Color focusRingDestructive;
 
   static const dark = AppStateColors(
-    hover: FamiliarPrimitives.softDark,
+    hover: SybilPrimitives.softDark,
     hoverOpacity: Color(0x1ADDEAAA),
-    pressed: FamiliarPrimitives.sageDark,
-    focus: FamiliarPrimitives.lineDark,
-    selected: FamiliarPrimitives.limeDark,
+    pressed: SybilPrimitives.sageDark,
+    focus: SybilPrimitives.lineDark,
+    selected: SybilPrimitives.limeDark,
     selectedOpacity: Color(0x33DDEAAA),
-    focusRing: FamiliarPrimitives.accentDark,
-    focusGap: FamiliarPrimitives.paperDark,
-    focusRingBrand: FamiliarPrimitives.accentDark,
-    focusRingDestructive: FamiliarPrimitives.errorDark,
+    focusRing: SybilPrimitives.accentDark,
+    focusGap: SybilPrimitives.paperDark,
+    focusRingBrand: SybilPrimitives.accentDark,
+    focusRingDestructive: SybilPrimitives.errorDark,
   );
 
   static const light = AppStateColors(
-    hover: FamiliarPrimitives.softLight,
+    hover: SybilPrimitives.softLight,
     hoverOpacity: Color(0x0D294A35),
-    pressed: FamiliarPrimitives.sageLight,
-    focus: FamiliarPrimitives.lineLight,
-    selected: FamiliarPrimitives.limeLight,
+    pressed: SybilPrimitives.sageLight,
+    focus: SybilPrimitives.lineLight,
+    selected: SybilPrimitives.limeLight,
     selectedOpacity: Color(0x26294A35),
-    focusRing: FamiliarPrimitives.accentLight,
-    focusGap: FamiliarPrimitives.paperLight,
-    focusRingBrand: FamiliarPrimitives.accentLight,
-    focusRingDestructive: FamiliarPrimitives.errorLight,
+    focusRing: SybilPrimitives.accentLight,
+    focusGap: SybilPrimitives.paperLight,
+    focusRingBrand: SybilPrimitives.accentLight,
+    focusRingDestructive: SybilPrimitives.errorLight,
   );
 }

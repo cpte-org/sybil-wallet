@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -5,6 +6,104 @@ import 'package:zcash_wallet/src/features/swap/integrations/near_intents/near_in
 import 'package:zcash_wallet/src/features/swap/providers/swap_failure_policy.dart';
 
 void main() {
+  test(
+    'proxy partner configuration has service guidance, not a wallet-build fix',
+    () {
+      const error = OneClickApiException(
+        'unavailable',
+        statusCode: 503,
+        responseBody:
+            '{"code":"PARTNER_NOT_CONFIGURED","message":"Swap service is not configured yet."}',
+      );
+      expect(
+        swapFailureCategory(SwapFailureOperation.quote, error),
+        SwapFailureCategory.serviceNotReady,
+      );
+      expect(
+        swapFailureMessage(SwapFailureOperation.quote, error),
+        contains('service is not ready'),
+      );
+      expect(
+        swapFailureMessage(SwapFailureOperation.quote, error),
+        isNot(contains('build')),
+      );
+      for (final operation in [
+        SwapFailureOperation.refreshStatus,
+        SwapFailureOperation.submitDeposit,
+      ]) {
+        expect(
+          swapFailureMessage(operation, error),
+          contains('Do not send funds again'),
+        );
+        expect(swapFailureMessage(operation, error), isNot(contains('build')));
+      }
+      expect(
+        swapFailureCategory(
+          SwapFailureOperation.quote,
+          const OneClickApiException(
+            'outage',
+            statusCode: 503,
+            responseBody: 'not JSON',
+          ),
+        ),
+        SwapFailureCategory.serviceUnavailable,
+      );
+    },
+  );
+
+  test(
+    'missing local service configuration has actionable quote and token copy',
+    () {
+      const error = OneClickApiException(
+        'configuration detail',
+        operation: 'configuration',
+      );
+      for (final operation in [
+        SwapFailureOperation.tokenList,
+        SwapFailureOperation.quote,
+        SwapFailureOperation.start,
+      ]) {
+        expect(
+          swapFailureCategory(operation, error, torEnabled: true),
+          SwapFailureCategory.serviceNotConfigured,
+        );
+        expect(
+          swapFailureMessage(operation, error),
+          contains('not configured in this Sybil build'),
+        );
+        expect(
+          swapFailureMessage(operation, error),
+          isNot(contains('Try again later')),
+        );
+      }
+      expect(
+        swapFailureMessage(
+          SwapFailureOperation.tokenList,
+          error,
+          surface: SwapFailureSurface.pay,
+        ),
+        startsWith('Payment conversion service'),
+      );
+    },
+  );
+
+  test('configuration failures after deposit never suggest resending', () {
+    const error = OneClickApiException(
+      'configuration detail',
+      operation: 'configuration',
+    );
+    for (final operation in [
+      SwapFailureOperation.refreshStatus,
+      SwapFailureOperation.submitDeposit,
+    ]) {
+      final message = swapFailureMessage(operation, error);
+      expect(message, contains('not configured'));
+      expect(message, contains('Do not send funds again'));
+      expect(message, contains('Keep your swap record'));
+      expect(message, isNot(contains('automatically')));
+    }
+  });
+
   test('credential failures are hidden as temporary service issues', () {
     const error = OneClickApiException('unauthorized', statusCode: 401);
 

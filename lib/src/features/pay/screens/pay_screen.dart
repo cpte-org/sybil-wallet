@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 
 import 'package:flutter/material.dart' show Material, MaterialType;
@@ -323,7 +324,11 @@ class _PayScreenState extends ConsumerState<PayScreen> {
     );
     final startBlockedReason =
         quote != null &&
-            swapReviewQuoteExceedsAvailableZec(quote, migrationSpendable)
+            swapReviewQuoteExceedsAvailableZec(
+              quote,
+              migrationSpendable,
+              depositFeeZatoshi: swapState.reviewDepositFeeZatoshi,
+            )
         ? "You don't have enough ZEC for this payment. Try a smaller amount."
         : null;
 
@@ -442,6 +447,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                       ? const SizedBox(height: 428)
                       : PayReviewStep(
                           quote: quote,
+                          depositFeeZatoshi: swapState.reviewDepositFeeZatoshi,
                           recipientAddress: recipientAddress,
                           recipientContact: recipientContact,
                           payingFiatText: swapReviewFiatTextForAsset(

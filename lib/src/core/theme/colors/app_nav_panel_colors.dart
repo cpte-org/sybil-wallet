@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/painting.dart';
 
 import '../primitives.dart';
@@ -18,16 +18,16 @@ class AppNavPanelColors {
   final Color activeLabel;
 
   static const dark = AppNavPanelColors(
-    badgeBg: FamiliarPrimitives.accentDark,
-    activeBg: FamiliarPrimitives.navActive,
-    activeIcon: FamiliarPrimitives.navLight,
-    activeLabel: FamiliarPrimitives.navLight,
+    badgeBg: SybilPrimitives.accentDark,
+    activeBg: SybilPrimitives.navActive,
+    activeIcon: SybilPrimitives.navLight,
+    activeLabel: SybilPrimitives.navLight,
   );
 
   static const light = AppNavPanelColors(
-    badgeBg: FamiliarPrimitives.accentLight,
-    activeBg: FamiliarPrimitives.limeLight,
-    activeIcon: FamiliarPrimitives.accentLight,
-    activeLabel: FamiliarPrimitives.inkLight,
+    badgeBg: SybilPrimitives.accentLight,
+    activeBg: SybilPrimitives.limeLight,
+    activeIcon: SybilPrimitives.accentLight,
+    activeLabel: SybilPrimitives.inkLight,
   );
 }

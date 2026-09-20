@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -141,7 +141,7 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(find.text('Reset Sigil'));
+    await tester.tap(find.text('Reset Sybil'));
     await tester.pump();
 
     expect(auth.calls, 1);
@@ -175,7 +175,7 @@ void main() {
     );
     expect(tester.takeException(), isNull);
 
-    await tester.tap(find.text('Reset Sigil'));
+    await tester.tap(find.text('Reset Sybil'));
     await tester.pump();
 
     expect(auth.calls, 1);
@@ -212,7 +212,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Reset Sigil'));
+    await tester.tap(find.text('Reset Sybil'));
     await tester.pumpAndSettle();
 
     // The OS prompt is never invoked, and the reset still proceeds.
@@ -249,7 +249,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Reset Sigil'));
+    await tester.tap(find.text('Reset Sybil'));
     await tester.pumpAndSettle();
 
     expect(auth.calls, 1);
@@ -294,7 +294,7 @@ void main() {
     );
     expect(find.text('This cannot be undone.'), findsNothing);
     final resetButton = tester.widget<AppButton>(
-      find.widgetWithText(AppButton, 'Reset Sigil'),
+      find.widgetWithText(AppButton, 'Reset Sybil'),
     );
     expect(resetButton.onPressed, isNotNull);
     expect(tester.takeException(), isNull);
@@ -362,7 +362,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Reset Sigil'));
+    await tester.tap(find.text('Reset Sybil'));
     await tester.pumpAndSettle();
 
     // Whole sentence, no ellipsis: this is the longest status the screen
@@ -472,12 +472,12 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Reset Sigil'));
+    await tester.tap(find.text('Reset Sybil'));
     await tester.pumpAndSettle();
 
     expect(auth.calls, 1);
     expect(auth.lastReason, kWalletResetDeviceAuthReason);
-    expect(find.text('Confirm reset Sigil'), findsNothing);
+    expect(find.text('Confirm reset Sybil'), findsNothing);
     expect(resetCalls, 1);
   });
 }

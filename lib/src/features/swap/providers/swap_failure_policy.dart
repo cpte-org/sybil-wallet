@@ -1,4 +1,6 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
+import 'dart:convert';
 
 import '../integrations/near_intents/near_intents_one_click_swap_adapter.dart';
 
@@ -25,6 +27,8 @@ enum SwapFailureCategory {
   noQuoteOrLiquidity,
   torBlocked,
   serviceUnavailable,
+  serviceNotConfigured,
+  serviceNotReady,
   networkTimeout,
   unverifiedResponse,
   retryLater,
@@ -82,6 +86,12 @@ SwapFailureCategory _oneClickCategory(
   OneClickApiException error, {
   required bool torEnabled,
 }) {
+  if (_isPartnerNotConfigured(error)) {
+    return SwapFailureCategory.serviceNotReady;
+  }
+  if (error.operation == 'configuration') {
+    return SwapFailureCategory.serviceNotConfigured;
+  }
   if (_isUnsupportedAssetError(error)) {
     return SwapFailureCategory.unsupportedAsset;
   }
@@ -125,6 +135,16 @@ SwapFailureCategory _oneClickCategory(
   return SwapFailureCategory.unknown;
 }
 
+bool _isPartnerNotConfigured(OneClickApiException error) {
+  if (error.statusCode != 503 || error.responseBody == null) return false;
+  try {
+    final response = jsonDecode(error.responseBody!);
+    return response is Map && response['code'] == 'PARTNER_NOT_CONFIGURED';
+  } on FormatException {
+    return false;
+  }
+}
+
 bool _isTorExitBlockedResponse(OneClickApiException error) {
   if (error.statusCode != 403) return false;
   final body = error.responseBody?.toLowerCase();
@@ -157,6 +177,11 @@ String _messageFor(
                 'connection.\nTurn off Tor in Settings to pay.'
           : 'Swap is unavailable over Tor because the service blocked this '
                 'connection.\nTurn off Tor in Settings to use swap.',
+    SwapFailureCategory.serviceNotReady => _serviceNotReadyMessage(operation),
+    SwapFailureCategory.serviceNotConfigured => _configurationMessage(
+      operation,
+      surface,
+    ),
     SwapFailureCategory.serviceUnavailable => _serviceUnavailableMessage(
       operation,
     ),
@@ -187,10 +212,36 @@ String _unsupportedAssetMessage(SwapFailureOperation operation) {
   };
 }
 
+String _serviceNotReadyMessage(SwapFailureOperation operation) {
+  if (operation == SwapFailureOperation.refreshStatus ||
+      operation == SwapFailureOperation.submitDeposit) {
+    return 'The Sybil swap service is not ready to check this swap.\n'
+        'Do not send funds again. Keep your swap record and check its status once the service is ready.';
+  }
+  return 'The Sybil conversion service is not ready yet.\n'
+      'Wait for the service to be configured before continuing.';
+}
+
+String _configurationMessage(
+  SwapFailureOperation operation,
+  SwapFailureSurface surface,
+) {
+  if (operation == SwapFailureOperation.refreshStatus ||
+      operation == SwapFailureOperation.submitDeposit) {
+    return 'Swap status cannot be checked because the service is not configured in this Sybil build.\n'
+        'Do not send funds again. Keep your swap record and use a configured Sybil build to check its status.';
+  }
+  final feature = surface == SwapFailureSurface.pay
+      ? 'Payment conversion'
+      : 'Swap';
+  return '$feature service is not configured in this Sybil build.\n'
+      'Use a Sybil build with the service configured to continue.';
+}
+
 String _serviceUnavailableMessage(SwapFailureOperation operation) {
   return switch (operation) {
-    SwapFailureOperation.refreshStatus || SwapFailureOperation.submitDeposit =>
-      _statusAutoRefreshMessage,
+    SwapFailureOperation.refreshStatus ||
+    SwapFailureOperation.submitDeposit => _statusAutoRefreshMessage,
     _ => 'Swap service is temporarily unavailable.\nTry again later.',
   };
 }
@@ -199,16 +250,16 @@ String _timeoutMessage(SwapFailureOperation operation) {
   return switch (operation) {
     SwapFailureOperation.quote =>
       'Quote request timed out.\nCheck your connection and try again.',
-    SwapFailureOperation.refreshStatus || SwapFailureOperation.submitDeposit =>
-      _statusAutoRefreshMessage,
+    SwapFailureOperation.refreshStatus ||
+    SwapFailureOperation.submitDeposit => _statusAutoRefreshMessage,
     _ => 'Request timed out.\nCheck your connection and try again.',
   };
 }
 
 String _retryLaterMessage(SwapFailureOperation operation) {
   return switch (operation) {
-    SwapFailureOperation.refreshStatus || SwapFailureOperation.submitDeposit =>
-      _statusAutoRefreshMessage,
+    SwapFailureOperation.refreshStatus ||
+    SwapFailureOperation.submitDeposit => _statusAutoRefreshMessage,
     _ => 'Swap service is still processing.\nWait a moment and try again.',
   };
 }

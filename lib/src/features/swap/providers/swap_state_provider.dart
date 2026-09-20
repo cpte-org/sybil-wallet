@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -677,7 +678,9 @@ class SwapNotifier extends Notifier<SwapState> {
             ? SwapFailureSurface.pay
             : SwapFailureSurface.swap,
       );
-      if (category == SwapFailureCategory.torBlocked) {
+      if (category == SwapFailureCategory.torBlocked ||
+          category == SwapFailureCategory.serviceNotConfigured ||
+          category == SwapFailureCategory.serviceNotReady) {
         state = state.copyWith(supportedAssetsError: message);
       }
       log(
@@ -720,6 +723,7 @@ class SwapNotifier extends Notifier<SwapState> {
       clearQuoteError: true,
     );
 
+    var estimatingDepositFee = false;
     try {
       if (!state.payMode) {
         await _persistComposerPreferences(preferences);
@@ -742,6 +746,12 @@ class SwapNotifier extends Notifier<SwapState> {
               slippageBps: state.slippageBps,
             ),
           );
+      estimatingDepositFee = quote.direction.sendsZec;
+      final depositFee = quote.direction.sendsZec
+          ? await ref
+                .read(swapDepositSenderProvider)
+                .estimateZecDepositFee(accountUuid: accountUuid, quote: quote)
+          : null;
       if (generation != _quoteGeneration) {
         return;
       }
@@ -754,16 +764,21 @@ class SwapNotifier extends Notifier<SwapState> {
         reviewQuote: quote,
         reviewAddressPlan: addressPlan,
         reviewAccountUuid: accountUuid,
+        reviewDepositFeeZatoshi: depositFee,
         quoteLoading: false,
         quoteExpired: false,
         clearQuoteError: true,
       );
     } catch (e) {
-      if (generation != _quoteGeneration) return;
+      if (generation != _quoteGeneration || !_isAccountActive(accountUuid)) {
+        return;
+      }
       state = state.copyWith(
         reviewVisible: false,
         quoteLoading: false,
-        quoteError: _friendlyQuoteError(e),
+        quoteError: estimatingDepositFee
+            ? _providerFailureMessage(SwapFailureOperation.sendZecDeposit, e)
+            : _friendlyQuoteError(e),
         clearReview: true,
       );
     }
@@ -772,6 +787,9 @@ class SwapNotifier extends Notifier<SwapState> {
   Future<SwapStartResult?> startIntent() async {
     final quote = state.reviewQuote;
     final addressPlan = state.reviewAddressPlan;
+    final reviewedFee = state.reviewDepositFeeZatoshi;
+    final reviewGeneration = _quoteGeneration;
+    if (state.quoteLoading) return null;
     if (quote == null || addressPlan == null || state.quoteExpired) {
       log(
         'Swap: start ignored; quote=${quote != null} '
@@ -828,10 +846,28 @@ class SwapNotifier extends Notifier<SwapState> {
         .isActiveAccountHardware;
     if (quote.direction.sendsZec) {
       try {
-        await ref
+        if (reviewedFee == null) throw const SwapDepositFeeChanged();
+        final currentFee = await ref
             .read(swapDepositSenderProvider)
             .estimateZecDepositFee(accountUuid: accountUuid, quote: quote);
+        if (reviewGeneration != _quoteGeneration ||
+            !_isAccountActive(accountUuid) ||
+            !identical(state.reviewQuote, quote)) {
+          return null;
+        }
+        if (state.quoteExpired ||
+            (actionDeadline != null &&
+                !DateTime.now().toUtc().isBefore(actionDeadline))) {
+          state = state.copyWith(startSubmitting: false);
+          expireReviewQuote();
+          return null;
+        }
+        checkSwapDepositFee(currentFee, reviewedFee);
       } catch (e) {
+        if (reviewGeneration != _quoteGeneration ||
+            !_isAccountActive(accountUuid)) {
+          return null;
+        }
         log(
           'Swap: live ZEC deposit preflight failed '
           'quote=${_shortSwapValue(quote.providerQuoteId)} error=$e',
@@ -941,6 +977,7 @@ class SwapNotifier extends Notifier<SwapState> {
           accountUuid: accountUuid,
           quote: quote,
           intentId: intent.id,
+          maximumFeeZatoshi: reviewedFee!,
         ),
       );
     }
@@ -1520,6 +1557,7 @@ class SwapNotifier extends Notifier<SwapState> {
     required String accountUuid,
     required SwapQuote quote,
     required String intentId,
+    required BigInt maximumFeeZatoshi,
   }) async {
     log(
       'Swap: live ZEC deposit begin intent=${_shortSwapValue(intentId)} '
@@ -1531,7 +1569,11 @@ class SwapNotifier extends Notifier<SwapState> {
     try {
       broadcast = await ref
           .read(swapDepositSenderProvider)
-          .sendZecDeposit(accountUuid: accountUuid, quote: quote);
+          .sendZecDeposit(
+            accountUuid: accountUuid,
+            quote: quote,
+            maximumFeeZatoshi: maximumFeeZatoshi,
+          );
     } catch (e) {
       log(
         'Swap: live ZEC deposit failed intent=${_shortSwapValue(intentId)} '
@@ -2061,6 +2103,7 @@ class SwapNotifier extends Notifier<SwapState> {
     Object error, {
     SwapFailureSurface surface = SwapFailureSurface.swap,
   }) {
+    if (error is SwapDepositFeeChanged) return error.toString();
     return swapFailureMessage(
       operation,
       error,

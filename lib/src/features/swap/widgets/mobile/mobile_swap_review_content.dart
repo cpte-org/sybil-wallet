@@ -1,4 +1,6 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/widgets.dart';
+import '../swap_deposit_fee_summary.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -23,6 +25,7 @@ import 'mobile_swap_review_header.dart';
 class MobileSwapReviewContent extends StatelessWidget {
   const MobileSwapReviewContent({
     required this.quote,
+    this.depositFeeZatoshi,
     required this.addressPlan,
     required this.accountLabel,
     required this.accountProfilePictureId,
@@ -39,6 +42,7 @@ class MobileSwapReviewContent extends StatelessWidget {
   });
 
   final SwapQuote quote;
+  final BigInt? depositFeeZatoshi;
   final SwapAddressPlan addressPlan;
   final String? accountLabel;
   final String accountProfilePictureId;
@@ -103,6 +107,10 @@ class MobileSwapReviewContent extends StatelessWidget {
         MobileSwapReviewHeader(pay: payRow, receive: receiveRow),
         const SizedBox(height: AppSpacing.sm),
         _ReviewCard(quote: quote),
+        if (quote.direction.sendsZec && depositFeeZatoshi != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          SwapDepositFeeSummary(quote: quote, feeZatoshi: depositFeeZatoshi!),
+        ],
         if (amountWarning != null) ...[
           const SizedBox(height: AppSpacing.s),
           _MobileReviewNotice(

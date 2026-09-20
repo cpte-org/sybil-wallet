@@ -1,4 +1,6 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/widgets.dart';
+import '../../swap/widgets/swap_deposit_fee_summary.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
@@ -7,6 +9,7 @@ import '../../../core/widgets/app_profile_picture.dart';
 import '../../../core/widgets/review_info_row.dart';
 import '../../address_book/models/address_book_contact.dart';
 import '../../swap/domain/swap_asset.dart';
+import '../../swap/domain/swap_direction.dart';
 import '../../swap/domain/swap_quote.dart';
 import '../../swap/models/swap_address_formatting.dart';
 import '../../swap/widgets/swap_asset_icon.dart';
@@ -17,6 +20,7 @@ import '../../swap/widgets/swap_asset_icon.dart';
 class PayReviewStep extends StatelessWidget {
   const PayReviewStep({
     required this.quote,
+    this.depositFeeZatoshi,
     required this.recipientAddress,
     required this.recipientContact,
     required this.payingFiatText,
@@ -33,6 +37,7 @@ class PayReviewStep extends StatelessWidget {
   });
 
   final SwapQuote quote;
+  final BigInt? depositFeeZatoshi;
   final String recipientAddress;
 
   /// Saved contact matching the recipient, for the avatar + display name.
@@ -120,6 +125,10 @@ class PayReviewStep extends StatelessWidget {
               ],
             ),
           ),
+          if (quote.direction.sendsZec && depositFeeZatoshi != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            SwapDepositFeeSummary(quote: quote, feeZatoshi: depositFeeZatoshi!),
+          ],
           const SizedBox(height: AppSpacing.sm),
           SizedBox(
             height: 40,

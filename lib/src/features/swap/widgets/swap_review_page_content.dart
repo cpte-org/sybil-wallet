@@ -1,4 +1,6 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/widgets.dart';
+import 'swap_deposit_fee_summary.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
@@ -22,6 +24,7 @@ const double _swapReviewContentWidth = 396;
 class SwapReviewPageContent extends StatelessWidget {
   const SwapReviewPageContent({
     required this.quote,
+    this.depositFeeZatoshi,
     required this.addressPlan,
     required this.expired,
     required this.amountWarning,
@@ -39,6 +42,7 @@ class SwapReviewPageContent extends StatelessWidget {
   });
 
   final SwapQuote quote;
+  final BigInt? depositFeeZatoshi;
   final SwapAddressPlan addressPlan;
 
   /// Saved contacts used to label the recipient/refund address lines when
@@ -101,6 +105,10 @@ class SwapReviewPageContent extends StatelessWidget {
               quote: quote,
               slippageToleranceTextOverride: slippageToleranceTextOverride,
             ),
+          ],
+          if (quote.direction.sendsZec && depositFeeZatoshi != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            SwapDepositFeeSummary(quote: quote, feeZatoshi: depositFeeZatoshi!),
           ],
           if (amountWarning != null) ...[
             const SizedBox(height: AppSpacing.sm),

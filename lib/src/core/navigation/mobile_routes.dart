@@ -1,6 +1,6 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
-import '../../features/contacts/presentation/familiar_add_person_screen.dart';
-import '../../features/contacts/presentation/familiar_choose_recipient_screen.dart';
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
+import '../../features/contacts/presentation/sybil_add_person_screen.dart';
+import '../../features/contacts/presentation/sybil_choose_recipient_screen.dart';
 import 'package:flutter/cupertino.dart' show CupertinoPage;
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart' show Scaffold;
@@ -8,13 +8,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/zns/presentation/zns_wallet_screen.dart';
 import '../../features/contacts/presentation/contact_exchange_screen.dart';
-import '../../features/contacts/presentation/familiar_people_screen.dart';
+import '../../features/contacts/presentation/sybil_people_screen.dart';
 import '../../features/contacts/presentation/contact_backup_screen.dart';
 import '../../features/contacts/presentation/contact_delivery_screen.dart';
 import '../../features/contacts/presentation/contact_introduction_screen.dart';
 import '../../features/settings/names_settings.dart';
 import '../../features/settings/contact_settings.dart';
 import '../../features/settings/screens/settings_base_key_screen.dart';
+import '../../features/settings/screens/settings_base_endpoint_screen.dart';
 
 import '../../features/accounts/screens/mobile/mobile_accounts_screen.dart';
 import '../../features/activity/screens/mobile/mobile_activity_screen.dart';
@@ -209,6 +210,13 @@ List<RouteBase> buildMobileRoutes({required List<RouteBase> entryRoutes}) {
       ),
     ),
     GoRoute(
+      path: '/settings/base-endpoint',
+      pageBuilder: (context, state) => CupertinoPage(
+        key: state.pageKey,
+        child: const SettingsBaseEndpointScreen(),
+      ),
+    ),
+    GoRoute(
       path: '/settings/explorer',
       pageBuilder: (context, state) => CupertinoPage(
         key: state.pageKey,
@@ -228,7 +236,7 @@ List<RouteBase> buildMobileRoutes({required List<RouteBase> entryRoutes}) {
       path: '/people/add',
       pageBuilder: (_, state) => CupertinoPage(
         key: state.pageKey,
-        child: FamiliarAddPersonScreen(
+        child: SybilAddPersonScreen(
           savedId: state.extra is String ? state.extra as String : null,
         ),
       ),
@@ -249,7 +257,7 @@ List<RouteBase> buildMobileRoutes({required List<RouteBase> entryRoutes}) {
           // onto `/send` keeps the first request's recipient.
           key: payloadScopedPageKey(state, prefill?.id),
           child: extra == null
-              ? const FamiliarChooseRecipientScreen()
+              ? const SybilChooseRecipientScreen()
               : MobileSendScreen(
                   useRouteSteps: true,
                   initialRecipient:
@@ -714,7 +722,7 @@ const List<_MobileTab> _allMobileTabs = [
   _MobileTab(
     path: '/people',
     item: AppMobileTabItem(iconName: AppIcons.users, label: 'People'),
-    screen: FamiliarPeopleScreen(),
+    screen: SybilPeopleScreen(),
   ),
   _MobileTab(
     path: '/activity',

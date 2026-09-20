@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'app_background_colors.dart';
 import 'app_border_colors.dart';
 import 'app_button_colors.dart';
@@ -25,10 +25,10 @@ export 'app_surface_colors.dart';
 export 'app_sync_colors.dart';
 export 'app_text_colors.dart';
 
-/// Semantic Familiar palette for the wallet, organized by component role.
+/// Semantic Sybil palette for the wallet, organized by component role.
 ///
 /// Existing token names remain compatible with wallet screens. Brand-crimson
-/// slots now carry Familiar's forest accent; utility slots retain distinct
+/// slots now carry Sybil's forest accent; utility slots retain distinct
 /// success, warning, and destructive meanings. Read through `context.colors`.
 class AppColors {
   const AppColors({

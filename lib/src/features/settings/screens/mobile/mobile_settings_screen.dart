@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/app_version_config.dart';
+import '../../../../core/config/swap_feature_config.dart';
 import '../../../../core/layout/mobile/app_mobile_sheet.dart';
 import '../../../../core/layout/mobile/app_mobile_tab_bar.dart';
 import '../../../../core/layout/mobile/mobile_top_nav.dart';
@@ -16,7 +17,7 @@ import '../../../../core/profile_pictures.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_icon.dart';
-import '../../../../core/widgets/familiar_widgets.dart';
+import '../../../../core/widgets/sybil_widgets.dart';
 import '../../../../core/widgets/app_profile_picture.dart';
 import '../../../../core/widgets/app_toast.dart';
 import '../../../../core/widgets/mobile/mobile_list_row.dart';
@@ -64,6 +65,7 @@ class MobileSettingsScreen extends ConsumerWidget {
     final settingsChevronColor = context.colors.icon.accent;
     final seedPhraseEnabled = account != null && !account.isHardware;
     final viewingKeyEnabled = account != null;
+    final swapFeatureEnabled = ref.watch(swapFeatureEnabledProvider);
 
     return SafeArea(
       bottom: false,
@@ -89,7 +91,7 @@ class MobileSettingsScreen extends ConsumerWidget {
                 ),
               ),
               children: [
-                const FamiliarPageHeader(title: 'Your wallet, your way.'),
+                const SybilPageHeader(title: 'Your wallet, your way.'),
                 const SizedBox(height: AppSpacing.md),
                 _SettingsGroup(
                   title: 'Security and recovery',
@@ -106,6 +108,32 @@ class MobileSettingsScreen extends ConsumerWidget {
                       onTap: seedPhraseEnabled
                           ? () => context.push('/settings/seed-phrase')
                           : null,
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        MobileListRow(
+                          key: const ValueKey(
+                            'mobile_settings_people_backup_row',
+                          ),
+                          leading: _RowIcon(AppIcons.users),
+                          label: 'Connection backup',
+                          minRowHeight: _settingsRowHeight,
+                          textStyle: settingsRowStyle,
+                          chevronColor: settingsChevronColor,
+                          showChevron: true,
+                          onTap: () => context.push('/contacts/backup'),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.s),
+                          child: Text(
+                            'Private connections need a separate backup',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: context.colors.text.secondary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     MobileListRow(
                       key: const ValueKey('mobile_settings_viewing_key_row'),
@@ -132,16 +160,6 @@ class MobileSettingsScreen extends ConsumerWidget {
                       onTap: seedPhraseEnabled
                           ? () => context.push('/settings/base-key')
                           : null,
-                    ),
-                    MobileListRow(
-                      key: const ValueKey('mobile_settings_people_backup_row'),
-                      leading: _RowIcon(AppIcons.users),
-                      label: 'Connection backup',
-                      minRowHeight: _settingsRowHeight,
-                      textStyle: settingsRowStyle,
-                      chevronColor: settingsChevronColor,
-                      showChevron: true,
-                      onTap: () => context.push('/contacts/backup'),
                     ),
                     MobileListRow(
                       leading: _RowIcon(AppIcons.lock),
@@ -218,16 +236,17 @@ class MobileSettingsScreen extends ConsumerWidget {
                           ? null
                           : () => _editAccount(context, ref, account),
                     ),
-                    MobileListRow(
-                      key: const ValueKey('mobile_settings_address_book_row'),
-                      leading: _RowIcon(AppIcons.users),
-                      label: 'People',
-                      minRowHeight: _settingsRowHeight,
-                      textStyle: settingsRowStyle,
-                      chevronColor: settingsChevronColor,
-                      showChevron: true,
-                      onTap: () => context.push('/people'),
-                    ),
+                    if (swapFeatureEnabled)
+                      MobileListRow(
+                        key: const ValueKey('mobile_settings_exchange_row'),
+                        leading: _RowIcon(AppIcons.swapArrows),
+                        label: 'Exchange ZEC',
+                        minRowHeight: _settingsRowHeight,
+                        textStyle: settingsRowStyle,
+                        chevronColor: settingsChevronColor,
+                        showChevron: true,
+                        onTap: () => context.push('/swap'),
+                      ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -283,6 +302,16 @@ class MobileSettingsScreen extends ConsumerWidget {
                       chevronColor: settingsChevronColor,
                       showChevron: true,
                       onTap: () => context.push('/settings/endpoint'),
+                    ),
+                    MobileListRow(
+                      key: const ValueKey('mobile_settings_base_endpoint_row'),
+                      leading: _RowIcon(AppIcons.endpoint),
+                      label: 'Base RPC endpoint',
+                      minRowHeight: _settingsRowHeight,
+                      textStyle: settingsRowStyle,
+                      chevronColor: settingsChevronColor,
+                      showChevron: true,
+                      onTap: () => context.push('/settings/base-endpoint'),
                     ),
                     MobileListRow(
                       key: const ValueKey('mobile_settings_explorer_row'),
@@ -405,14 +434,7 @@ class MobileSettingsScreen extends ConsumerWidget {
   };
 
   static String _profilePictureDisplayLabel(String id) {
-    final option = resolveProfilePictureOption(id);
-    return switch (option.id) {
-      'pfp-01' => 'Knight',
-      'pfp-02' => 'Viking',
-      'pfp-03' => 'Samurai',
-      'pfp-11' => 'Wizard',
-      _ => option.label,
-    };
+    return resolveProfilePictureOption(id).label;
   }
 
   Future<void> _toggleBiometric(BuildContext context, WidgetRef ref) async {
@@ -532,7 +554,7 @@ class _DisableBiometricSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'You will use your passcode to unlock Sigil. You can turn '
+            'You will use your passcode to unlock Sybil. You can turn '
             '${kind.inlineUnlockFeatureLabel} back on in settings anytime.',
             style: _bodyStyle.copyWith(color: colors.text.accent),
           ),
@@ -570,7 +592,7 @@ class _SettingsVersionFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Sigil, version $kVizorReleaseVersion',
+      label: 'Sybil, version $kVizorReleaseVersion',
       excludeSemantics: true,
       child: Center(
         child: Row(
@@ -611,7 +633,7 @@ class _SettingsGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FamiliarCard(
+    return SybilCard(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.sm,
         AppSpacing.base,

@@ -1,8 +1,10 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import '../../../../core/network/network_http_client.dart';
+import '../../../../core/config/near_intents_endpoint_config.dart';
 import '../../domain/swap_contract.dart';
 import '../../models/swap_token_amount_formatting.dart';
 
@@ -16,6 +18,7 @@ class NearIntentsOneClickSwapAdapter
     implements SwapProvider, SwapPricingProvider {
   NearIntentsOneClickSwapAdapter({
     Uri? baseUri,
+    this.endpointConfig,
     OneClickApiTransport? transport,
     this.bearerToken,
     this.referral,
@@ -24,11 +27,21 @@ class NearIntentsOneClickSwapAdapter
     this.quoteDeadline = const Duration(hours: 2),
     this.assetIdOverrides = const {},
     DateTime Function()? now,
-  }) : baseUri = baseUri ?? Uri.parse('https://1click.chaindefuser.com'),
+  }) : assert(baseUri == null || endpointConfig == null),
+       _baseUri = baseUri ?? Uri.parse('https://1click.chaindefuser.com'),
        transport = transport ?? HttpClientOneClickApiTransport(),
        _now = now ?? DateTime.now;
 
-  final Uri baseUri;
+  final Uri _baseUri;
+  final NearIntentsEndpointConfig? endpointConfig;
+  Uri get baseUri {
+    try {
+      return endpointConfig?.requireBaseUri() ?? _baseUri;
+    } on NearIntentsConfigurationException catch (error) {
+      throw OneClickApiException(error.message, operation: 'configuration');
+    }
+  }
+
   final OneClickApiTransport transport;
   final String? bearerToken;
   final String? referral;

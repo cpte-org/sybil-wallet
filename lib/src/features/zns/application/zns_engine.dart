@@ -1,5 +1,6 @@
 import 'dart:async';
 import '../domain/zns_operation.dart';
+import '../data/zns_transaction_preflight.dart';
 import 'zns_journal.dart';
 
 /// A funding failure proven to have happened before any signing or broadcast.
@@ -151,6 +152,7 @@ class ZnsEngine {
   bool busy = false;
   bool _disposed = false;
   String? error;
+  String? progressMessage;
   Timer? _timer;
 
   Future<void> load() async {
@@ -465,6 +467,7 @@ class ZnsEngine {
         await gateway.quoteRegistration(reviewed.name),
       );
     }
+    reviewed.message = null;
     operation = reviewed;
     await _save(); // Durable secret and spend limits precede all external actions.
     authorized = true;
@@ -530,13 +533,17 @@ class ZnsEngine {
     await _save();
     if (receipt['success'] != true) {
       throw StateError(
-        'The ${pending['kind']} transaction reverted. Its gas was spent; review before retrying.',
+        'The Base transaction reverted. Network fees were spent, but its swap and name changes were rolled back. Review before retrying.',
       );
     }
     return true;
   }
 
-  Future<void> _send(ZnsOperation op, Map<String, dynamic> intent) async {
+  Future<void> _send(
+    ZnsOperation op,
+    Map<String, dynamic> intent, {
+    Future<Map<String, dynamic>> Function()? refreshSwap,
+  }) async {
     _guard();
     if (intent['kind'] == 'release' &&
         !znsExitWithinReview(
@@ -548,7 +555,32 @@ class ZnsEngine {
       );
     }
     _guard();
-    final signed = await gateway.sign(op, intent, ensureAuthorized: _guard);
+    op.phase = intent['kind'] as String;
+    progressMessage = 'Checking transaction before signing…';
+    onChange();
+    Map<String, dynamic> signed;
+    try {
+      signed = await gateway.sign(op, intent, ensureAuthorized: _guard);
+    } on ZnsUnsignedSwapRejected {
+      if (refreshSwap == null ||
+          intent['kind'] != 'atomicRegister' ||
+          intent['swap'] == null) {
+        rethrow;
+      }
+      _guard();
+      progressMessage = 'Refreshing the swap route…';
+      onChange();
+      final fresh = await refreshSwap();
+      _guard();
+      progressMessage = 'Checking the refreshed route…';
+      onChange();
+      // Exactly one unsigned retry. Journal writes and broadcasts are outside
+      // this catch, so even a misclassified broadcast error cannot re-sign.
+      signed = await gateway.sign(op, {
+        ...intent,
+        'swap': fresh,
+      }, ensureAuthorized: _guard);
+    }
     _guard();
     op.pending = {...signed, 'kind': intent['kind']};
     op.phase = intent['kind'] as String;
@@ -600,6 +632,7 @@ class ZnsEngine {
   Future<void> advance() async {
     if (busy || _disposed || operation == null || !authorized) return;
     busy = true;
+    progressMessage = 'Checking saved progress…';
     onChange();
     try {
       _guard();
@@ -760,23 +793,34 @@ class ZnsEngine {
             (sum, tx) => sum + BigInt.parse(tx['value'] as String? ?? '0'),
           );
       final budget = op.maxEthWei - op.maxGasFeeWei - spentEth;
+      if (op.kind == 'register') op.phase = 'register';
+      progressMessage = shortfall > BigInt.zero
+          ? 'Finding a swap route…'
+          : 'Preparing transaction…';
+      onChange();
       final swap = shortfall > BigInt.zero
           ? await gateway.swapQuote(shortfall, budget)
           : null;
       if (op.kind == 'register' && gateway.supportsAtomic) {
-        await _send(op, {
-          'kind': 'atomicRegister',
-          'name': op.name,
-          'unifiedAddress': op.unifiedAddress,
-          'secret': op.secret,
-          'amount': op.requiredTokenUnits.toString(),
-          'maxDeposit': op.requiredTokenUnits.toString(),
-          'extraDeposit': op.extraDeposit.toString(),
-          'expectedPricingMode': op.registrationQuote!.pricingMode,
-          'existingTokenUnits': state.token.toString(),
-          'deadline': (state.timestamp + 600).toString(),
-          'swap': swap,
-        });
+        await _send(
+          op,
+          {
+            'kind': 'atomicRegister',
+            'name': op.name,
+            'unifiedAddress': op.unifiedAddress,
+            'secret': op.secret,
+            'amount': op.requiredTokenUnits.toString(),
+            'maxDeposit': op.requiredTokenUnits.toString(),
+            'extraDeposit': op.extraDeposit.toString(),
+            'expectedPricingMode': op.registrationQuote!.pricingMode,
+            'existingTokenUnits': state.token.toString(),
+            'deadline': (state.timestamp + 600).toString(),
+            'swap': swap,
+          },
+          refreshSwap: swap == null
+              ? null
+              : () => gateway.swapQuote(shortfall, budget),
+        );
         return;
       }
       if (swap != null) {
@@ -819,6 +863,7 @@ class ZnsEngine {
         /* Retain error and in-memory recovery. */
       }
     } finally {
+      progressMessage = null;
       busy = false;
       onChange();
       if (authorized && !_disposed) {

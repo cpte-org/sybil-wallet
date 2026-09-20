@@ -1,10 +1,10 @@
-<!-- Apache-2.0 section 4(b): modified from upstream by the Sigil fork. -->
+<!-- Apache-2.0 section 4(b): modified from upstream by the Sybil fork. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.CAMERA" />
     <application
-        android:label="Sigil"
+        android:label="Sybil Beta"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -38,26 +38,20 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Vizor https links: the host is claimed whole, with no path
-                 constraint. A bare `https://<host>` carries an *empty* path on
-                 Android, which android:path="/" does not match, so a
-                 path-constrained filter left exactly the bare origin sitting in
-                 the browser. Claiming the host matches the empty path, "/", and
-                 "/payment-links/open" alike, and it is what iOS already does:
-                 its AASA claims every path on this host. Widening is safe
-                 because nothing downstream trusts the path: MainActivity's
-                 acceptsIncomingUri admits by host, and Dart's
-                 classifyIncomingLink drops an unrecognised path on this origin
-                 silently. -->
+            <!-- The Sybil website shares this host with payment links. Only
+                 claim the explicit payment path; download and documentation
+                 links must remain in the browser. Dart still validates the
+                 origin and payload before offering any wallet action. -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data
                     android:scheme="https"
-                    android:host="${vizorDeeplinkHost}" />
+                    android:host="${vizorDeeplinkHost}"
+                    android:path="/payment-links/open" />
             </intent-filter>
-            <!-- ZIP-321 payment links: zcash:<address>?amount=... open Vizor.
+            <!-- ZIP-321 payment links: zcash:<address>?amount=... open Sybil.
                  Handled in MainActivity (com.zcash.wallet/payment_uri channel),
                  not Flutter's built-in deep linking. -->
             <intent-filter>

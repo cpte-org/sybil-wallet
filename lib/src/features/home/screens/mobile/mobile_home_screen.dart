@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 
 import '../../../../providers/app_security_provider.dart';
@@ -53,7 +53,7 @@ import '../../../migration/widgets/mobile/mobile_ironwood_migration_announcement
 import '../../../swap/models/swap_activity_navigation.dart';
 import '../../../swap/widgets/swap_activity_status_auto_refresh.dart';
 import '../../services/transparent_shielding_service.dart';
-import '../../widgets/familiar_home_dashboard.dart';
+import '../../widgets/sybil_home_dashboard.dart';
 import 'mobile_keystone_shield_screen.dart';
 
 /// Mobile home tab: shielded balance card, send/receive actions, and
@@ -1074,7 +1074,7 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
     ];
 
     if (!widget.ironwoodMigrationCta.visible) {
-      return FamiliarHomeDashboard(
+      return SybilHomeDashboard(
         sync: sync,
         networkPrivacy: ref.watch(networkPrivacyProvider),
         ironwoodOnly:

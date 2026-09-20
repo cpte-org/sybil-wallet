@@ -1,10 +1,10 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/material.dart' show MaterialApp;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
 import 'package:zcash_wallet/src/core/widgets/review_buttons_stack.dart';
-import 'package:zcash_wallet/src/core/widgets/familiar_widgets.dart';
+import 'package:zcash_wallet/src/core/widgets/sybil_widgets.dart';
 import 'package:zcash_wallet/src/features/send/widgets/send_review_content_view.dart';
 import 'package:zcash_wallet/src/features/send/widgets/send_status_content_view.dart';
 import 'package:zcash_wallet/widgetbook/send_review_status_use_cases.dart';
@@ -67,7 +67,7 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('Send failed'), findsOneWidget);
     expect(find.text('Failed'), findsOneWidget);
-    expect(find.byType(FamiliarCard), findsNWidgets(2));
+    expect(find.byType(SybilCard), findsNWidgets(2));
     expect(find.byType(SendStatusContentView), findsOneWidget);
   });
 }

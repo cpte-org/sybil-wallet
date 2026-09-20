@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/painting.dart';
 
 import '../primitives.dart';
@@ -51,34 +51,34 @@ class AppTextColors {
   final Color homeCard;
 
   static const dark = AppTextColors(
-    accent: FamiliarPrimitives.inkDark,
-    primary: FamiliarPrimitives.textDark,
-    secondary: FamiliarPrimitives.mutedDark,
-    muted: FamiliarPrimitives.mutedDark,
+    accent: SybilPrimitives.inkDark,
+    primary: SybilPrimitives.textDark,
+    secondary: SybilPrimitives.mutedDark,
+    muted: SybilPrimitives.mutedDark,
     disabled: Color(0xFF7F9382),
-    inverse: FamiliarPrimitives.onAccentDark,
-    warning: FamiliarPrimitives.warningDark,
-    positiveStrong: FamiliarPrimitives.accentDark,
-    destructive: FamiliarPrimitives.errorDark,
-    destructiveLight: FamiliarPrimitives.errorDark,
-    success: FamiliarPrimitives.accentDark,
-    brandCrimson: FamiliarPrimitives.accentDark,
-    homeCard: FamiliarPrimitives.navInk,
+    inverse: SybilPrimitives.onAccentDark,
+    warning: SybilPrimitives.warningDark,
+    positiveStrong: SybilPrimitives.accentDark,
+    destructive: SybilPrimitives.errorDark,
+    destructiveLight: SybilPrimitives.errorDark,
+    success: SybilPrimitives.accentDark,
+    brandCrimson: SybilPrimitives.accentDark,
+    homeCard: SybilPrimitives.navInk,
   );
 
   static const light = AppTextColors(
-    accent: FamiliarPrimitives.inkLight,
-    primary: FamiliarPrimitives.textLight,
-    secondary: FamiliarPrimitives.mutedLight,
-    muted: FamiliarPrimitives.mutedLight,
+    accent: SybilPrimitives.inkLight,
+    primary: SybilPrimitives.textLight,
+    secondary: SybilPrimitives.mutedLight,
+    muted: SybilPrimitives.mutedLight,
     disabled: Color(0xFF899286),
-    inverse: FamiliarPrimitives.onAccentLight,
-    warning: FamiliarPrimitives.warningLight,
-    positiveStrong: FamiliarPrimitives.accentLight,
-    destructive: FamiliarPrimitives.errorLight,
-    destructiveLight: FamiliarPrimitives.errorLight,
-    success: FamiliarPrimitives.accentLight,
-    brandCrimson: FamiliarPrimitives.accentLight,
-    homeCard: FamiliarPrimitives.navInk,
+    inverse: SybilPrimitives.onAccentLight,
+    warning: SybilPrimitives.warningLight,
+    positiveStrong: SybilPrimitives.accentLight,
+    destructive: SybilPrimitives.errorLight,
+    destructiveLight: SybilPrimitives.errorLight,
+    success: SybilPrimitives.accentLight,
+    brandCrimson: SybilPrimitives.accentLight,
+    homeCard: SybilPrimitives.navInk,
   );
 }

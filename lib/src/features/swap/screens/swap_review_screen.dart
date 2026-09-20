@@ -1,10 +1,11 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/formatting/zec_amount.dart';
+import '../providers/swap_deposit_sender.dart';
 import '../../../core/layout/app_desktop_shell.dart';
 import '../../../core/layout/app_layout.dart';
 import '../../../core/layout/app_main_sidebar.dart';
@@ -136,7 +137,11 @@ class _SwapReviewScreenState extends ConsumerState<SwapReviewScreen> {
       ),
     );
     final startBlockedReason =
-        swapReviewQuoteExceedsAvailableZec(quote, migrationSpendable)
+        swapReviewQuoteExceedsAvailableZec(
+          quote,
+          migrationSpendable,
+          depositFeeZatoshi: swapState.reviewDepositFeeZatoshi,
+        )
         ? widget.payMode
               ? "You don't have enough ZEC for this payment. Try a smaller amount."
               : "You don't have enough ZEC for this swap. Try a smaller amount."
@@ -168,6 +173,7 @@ class _SwapReviewScreenState extends ConsumerState<SwapReviewScreen> {
                   children: [
                     SwapReviewPageContent(
                       quote: quote,
+                      depositFeeZatoshi: swapState.reviewDepositFeeZatoshi,
                       addressPlan: addressPlan,
                       addressBookContacts:
                           ref.watch(addressBookProvider).value?.contacts ??
@@ -256,11 +262,12 @@ double? _reviewQuoteUsdValueForAsset(
 /// Shared with the mobile review screen.
 bool swapReviewQuoteExceedsAvailableZec(
   SwapQuote quote,
-  BigInt availableZatoshi,
-) {
+  BigInt availableZatoshi, {
+  BigInt? depositFeeZatoshi,
+}) {
   if (!quote.direction.sendsZec) return false;
-  final amountText = quote.sellAmountText.split(' ').first.trim();
-  final amount = parseZecAmount(amountText);
-  if (amount == null || amount <= BigInt.zero) return false;
-  return amount >= availableZatoshi;
+  // Missing fee is not an authorization to spend an unreviewed total.
+  if (depositFeeZatoshi == null) return true;
+  return zecDepositAmountZatoshiForQuote(quote) + depositFeeZatoshi >
+      availableZatoshi;
 }

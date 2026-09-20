@@ -1,0 +1,104 @@
+# Sybil mainnet beta builds
+
+The first public Sybil beta can receive ZEC, use the existing exchange flow,
+and connect to the verified Base mainnet Names registry. Build the Linux x64
+and Android ARM64 beta from the wallet repository with FVM and the existing
+native build prerequisites. Linux keeps the existing `vizor` executable and
+compatibility identity; Android is a separate Sybil app with application ID
+`cash.sybil.wallet` and a new Sybil release-signing key:
+
+```sh
+fvm install
+fvm flutter pub get
+SIMPLEX_LIBS_DIR=/absolute/path/to/verified/simplex/libs \
+  bash scripts/build-sybil-beta.sh linux
+bash scripts/build-sybil-beta.sh android
+```
+
+Use `both` (the default) with `SIMPLEX_LIBS_DIR` set to build both targets. The
+Linux runtime is the existing SimpleX v7.0.2 x86_64 bundle; verify the pinned
+archive checksum in [the SimpleX build notes](../tools/simplex/README.md) and
+keep its complete `libs/` directory together. The script refreshes an existing
+CMake runtime path before building and checks the resulting bundle. Android
+uses the existing checksum-verified runtime fetch/extraction script and cached
+official APK. `SIMPLEX_ANDROID_APK_PATH` and `SIMPLEX_ANDROID_DEST_DIR` remain
+available for those cached inputs.
+
+The beta script fixes these public settings:
+
+| Setting | Value |
+| --- | --- |
+| `ZCASH_DEFAULT_NETWORK` | `main` |
+| `ZNS_BASE_SEPOLIA` | `false` |
+| `ZCASH_CONTACTS_EXPERIMENT` | `true` (existing technical feature flag) |
+| `SIGIL_NEAR_INTENTS_BASE_URL` | `https://api.sybil.cash/api/near-intents/1click` |
+| `SIGIL_NEAR_INTENTS_ALLOW_LOOPBACK` | `false` |
+| `VIZOR_FORM_FACTOR` | `desktop` on Linux, `mobile` on Android |
+| `VIZOR_RELEASE_VERSION` | `1.0.0-beta.1` |
+| `VIZOR_RELEASE_BUILD_NUMBER` | `1` |
+| `VIZOR_UPDATE_CHECK_ENABLED` | `false` |
+
+The mainnet registry default is
+`0x17ea278fe9bee80449e7e576fb8fa4ec2f0ec3a5` on Base chain 8453. Its deployment
+transaction is
+`0xd71a2883627ea1ff375fe2b7d4c4b1e450294fe665567afbbe397d63624f28d1`,
+confirmed at block 51,543,513 with the expected runtime and canonical
+token/oracle/protocol configuration. Existing saved Names configuration takes
+precedence over build defaults; the build does not overwrite it.
+
+The default Base RPC for new builds is `https://base.drpc.org`. Earlier defaults
+encountered HTTP 429 during registration reads or rejected transaction-receipt
+access with HTTP 403. The dedicated endpoint settings allow an explicit change
+without discarding saved registration progress.
+The RPC client now paces requests and retries rate-limited reads with bounded
+backoff, respecting `Retry-After`. Signed transaction submission is not
+automatically retried by that layer. Saved RPC overrides remain unchanged. Edit them
+in Settings → Network and app → Base RPC endpoint, also accessible from Public
+Zcash names. Choose Recommended to replace an older saved endpoint explicitly,
+or enter a custom HTTPS URL. The wallet verifies the same network and registry
+before saving. This changes only the RPC; a paused operation retains its saved
+progress and still requires review before resuming.
+
+The batch-account default is
+`0x4f93112eb41dbec6fada4494272d3d410187a942`, deployed by transaction
+`0x7ccd28b3f09d7e1dd1e8adaa6615e7afd8cacdd0e85c8f155737d770a7c1d7b0`
+with its exact runtime verified. Configuring this address enables the existing
+atomic-registration path, which checks the delegate's complete runtime before
+authorization. Deployment alone does not delegate a wallet account. These
+deployment/runtime checks are separate from explorer source verification;
+consult the contract repository's mainnet reports for its current status.
+
+No JWT, upstream API secret, client fee or referral is embedded. The beta does
+not select Base Sepolia. Registry configuration enables the existing reviewed
+Names flows; there is no separate build flag that bypasses transaction review.
+A wallet-driven mainnet run completed the full reviewed registration flow and
+confirmed the active name in an independent readback. This is live integration
+evidence for that run; it is not an independent security audit or qualification
+of funds-return, release/refund handling, mobile background delivery, or every
+physical device. Public-name lookup remains optional and default-off.
+
+Artifacts are:
+
+- `dist/linux/sybil-beta-mainnet-linux-x64.tar.gz`: extract into an empty
+  directory and launch `./vizor`; retain its sibling `lib/` and `data/` folders.
+- `dist/android/sybil-beta-mainnet-arm64.apk`: Android ARM64 release APK.
+
+Linux keeps the existing `vizor` executable and compatibility identifiers.
+Android uses application ID `cash.sybil.wallet`, version `1.0.0-beta.1` / code
+`1`, and the newly provisioned Sybil release key. The beta script sets
+`ANDROID_REQUIRE_RELEASE_SIGNING=true`; it refuses to publish an APK when
+`ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`,
+or `ANDROID_KEY_PASSWORD` is missing. Set those values securely in the build
+environment. The separate application ID lets Android users keep Vizor
+installed, and there is no automatic wallet-data migration. Preserve the
+upstream notices and the SimpleX source/build and license materials described
+in [Sybil licensing](SYBIL-LICENSING.md).
+
+## Wallet data and upgrades
+
+An existing mainnet wallet can use a rebuilt Linux beta without clearing its
+data. The Android beta is a separate application and does not automatically
+migrate Vizor data; import recovery material explicitly into a disposable test
+wallet when appropriate. The build scripts do not wipe storage or migrate
+testnet accounts. A saved testnet wallet remains a testnet wallet; setting up a
+fresh mainnet wallet is an explicit user action.

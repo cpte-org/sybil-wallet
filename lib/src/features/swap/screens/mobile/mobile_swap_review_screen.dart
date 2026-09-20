@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 
 import 'package:flutter/material.dart' show Scaffold;
@@ -297,7 +298,11 @@ class _MobileSwapReviewScreenState
       swapState.reviewAccountUuid,
     );
     final startBlockedReason =
-        swapReviewQuoteExceedsAvailableZec(quote, migrationSpendable)
+        swapReviewQuoteExceedsAvailableZec(
+          quote,
+          migrationSpendable,
+          depositFeeZatoshi: swapState.reviewDepositFeeZatoshi,
+        )
         ? widget.payMode
               ? "You don't have enough ZEC for this payment. Try a smaller amount."
               : "You don't have enough ZEC for this swap. Try a smaller amount."
@@ -387,6 +392,7 @@ class _MobileSwapReviewScreenState
                       )
                     : MobileSwapReviewContent(
                         quote: quote,
+                        depositFeeZatoshi: swapState.reviewDepositFeeZatoshi,
                         addressPlan: addressPlan,
                         addressBookContacts: addressBookContacts,
                         userExternalContactId: swapState.userExternalContactId,

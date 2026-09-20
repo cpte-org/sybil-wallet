@@ -1,11 +1,11 @@
-Sigil wallet third-party attribution addendum
+Sybil wallet third-party attribution addendum
 
 This file records attribution information for the wallet distribution. It does
 not replace the license of the repository or of any component. Where Apache
 License 2.0 section 4(d) applies, preserve the applicable readable attribution
 notices in this file in derivative distributions. See LICENSE for the
 repository-level Apache License 2.0 and see
-docs/SIGIL-LICENSING.md for the evidence, scope, and release checklist.
+docs/SYBIL-LICENSING.md for the evidence, scope, and release checklist.
 
 The wallet tree is derived from the Chainapsis Vizor wallet. Where Apache
 License 2.0 section 4(c) applies, preserve the applicable copyright, patent,
@@ -44,20 +44,33 @@ The Flutter bundle carries byte-for-byte copies of the root legal files at
 assets/legal/LICENSE, assets/legal/NOTICE, and
 assets/legal/fonts/OFL-1.1.txt. The application registers these files with
 Flutter's legal-notices registry through
-lib/src/core/legal/sigil_legal_notices.dart.
+lib/src/core/legal/sybil_legal_notices.dart.
 
-The pinned desktop_window_bootstrap package currently carries the upstream
-placeholder text "TODO: Add your license here." and is not represented here as
-Apache-licensed. Resolve that upstream license before distributing a target
-that includes the package.
+The Flutter bundle also carries tools/licensing/SYBIL-DEPENDENCY-LICENSES.md,
+which is generated from pubspec.lock and rust/Cargo.lock. The corresponding
+cache-backed license texts are retained under tools/licensing/licenses/ in the
+source tree and aggregated in assets/legal/THIRD-PARTY-NOTICES.txt for the
+runtime legal-notices view; rows without a local text are called out in the
+inventory. The Android native attribution supplement in
+tools/licensing/ANDROID-NATIVE-NOTICES.txt covers the resolved zxing-cpp,
+AndroidX camera, biometric, and DataStore artifacts. The retained SimpleX
+Haskell/native dependency texts under tools/licensing/licenses/simplex-haskell/
+are included in the same aggregate.
 
-Optional Linux SimpleX component:
+SimpleX Chat v7.0.2 component:
 
 The SimpleX Chat v7.0.2 runtime is separately licensed under the GNU Affero
-General Public License, version 3. It is installed only when the Linux build
-is configured with a non-empty SIMPLEX_LIBS_DIR. It is not part of this source
-repository. See docs/SIGIL-LICENSING.md before distributing a bundle that
-contains it; that bundle must carry the upstream notices and provide the
-corresponding source through a conveyance method required by AGPL section 6.
-The optional AGPL component does not change the wallet's repository-level
-Apache License 2.0.
+General Public License, version 3. It is installed only when a target is
+configured with the SimpleX runtime. The exact corresponding-source package is
+dist/source/sybil-simplex-source-v7.0.2.tar.gz and its release access URL is
+https://github.com/cpte-org/sybil-wallet/releases/download/v1.0.0-beta.1/sybil-simplex-source-v7.0.2.tar.gz.
+The package includes the pinned SimpleX source, Cabal/Nix build inputs,
+upstream dependency notices, ten pinned Git dependency archives, observed
+runtime Hackage sources, GHC 9.6.3 source, and native library source inputs.
+SQLCipher source is retained in the pinned Git inputs. The source manifests
+identify exact versions, hashes, runtime mappings and system-provided libraries;
+they do not claim a bit-for-bit reproduction of the official native binaries.
+See docs/SYBIL-LICENSING.md and
+tools/simplex/licenses/SIMPLEX-SOURCE-AND-BUILD.txt for the release access record.
+The original Apache grants remain preserved on the wallet source. Distribution
+of the combined beta must also comply with the AGPL component's requirements.

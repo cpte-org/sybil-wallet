@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/widgets.dart';
 
 import 'app_theme_data.dart';
@@ -13,7 +13,7 @@ export 'app_spacing.dart';
 export 'app_theme_data.dart';
 export 'app_typography.dart';
 export 'colors/app_colors.dart';
-export 'familiar_palette.dart';
+export 'sybil_palette.dart';
 
 /// Propagates [AppThemeData] down the widget tree.
 ///

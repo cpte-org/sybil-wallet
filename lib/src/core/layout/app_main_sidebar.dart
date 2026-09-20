@@ -1,10 +1,11 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart' show Colors;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../widgets/sybil_widgets.dart' show SybilBetaBadge;
 import 'package:go_router/go_router.dart';
 
 import '../../../main.dart' show log;
@@ -396,14 +397,21 @@ class _AppMainSidebarState extends ConsumerState<AppMainSidebar> {
                       if (!compact)
                         Padding(
                           padding: const EdgeInsets.fromLTRB(12, 12, 12, 38),
-                          child: Text(
-                            'sigil.',
-                            style: AppTypography.headlineLarge.copyWith(
-                              fontFamily: 'Young Serif',
-                              fontSize: 40,
-                              letterSpacing: -2,
-                              color: context.colors.text.primary,
-                            ),
+                          child: Wrap(
+                            spacing: 10,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                'sybil.',
+                                style: AppTypography.headlineLarge.copyWith(
+                                  fontFamily: 'Young Serif',
+                                  fontSize: 40,
+                                  letterSpacing: -2,
+                                  color: context.colors.text.primary,
+                                ),
+                              ),
+                              const SybilBetaBadge(),
+                            ],
                           ),
                         ),
                       Expanded(

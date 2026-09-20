@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zcash_wallet/src/features/contacts/application/contact_delivery_coordinator.dart';
 import 'package:zcash_wallet/src/features/contacts/application/contact_delivery_providers.dart';
 import 'package:zcash_wallet/src/features/contacts/data/contact_delivery_repository.dart';
@@ -52,16 +53,19 @@ class _ReceivingTransport extends _Transport {
 class _Transport extends SimplexNativeTransport {
   _Transport() : super(scope: scope, networkAllowed: () => true);
   int sends = 0;
+  bool hasPeer = true;
+  bool hasIncoming = true;
   @override
   Future<String> securityCode(String peer) async =>
       '123456789012345678901234567890';
   @override
-  Future<List<({String id, String label})>> peers() async => [
-    (id: '1', label: 'Unverified label'),
-  ];
+  Future<List<({String id, String label})>> peers() async =>
+      !hasPeer ? [] : [(id: '1', label: 'Unverified label')];
   @override
   Future<void> reconcile(ContactDeliveryCoordinator coordinator) async {
-    await coordinator.receive(scope, '1', 'abcdefghijklmnop', packet);
+    if (hasIncoming) {
+      await coordinator.receive(scope, '1', 'abcdefghijklmnop', packet);
+    }
   }
 
   @override
@@ -71,6 +75,142 @@ class _Transport extends SimplexNativeTransport {
 }
 
 void main() {
+  testWidgets(
+    'fresh inbox offers setup instead of waiting for an impossible reply',
+    (tester) async {
+      final transport = _Transport()
+        ..hasPeer = false
+        ..hasIncoming = false;
+      final coordinator = ContactDeliveryCoordinator(
+        scope: () => scope,
+        repository: _Repository(),
+      );
+      addTearDown(coordinator.invalidate);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            contactDeliveryScopeProvider.overrideWithValue(scope),
+            contactDeliveryCoordinatorProvider.overrideWithValue(coordinator),
+            simplexNativeTransportProvider.overrideWith((_) async => transport),
+          ],
+          child: MaterialApp(
+            home: AppTheme(
+              data: AppThemeData.dark,
+              child: Scaffold(
+                body: ContactPacketDeliveryControls.inbox(
+                  kinds: const {ContactPacketKind.delivery},
+                  onSelected: (_) async =>
+                      fail('Empty inbox cannot select a packet'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Load from private inbox'));
+      await tester.pumpAndSettle();
+      expect(find.text('Connect with someone'), findsOneWidget);
+      expect(find.text('No private delivery connections yet.'), findsOneWidget);
+      expect(
+        find.text('Waiting for a reply. This inbox updates while open.'),
+        findsNothing,
+      );
+      expect(transport.sends, 0);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets(
+    'empty connections offer setup and return to the original send review',
+    (tester) async {
+      final repository = _Repository(),
+          transport = _Transport()..hasPeer = false;
+      final coordinator = ContactDeliveryCoordinator(
+        scope: () => scope,
+        repository: repository,
+      );
+      addTearDown(coordinator.invalidate);
+      final reviewKey = GlobalKey();
+      final expiresAt = DateTime.now().add(const Duration(minutes: 5));
+      final router = GoRouter(
+        initialLocation: '/review',
+        routes: [
+          GoRoute(
+            path: '/review',
+            builder: (_, _) => Scaffold(
+              body: ContactPacketDeliveryControls.send(
+                key: reviewKey,
+                packet: packet,
+                expiresAt: expiresAt,
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/contacts/delivery',
+            builder: (context, _) => Scaffold(
+              body: TextButton(
+                onPressed: () {
+                  transport.hasPeer = true;
+                  context.pop();
+                },
+                child: const Text('Finish test setup'),
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            contactDeliveryScopeProvider.overrideWithValue(scope),
+            contactDeliveryCoordinatorProvider.overrideWithValue(coordinator),
+            simplexNativeTransportProvider.overrideWith((_) async => transport),
+          ],
+          child: MaterialApp.router(
+            routerConfig: router,
+            builder: (_, child) =>
+                AppTheme(data: AppThemeData.dark, child: child!),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final reviewState = reviewKey.currentState;
+      await tester.tap(find.text('Choose private delivery connection'));
+      await tester.pumpAndSettle();
+      expect(find.text('Connect with this person'), findsOneWidget);
+      expect(find.text('Approve and send'), findsNothing);
+      await tester.tap(find.text('Connect with this person'));
+      await tester.pumpAndSettle();
+      expect(find.text('Finish test setup'), findsOneWidget);
+      expect(transport.sends, 0);
+      await tester.tap(find.text('Finish test setup'));
+      await tester.pumpAndSettle();
+      expect(identical(reviewKey.currentState, reviewState), isTrue);
+      expect(find.text('Connect with this person'), findsNothing);
+      expect(find.text('Approve and send'), findsOneWidget);
+      expect(transport.sends, 0);
+      expect(repository.journal.records, isEmpty);
+      // Existing connections must not block setting up a different person.
+      await tester.tap(find.text('Connect with someone new'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Finish test setup'));
+      await tester.pumpAndSettle();
+      expect(identical(reviewKey.currentState, reviewState), isTrue);
+      expect(transport.sends, 0);
+      await tester.tap(find.byType(DropdownButton<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Unverified label · 1').last);
+      await tester.pumpAndSettle();
+      expect(transport.sends, 0);
+      await tester.tap(find.text('Approve and send'));
+      await tester.pumpAndSettle();
+      expect(transport.sends, 1);
+      expect(repository.journal.records.single.packet, packet);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
   testWidgets('pending inbox read preserves a newer receiver failure', (
     tester,
   ) async {
@@ -149,14 +289,12 @@ void main() {
           overrides: [
             contactDeliveryScopeProvider.overrideWith((_) => scope),
             contactDeliveryCoordinatorProvider.overrideWith((_) => coordinator),
-            simplexNativeTransportProvider.overrideWith(
-              (_) async {
-                opens++;
-                final transport = _ReceivingTransport();
-                sessions.add(transport);
-                return transport;
-              },
-            ),
+            simplexNativeTransportProvider.overrideWith((_) async {
+              opens++;
+              final transport = _ReceivingTransport();
+              sessions.add(transport);
+              return transport;
+            }),
           ],
           child: MaterialApp(
             home: AppTheme(

@@ -1,0 +1,4243 @@
+[
+  {
+    "name": "alloy-json-abi",
+    "version": "0.8.26",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-json-abi-0.8.26",
+    "repository": "https://github.com/alloy-rs/core",
+    "vcs": {
+      "git": {
+        "sha1": "79d0ef6e6a4331f5512957bb62a3018ad782b15d"
+      },
+      "path_in_vcs": "crates/json-abi"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "79d0ef6e6a4331f5512957bb62a3018ad782b15d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/alloy-json-abi-0.8.26/LICENSE-APACHE",
+        "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "source": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/alloy-json-abi-0.8.26/LICENSE-MIT",
+        "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "source": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d",
+      "sha256": "3ca4164ec55001b947423fd7d0bd225f56145bfc775a855b47653cb273b5474f"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "alloy-primitives",
+    "version": "0.8.26",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-primitives-0.8.26",
+    "repository": "https://github.com/alloy-rs/core",
+    "vcs": {
+      "git": {
+        "sha1": "79d0ef6e6a4331f5512957bb62a3018ad782b15d"
+      },
+      "path_in_vcs": "crates/primitives"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "79d0ef6e6a4331f5512957bb62a3018ad782b15d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/alloy-primitives-0.8.26/LICENSE-APACHE",
+        "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "source": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/alloy-primitives-0.8.26/LICENSE-MIT",
+        "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "source": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d",
+      "sha256": "3ca4164ec55001b947423fd7d0bd225f56145bfc775a855b47653cb273b5474f"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "alloy-rlp",
+    "version": "0.3.16",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-rlp-0.3.16",
+    "repository": "https://github.com/alloy-rs/rlp",
+    "vcs": {
+      "git": {
+        "sha1": "87cd1b72eddd24410b0cf782436ad3ea94262d05"
+      },
+      "path_in_vcs": "crates/rlp"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "87cd1b72eddd24410b0cf782436ad3ea94262d05",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/alloy-rlp-0.3.16/LICENSE-APACHE",
+        "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "source": "https://codeload.github.com/alloy-rs/rlp/tar.gz/87cd1b72eddd24410b0cf782436ad3ea94262d05#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/alloy-rlp-0.3.16/LICENSE-MIT",
+        "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "source": "https://codeload.github.com/alloy-rs/rlp/tar.gz/87cd1b72eddd24410b0cf782436ad3ea94262d05#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/alloy-rs/rlp/tar.gz/87cd1b72eddd24410b0cf782436ad3ea94262d05",
+      "sha256": "329111b3128df09969ae6b718968404bb1a997ee3031b159f2e85cc00d991381"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "alloy-sol-macro",
+    "version": "0.8.26",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-sol-macro-0.8.26",
+    "repository": "https://github.com/alloy-rs/core",
+    "vcs": {
+      "git": {
+        "sha1": "79d0ef6e6a4331f5512957bb62a3018ad782b15d"
+      },
+      "path_in_vcs": "crates/sol-macro"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "79d0ef6e6a4331f5512957bb62a3018ad782b15d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/alloy-sol-macro-0.8.26/LICENSE-APACHE",
+        "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "source": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/alloy-sol-macro-0.8.26/LICENSE-MIT",
+        "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "source": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d",
+      "sha256": "3ca4164ec55001b947423fd7d0bd225f56145bfc775a855b47653cb273b5474f"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "alloy-sol-macro-expander",
+    "version": "0.8.26",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-sol-macro-expander-0.8.26",
+    "repository": "https://github.com/alloy-rs/core",
+    "vcs": {
+      "git": {
+        "sha1": "79d0ef6e6a4331f5512957bb62a3018ad782b15d"
+      },
+      "path_in_vcs": "crates/sol-macro-expander"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "79d0ef6e6a4331f5512957bb62a3018ad782b15d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/alloy-sol-macro-expander-0.8.26/LICENSE-APACHE",
+        "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "source": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/alloy-sol-macro-expander-0.8.26/LICENSE-MIT",
+        "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "source": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d",
+      "sha256": "3ca4164ec55001b947423fd7d0bd225f56145bfc775a855b47653cb273b5474f"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "alloy-sol-macro-input",
+    "version": "0.8.26",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-sol-macro-input-0.8.26",
+    "repository": "https://github.com/alloy-rs/core",
+    "vcs": {
+      "git": {
+        "sha1": "79d0ef6e6a4331f5512957bb62a3018ad782b15d"
+      },
+      "path_in_vcs": "crates/sol-macro-input"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "79d0ef6e6a4331f5512957bb62a3018ad782b15d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/alloy-sol-macro-input-0.8.26/LICENSE-APACHE",
+        "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "source": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/alloy-sol-macro-input-0.8.26/LICENSE-MIT",
+        "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "source": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d",
+      "sha256": "3ca4164ec55001b947423fd7d0bd225f56145bfc775a855b47653cb273b5474f"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "alloy-sol-type-parser",
+    "version": "0.8.26",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-sol-type-parser-0.8.26",
+    "repository": "https://github.com/alloy-rs/core",
+    "vcs": {
+      "git": {
+        "sha1": "79d0ef6e6a4331f5512957bb62a3018ad782b15d"
+      },
+      "path_in_vcs": "crates/sol-type-parser"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "79d0ef6e6a4331f5512957bb62a3018ad782b15d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/alloy-sol-type-parser-0.8.26/LICENSE-APACHE",
+        "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "source": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/alloy-sol-type-parser-0.8.26/LICENSE-MIT",
+        "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "source": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d",
+      "sha256": "3ca4164ec55001b947423fd7d0bd225f56145bfc775a855b47653cb273b5474f"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "alloy-sol-types",
+    "version": "0.8.26",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/alloy-sol-types-0.8.26",
+    "repository": "https://github.com/alloy-rs/core",
+    "vcs": {
+      "git": {
+        "sha1": "79d0ef6e6a4331f5512957bb62a3018ad782b15d"
+      },
+      "path_in_vcs": "crates/sol-types"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "79d0ef6e6a4331f5512957bb62a3018ad782b15d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/alloy-sol-types-0.8.26/LICENSE-APACHE",
+        "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "source": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/alloy-sol-types-0.8.26/LICENSE-MIT",
+        "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "source": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d",
+      "sha256": "3ca4164ec55001b947423fd7d0bd225f56145bfc775a855b47653cb273b5474f"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "amplify_num",
+    "version": "0.5.4",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/amplify_num-0.5.4",
+    "repository": "https://github.com/rust-amplify/amplify-num",
+    "vcs": {
+      "git": {
+        "sha1": "872842c3d151296b18314dfa5bf86548c2ce4f29"
+      },
+      "path_in_vcs": "num"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "872842c3d151296b18314dfa5bf86548c2ce4f29",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/amplify_num-0.5.4/LICENSE",
+        "sha256": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9",
+        "source": "https://codeload.github.com/rust-amplify/amplify-num/tar.gz/872842c3d151296b18314dfa5bf86548c2ce4f29#LICENSE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/rust-amplify/amplify-num/tar.gz/872842c3d151296b18314dfa5bf86548c2ce4f29",
+      "sha256": "7f34d823e1620ef5ffec747bd810d10b0ec991b4a287d2aefd8a8ae6c15808d1"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "amplify_syn",
+    "version": "2.0.1",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/amplify_syn-2.0.1",
+    "repository": "https://github.com/rust-amplify/amplify-derive",
+    "vcs": {
+      "git": {
+        "sha1": "29ca86c56316ce683bf3827a9d245334db69ce1f"
+      },
+      "path_in_vcs": "syn"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "29ca86c56316ce683bf3827a9d245334db69ce1f",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/amplify_syn-2.0.1/LICENSE",
+        "sha256": "a7173d3ff287d45cecb4f31f854259264206b152b00bf4ac6ba0445bb0e864a9",
+        "source": "https://codeload.github.com/rust-amplify/amplify-derive/tar.gz/29ca86c56316ce683bf3827a9d245334db69ce1f#LICENSE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/rust-amplify/amplify-derive/tar.gz/29ca86c56316ce683bf3827a9d245334db69ce1f",
+      "sha256": "9692df78089a561505e0e4a5d1765a98325f68670e464e4bbee9116273e64862"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "anes",
+    "version": "0.1.6",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/anes-0.1.6",
+    "repository": "https://github.com/zrzka/anes-rs",
+    "vcs": {
+      "git": {
+        "sha1": "378ac7461ecac29fde9e10df7b08359d1315a9ad"
+      }
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": false
+    },
+    "revision": "378ac7461ecac29fde9e10df7b08359d1315a9ad",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/anes-0.1.6/LICENSE-APACHE",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "source": "https://codeload.github.com/zrzka/anes-rs/tar.gz/378ac7461ecac29fde9e10df7b08359d1315a9ad#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/anes-0.1.6/LICENSE-MIT",
+        "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "source": "https://codeload.github.com/zrzka/anes-rs/tar.gz/378ac7461ecac29fde9e10df7b08359d1315a9ad#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/zrzka/anes-rs/tar.gz/378ac7461ecac29fde9e10df7b08359d1315a9ad",
+      "sha256": "c3a8e5a84822e2bf5c1f392b972dbe9c8cb3f2fed4d69e1942e585987671e721"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "arti-client",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/arti-client-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/arti-client"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/arti-client-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/arti-client-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "asn1-rs-impl",
+    "version": "0.2.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT/Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/asn1-rs-impl-0.2.0",
+    "repository": "https://github.com/rusticata/asn1-rs",
+    "vcs": {
+      "git": {
+        "sha1": "a20e5f7319c896737ad0f2557037817b91ad854f"
+      },
+      "path_in_vcs": "impl"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "a20e5f7319c896737ad0f2557037817b91ad854f",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/asn1-rs-impl-0.2.0/LICENSE-APACHE",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "source": "https://codeload.github.com/rusticata/asn1-rs/tar.gz/a20e5f7319c896737ad0f2557037817b91ad854f#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/asn1-rs-impl-0.2.0/LICENSE-MIT",
+        "sha256": "a5c61b93b6ee1d104af9920cf020ff3c7efe818e31fe562c72261847a728f513",
+        "source": "https://codeload.github.com/rusticata/asn1-rs/tar.gz/a20e5f7319c896737ad0f2557037817b91ad854f#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/rusticata/asn1-rs/tar.gz/a20e5f7319c896737ad0f2557037817b91ad854f",
+      "sha256": "4d191cb8e101a853a54ce3054c2737deae7f6b853dbdb7fe372dff5d38b736c6"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "bitcoin-private",
+    "version": "0.1.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "CC0-1.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/bitcoin-private-0.1.0",
+    "repository": "https://github.com/rust-bitcoin/rust-bitcoin",
+    "vcs": {
+      "git": {
+        "sha1": "edcb6fb81f8480f2f179d2d4966727eada022058"
+      },
+      "path_in_vcs": "internals"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "edcb6fb81f8480f2f179d2d4966727eada022058",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/bitcoin-private-0.1.0/LICENSE",
+        "sha256": "7179683e8000e6bdc9bbc60d85edf0a4ac8e76f951857f54fcb775d5886f1309",
+        "source": "https://codeload.github.com/rust-bitcoin/rust-bitcoin/tar.gz/edcb6fb81f8480f2f179d2d4966727eada022058#LICENSE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/rust-bitcoin/rust-bitcoin/tar.gz/edcb6fb81f8480f2f179d2d4966727eada022058",
+      "sha256": "2d3b61714409f327576fc42e5c8a497e0331d0362d1995bf21bb42ec4ee82f89"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "bitcoin_hashes",
+    "version": "0.12.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "CC0-1.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/bitcoin_hashes-0.12.0",
+    "repository": "https://github.com/rust-bitcoin/bitcoin_hashes",
+    "vcs": {
+      "git": {
+        "sha1": "edcb6fb81f8480f2f179d2d4966727eada022058"
+      },
+      "path_in_vcs": "hashes"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "edcb6fb81f8480f2f179d2d4966727eada022058",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/bitcoin_hashes-0.12.0/LICENSE",
+        "sha256": "7179683e8000e6bdc9bbc60d85edf0a4ac8e76f951857f54fcb775d5886f1309",
+        "source": "https://codeload.github.com/rust-bitcoin/rust-bitcoin/tar.gz/edcb6fb81f8480f2f179d2d4966727eada022058#LICENSE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/rust-bitcoin/rust-bitcoin/tar.gz/edcb6fb81f8480f2f179d2d4966727eada022058",
+      "sha256": "2d3b61714409f327576fc42e5c8a497e0331d0362d1995bf21bb42ec4ee82f89"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "blake2b_simd",
+    "version": "1.0.5",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/blake2b_simd-1.0.5",
+    "repository": "https://github.com/oconnor663/blake2_simd",
+    "vcs": {
+      "git": {
+        "sha1": "47714dc3c424e82213d7f2eb4a833e3843017be5"
+      },
+      "path_in_vcs": "blake2b"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "47714dc3c424e82213d7f2eb4a833e3843017be5",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/blake2b_simd-1.0.5/LICENSE",
+        "sha256": "27e0387973d6b8507cb15f825f6f26e0278d4d5857082c1f56b49a7b39a90183",
+        "source": "https://codeload.github.com/oconnor663/blake2_simd/tar.gz/47714dc3c424e82213d7f2eb4a833e3843017be5#LICENSE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/oconnor663/blake2_simd/tar.gz/47714dc3c424e82213d7f2eb4a833e3843017be5",
+      "sha256": "344efaa41c07b351f35177b7f6365598a9db3fcfa443684af6aa5df13bb485ec"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "blake2s_simd",
+    "version": "1.0.5",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/blake2s_simd-1.0.5",
+    "repository": "https://github.com/oconnor663/blake2_simd",
+    "vcs": {
+      "git": {
+        "sha1": "47714dc3c424e82213d7f2eb4a833e3843017be5"
+      },
+      "path_in_vcs": "blake2s"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "47714dc3c424e82213d7f2eb4a833e3843017be5",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/blake2s_simd-1.0.5/LICENSE",
+        "sha256": "27e0387973d6b8507cb15f825f6f26e0278d4d5857082c1f56b49a7b39a90183",
+        "source": "https://codeload.github.com/oconnor663/blake2_simd/tar.gz/47714dc3c424e82213d7f2eb4a833e3843017be5#LICENSE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/oconnor663/blake2_simd/tar.gz/47714dc3c424e82213d7f2eb4a833e3843017be5",
+      "sha256": "344efaa41c07b351f35177b7f6365598a9db3fcfa443684af6aa5df13bb485ec"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "blake3",
+    "version": "1.8.7",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "CC0-1.0 OR Apache-2.0 OR Apache-2.0 WITH LLVM-exception",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.7",
+    "repository": "https://github.com/BLAKE3-team/BLAKE3",
+    "vcs": {
+      "git": {
+        "sha1": "f3149ec5bb5449af877ba20377a11008ff499fa2"
+      },
+      "path_in_vcs": ""
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "f3149ec5bb5449af877ba20377a11008ff499fa2",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/blake3-1.8.7/LICENSE_A2",
+        "sha256": "00fcc7a934ddbc9ece2a7cc063ac788e284b703b1d705ccbba72d462aa97921e",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.7/LICENSE_A2",
+        "evidence": "exact published crate; nonstandard legal filename"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/blake3-1.8.7/LICENSE_A2LLVM",
+        "sha256": "a5695f57ea0c221e0e8b7d784ff774c35e88c3d3270353646a925880bb3492cc",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.7/LICENSE_A2LLVM",
+        "evidence": "exact published crate; nonstandard legal filename"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/blake3-1.8.7/LICENSE_CC0",
+        "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.7/LICENSE_CC0",
+        "evidence": "exact published crate; nonstandard legal filename"
+      }
+    ],
+    "resolution": "exact-crate-nonstandard-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/BLAKE3-team/BLAKE3/tar.gz/f3149ec5bb5449af877ba20377a11008ff499fa2",
+      "sha256": "92acc8eaef2623ee54bf527454fcc56255cd0a9bfe153ca3e722d367c74b1c4a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "caret",
+    "version": "0.7.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/caret-0.7.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/caret"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/caret-0.7.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/caret-0.7.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "cookie-factory",
+    "version": "0.3.3",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/cookie-factory-0.3.3",
+    "repository": "https://github.com/rust-bakery/cookie-factory",
+    "vcs": {
+      "git": {
+        "sha1": "d36b805dbd7dd65f2df947235c5bcc573afe2c76"
+      },
+      "path_in_vcs": ""
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "d36b805dbd7dd65f2df947235c5bcc573afe2c76",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/cookie-factory-0.3.3/LICENSES/MIT.txt",
+        "sha256": "d09216dc1ea5f273997667935a8d6514d80f00b89fb6954ecc3a43e0a6e360de",
+        "source": "https://codeload.github.com/rust-bakery/cookie-factory/tar.gz/d36b805dbd7dd65f2df947235c5bcc573afe2c76#LICENSES/MIT.txt",
+        "evidence": "exact revision archive nonstandard legal directory"
+      }
+    ],
+    "resolution": "exact-source-nonstandard-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/rust-bakery/cookie-factory/tar.gz/d36b805dbd7dd65f2df947235c5bcc573afe2c76",
+      "sha256": "974a08cc89853fe331ca62d26ac2708da61366db9015e39c61218ce582df8b8c"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "crc-catalog",
+    "version": "2.5.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/crc-catalog-2.5.0",
+    "repository": "https://github.com/akhilles/crc-catalog",
+    "vcs": {
+      "git": {
+        "sha1": "ed4ad631f22b05055c21a3a4127eb7cf6d75bb62"
+      },
+      "path_in_vcs": ""
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "ed4ad631f22b05055c21a3a4127eb7cf6d75bb62",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/crc-catalog-2.5.0/LICENSES/Apache-2.0.txt",
+        "sha256": "d3cdb764b98283ee7c3a3cea8d374e2a2957322374378d1f3263f4d512741fc3",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/crc-catalog-2.5.0/LICENSES/Apache-2.0.txt",
+        "evidence": "exact published crate; nonstandard legal filename"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/crc-catalog-2.5.0/LICENSES/MIT.txt",
+        "sha256": "5ef8fcfb6cccec8fcae043c834099a60c8b7406408db576e026d2b7e67dc5cf5",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/crc-catalog-2.5.0/LICENSES/MIT.txt",
+        "evidence": "exact published crate; nonstandard legal filename"
+      }
+    ],
+    "resolution": "exact-crate-nonstandard-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/akhilles/crc-catalog/tar.gz/ed4ad631f22b05055c21a3a4127eb7cf6d75bb62",
+      "sha256": "9b7ded3234f4f8d07b32bcb28affc172eb349e2ccd41626a02a65a372b2d8879"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "defmt-parser",
+    "version": "1.0.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/defmt-parser-1.0.0",
+    "repository": "https://github.com/knurling-rs/defmt",
+    "vcs": {
+      "git": {
+        "sha1": "4a8cdb44891ed57b8ff5a023b6bec7137c48708f"
+      },
+      "path_in_vcs": "parser"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "4a8cdb44891ed57b8ff5a023b6bec7137c48708f",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/defmt-parser-1.0.0/LICENSE-APACHE",
+        "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+        "source": "https://codeload.github.com/knurling-rs/defmt/tar.gz/4a8cdb44891ed57b8ff5a023b6bec7137c48708f#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/defmt-parser-1.0.0/LICENSE-MIT",
+        "sha256": "2710a622a896bba67356913d4d0492cab5465f61b2ecce6d880aeb483834fb50",
+        "source": "https://codeload.github.com/knurling-rs/defmt/tar.gz/4a8cdb44891ed57b8ff5a023b6bec7137c48708f#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/knurling-rs/defmt/tar.gz/4a8cdb44891ed57b8ff5a023b6bec7137c48708f",
+      "sha256": "0e5f4244d6418305ed6fc363c86c7e1e2effa72744cc14605384b69e69479bfc"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "derive-deftly-macros",
+    "version": "1.3.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/derive-deftly-macros-1.3.0",
+    "repository": "https://gitlab.torproject.org/Diziet/rust-derive-deftly",
+    "vcs": {
+      "git": {
+        "sha1": "d7390206b2f57152e114bb9c6cd2893ef20c7994"
+      },
+      "path_in_vcs": "macros"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "d7390206b2f57152e114bb9c6cd2893ef20c7994",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/derive-deftly-macros-1.3.0/SIBLING-derive-deftly-1.3.0-LICENCE",
+        "sha256": "8ca14a71ccb997fcb12b610a631f51fe181d17db17b47aaeb6e3dc6cfbddce32",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/derive-deftly-1.3.0/LICENCE",
+        "evidence": "same repository and exact .cargo_vcs_info commit"
+      }
+    ],
+    "resolution": "same-commit-sibling-texts",
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "ed25519-consensus",
+    "version": "2.1.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-consensus-2.1.0",
+    "repository": "https://github.com/penumbra-zone/ed25519-consensus",
+    "vcs": {
+      "git": {
+        "sha1": "78f83b21767077f602f30148e513a52e844abbb6"
+      },
+      "path_in_vcs": ""
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "78f83b21767077f602f30148e513a52e844abbb6",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/ed25519-consensus-2.1.0/STANDARD-APACHE-2.0.txt",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+        "evidence": "standard text for an explicitly offered license option; not an invented upstream notice"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/ed25519-consensus-2.1.0/UPSTREAM-Cargo.toml",
+        "sha256": "0c613651eb3d1ad94d8f5923531de7bf832f100ec7f4a0c24c6cd9af75e9cf4d",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-consensus-2.1.0/Cargo.toml",
+        "evidence": "exact published crate evidence; author names retained as author names"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/ed25519-consensus-2.1.0/UPSTREAM-README.md",
+        "sha256": "4fcc427dab9fabcc0ba0edb6200486490c4d798e14dfb42dce89be9465236e8c",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-consensus-2.1.0/README.md",
+        "evidence": "exact published crate evidence; author names retained as author names"
+      }
+    ],
+    "resolution": "explicit-apache-option-standard-text-and-source-grant",
+    "source_archive": {
+      "url": "https://codeload.github.com/penumbra-zone/ed25519-consensus/tar.gz/78f83b21767077f602f30148e513a52e844abbb6",
+      "sha256": "dd010ead27f7c1bdaedfdeab53b38b05c2dca13ef546f35f381eb9294e501d4b"
+    },
+    "selected_license_option": "Apache-2.0",
+    "source_notice_gap": "No standalone license or copyright notice in exact-revision source; no copyright holder inferred",
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "equihash",
+    "version": "0.3.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/equihash-0.3.0",
+    "repository": "https://github.com/zcash/librustzcash",
+    "vcs": {
+      "git": {
+        "sha1": "eafd51ace8818198a21dbadfe921273e06d66999"
+      },
+      "path_in_vcs": "components/equihash"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "eafd51ace8818198a21dbadfe921273e06d66999",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/equihash-0.3.0/COPYING.md",
+        "sha256": "1b0f8332e3f8b72835e1bf816a7471103c74e82b16c149e08f36136e175d9846",
+        "source": "https://codeload.github.com/zcash/librustzcash/tar.gz/eafd51ace8818198a21dbadfe921273e06d66999#COPYING.md",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/equihash-0.3.0/LICENSE-APACHE",
+        "sha256": "3708458dee7f359ac6c9c5558023ed481be87e5372c43ebd7f2ca7ad23c12026",
+        "source": "https://codeload.github.com/zcash/librustzcash/tar.gz/eafd51ace8818198a21dbadfe921273e06d66999#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/equihash-0.3.0/LICENSE-MIT",
+        "sha256": "bf145b7a25b6cc65f07176f8b8a6e789ca1d1c762bfbd3c53450bf8031ef5291",
+        "source": "https://codeload.github.com/zcash/librustzcash/tar.gz/eafd51ace8818198a21dbadfe921273e06d66999#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/zcash/librustzcash/tar.gz/eafd51ace8818198a21dbadfe921273e06d66999",
+      "sha256": "c7fd9147b2e33aab56ec6a68ff7aa9f1b00ba3466dfd54027fbf477463cd5773"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "ff_derive",
+    "version": "0.14.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT/Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/ff_derive-0.14.0",
+    "repository": "https://github.com/zkcrypto/ff",
+    "vcs": {
+      "git": {
+        "sha1": "8cf62cd9c7a37ee8c4abb0b89308df8e873b21c3"
+      },
+      "path_in_vcs": "ff_derive"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "8cf62cd9c7a37ee8c4abb0b89308df8e873b21c3",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/ff_derive-0.14.0/SIBLING-ff-0.14.0-LICENSE-APACHE",
+        "sha256": "3708458dee7f359ac6c9c5558023ed481be87e5372c43ebd7f2ca7ad23c12026",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/ff-0.14.0/LICENSE-APACHE",
+        "evidence": "same repository and exact .cargo_vcs_info commit"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/ff_derive-0.14.0/SIBLING-ff-0.14.0-LICENSE-MIT",
+        "sha256": "8d0c1d1d4b2bebf5b9211f0e883d5a482b7808f3ed31320da14ddee95811f4ef",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/ff-0.14.0/LICENSE-MIT",
+        "evidence": "same repository and exact .cargo_vcs_info commit"
+      }
+    ],
+    "resolution": "same-commit-sibling-texts",
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "fixed-hash",
+    "version": "0.8.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/fixed-hash-0.8.0",
+    "repository": "https://github.com/paritytech/parity-common",
+    "vcs": {
+      "git": {
+        "sha1": "6aa58bfeaa870b4f7387e50319004151443f7297"
+      },
+      "path_in_vcs": "fixed-hash"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "6aa58bfeaa870b4f7387e50319004151443f7297",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/fixed-hash-0.8.0/LICENSE-APACHE2",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "source": "https://codeload.github.com/paritytech/parity-common/tar.gz/6aa58bfeaa870b4f7387e50319004151443f7297#LICENSE-APACHE2",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/fixed-hash-0.8.0/LICENSE-MIT",
+        "sha256": "4fd70c448a560ab3226168373907c277e610a6cc21f8d618decee144421070ca",
+        "source": "https://codeload.github.com/paritytech/parity-common/tar.gz/6aa58bfeaa870b4f7387e50319004151443f7297#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/fixed-hash-0.8.0/license-header",
+        "sha256": "110173f32ce46f8f25705cd2d321bf6a4f725f386bd79ba4be380c2e7940a21a",
+        "source": "https://codeload.github.com/paritytech/parity-common/tar.gz/6aa58bfeaa870b4f7387e50319004151443f7297#license-header",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/paritytech/parity-common/tar.gz/6aa58bfeaa870b4f7387e50319004151443f7297",
+      "sha256": "2f9fd4e002e65020a5c6bc54e29022daaeb6b7169868a2c4d8f872bf09cf976d"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "flutter_rust_bridge",
+    "version": "2.11.1",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/flutter_rust_bridge-2.11.1",
+    "repository": "https://github.com/fzyzcjy/flutter_rust_bridge",
+    "vcs": {
+      "git": {
+        "sha1": "f19087cd0cac019b82d52cfa5153ce81b1b6e902"
+      },
+      "path_in_vcs": "frb_rust"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "f19087cd0cac019b82d52cfa5153ce81b1b6e902",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/flutter_rust_bridge-2.11.1/LICENSE",
+        "sha256": "d56622df159a9967bd6a16c726823a2cbe8546c1f18437617283c9da27000390",
+        "source": "https://codeload.github.com/fzyzcjy/flutter_rust_bridge/tar.gz/f19087cd0cac019b82d52cfa5153ce81b1b6e902#LICENSE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/fzyzcjy/flutter_rust_bridge/tar.gz/f19087cd0cac019b82d52cfa5153ce81b1b6e902",
+      "sha256": "ee6b6166e201cb750f7a17f3cc67f733e2cf6a0b176a07c69a678ed9ed6db1d2"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "flutter_rust_bridge_macros",
+    "version": "2.11.1",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/flutter_rust_bridge_macros-2.11.1",
+    "repository": "https://github.com/fzyzcjy/flutter_rust_bridge",
+    "vcs": {
+      "git": {
+        "sha1": "f19087cd0cac019b82d52cfa5153ce81b1b6e902"
+      },
+      "path_in_vcs": "frb_macros"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "f19087cd0cac019b82d52cfa5153ce81b1b6e902",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/flutter_rust_bridge_macros-2.11.1/LICENSE",
+        "sha256": "d56622df159a9967bd6a16c726823a2cbe8546c1f18437617283c9da27000390",
+        "source": "https://codeload.github.com/fzyzcjy/flutter_rust_bridge/tar.gz/f19087cd0cac019b82d52cfa5153ce81b1b6e902#LICENSE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/fzyzcjy/flutter_rust_bridge/tar.gz/f19087cd0cac019b82d52cfa5153ce81b1b6e902",
+      "sha256": "ee6b6166e201cb750f7a17f3cc67f733e2cf6a0b176a07c69a678ed9ed6db1d2"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "frost-core",
+    "version": "3.0.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/frost-core-3.0.0",
+    "repository": "https://github.com/ZcashFoundation/frost",
+    "vcs": {
+      "git": {
+        "sha1": "2016e44ba4a4757a996300350063b937a2ad33e8"
+      },
+      "path_in_vcs": "frost-core"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "2016e44ba4a4757a996300350063b937a2ad33e8",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/frost-core-3.0.0/LICENCE",
+        "sha256": "8b854f5567a4de6abad82bb4f0f2b771b9053f5a2295e014734b043b11dff550",
+        "source": "https://codeload.github.com/ZcashFoundation/frost/tar.gz/2016e44ba4a4757a996300350063b937a2ad33e8#LICENCE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/frost-core-3.0.0/LICENCE.MIT",
+        "sha256": "eac2aa02c57c21016c6f3f9987a743b8986922d1388d85e99d4518c4aab6707e",
+        "source": "https://codeload.github.com/ZcashFoundation/frost/tar.gz/2016e44ba4a4757a996300350063b937a2ad33e8#LICENCE.MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/frost-core-3.0.0/LICENSE.Apache-2.0",
+        "sha256": "04cc45eb3e3689bff30987f394d7dcbe14dd34f569be47f4de8e21f876a43074",
+        "source": "https://codeload.github.com/ZcashFoundation/frost/tar.gz/2016e44ba4a4757a996300350063b937a2ad33e8#LICENSE.Apache-2.0",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/ZcashFoundation/frost/tar.gz/2016e44ba4a4757a996300350063b937a2ad33e8",
+      "sha256": "74fa0631e41d56abac8b5b7cdcdad35c59e45e05b8b3b644f854869b2c3c0951"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "frost-rerandomized",
+    "version": "3.0.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/frost-rerandomized-3.0.0",
+    "repository": "https://github.com/ZcashFoundation/frost",
+    "vcs": {
+      "git": {
+        "sha1": "2016e44ba4a4757a996300350063b937a2ad33e8"
+      },
+      "path_in_vcs": "frost-rerandomized"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "2016e44ba4a4757a996300350063b937a2ad33e8",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/frost-rerandomized-3.0.0/LICENCE",
+        "sha256": "8b854f5567a4de6abad82bb4f0f2b771b9053f5a2295e014734b043b11dff550",
+        "source": "https://codeload.github.com/ZcashFoundation/frost/tar.gz/2016e44ba4a4757a996300350063b937a2ad33e8#LICENCE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/frost-rerandomized-3.0.0/LICENCE.MIT",
+        "sha256": "eac2aa02c57c21016c6f3f9987a743b8986922d1388d85e99d4518c4aab6707e",
+        "source": "https://codeload.github.com/ZcashFoundation/frost/tar.gz/2016e44ba4a4757a996300350063b937a2ad33e8#LICENCE.MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/frost-rerandomized-3.0.0/LICENSE.Apache-2.0",
+        "sha256": "04cc45eb3e3689bff30987f394d7dcbe14dd34f569be47f4de8e21f876a43074",
+        "source": "https://codeload.github.com/ZcashFoundation/frost/tar.gz/2016e44ba4a4757a996300350063b937a2ad33e8#LICENSE.Apache-2.0",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/ZcashFoundation/frost/tar.gz/2016e44ba4a4757a996300350063b937a2ad33e8",
+      "sha256": "74fa0631e41d56abac8b5b7cdcdad35c59e45e05b8b3b644f854869b2c3c0951"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "fs-mistrust",
+    "version": "0.12.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/fs-mistrust-0.12.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/fs-mistrust"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/fs-mistrust-0.12.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/fs-mistrust-0.12.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "ics23",
+    "version": "0.12.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/ics23-0.12.0",
+    "repository": "https://github.com/cosmos/ics23",
+    "vcs": {
+      "git": {
+        "sha1": "d7cc4a50d8720007f47f0392a1ea9d46cfc53e24"
+      },
+      "path_in_vcs": "rust"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "d7cc4a50d8720007f47f0392a1ea9d46cfc53e24",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/ics23-0.12.0/LICENSE",
+        "sha256": "e1b7fabf18091c104fbeab2cb76113974c96ccd0826d8443e835bc3cfba1bf3e",
+        "source": "https://codeload.github.com/cosmos/ics23/tar.gz/d7cc4a50d8720007f47f0392a1ea9d46cfc53e24#LICENSE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/cosmos/ics23/tar.gz/d7cc4a50d8720007f47f0392a1ea9d46cfc53e24",
+      "sha256": "474645dc2455ab45a398c93937379cf4a818edac90afe57f6e3e9f097b195233"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "impl-codec",
+    "version": "0.6.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/impl-codec-0.6.0",
+    "repository": "https://github.com/paritytech/parity-common",
+    "vcs": {
+      "git": {
+        "sha1": "1d3a3d5138403bbf07d42978b29d8ac7d3fff53b"
+      },
+      "path_in_vcs": "primitive-types/impls/codec"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "1d3a3d5138403bbf07d42978b29d8ac7d3fff53b",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/impl-codec-0.6.0/LICENSE-APACHE2",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "source": "https://codeload.github.com/paritytech/parity-common/tar.gz/1d3a3d5138403bbf07d42978b29d8ac7d3fff53b#LICENSE-APACHE2",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/impl-codec-0.6.0/LICENSE-MIT",
+        "sha256": "4fd70c448a560ab3226168373907c277e610a6cc21f8d618decee144421070ca",
+        "source": "https://codeload.github.com/paritytech/parity-common/tar.gz/1d3a3d5138403bbf07d42978b29d8ac7d3fff53b#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/impl-codec-0.6.0/license-header",
+        "sha256": "110173f32ce46f8f25705cd2d321bf6a4f725f386bd79ba4be380c2e7940a21a",
+        "source": "https://codeload.github.com/paritytech/parity-common/tar.gz/1d3a3d5138403bbf07d42978b29d8ac7d3fff53b#license-header",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/paritytech/parity-common/tar.gz/1d3a3d5138403bbf07d42978b29d8ac7d3fff53b",
+      "sha256": "6533337aae073cae11d4fe5161ffd0cf92bf2f6f5c619d2709e5945cb093200d"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "impl-trait-for-tuples",
+    "version": "0.2.3",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "Apache-2.0/MIT",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3",
+    "repository": "https://github.com/bkchr/impl-trait-for-tuples",
+    "vcs": {
+      "git": {
+        "sha1": "457d40c9993b7a6607f213bdf84d856c3871e88c"
+      },
+      "path_in_vcs": ""
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "457d40c9993b7a6607f213bdf84d856c3871e88c",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/impl-trait-for-tuples-0.2.3/STANDARD-APACHE-2.0.txt",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+        "evidence": "standard text for an explicitly offered license option; not an invented upstream notice"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/impl-trait-for-tuples-0.2.3/UPSTREAM-Cargo.toml",
+        "sha256": "6b8188a656ea9d9b5b521d3aa002fe0ed7241a272afed54f7b83386b8a5a8049",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/Cargo.toml",
+        "evidence": "exact published crate evidence; author names retained as author names"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/impl-trait-for-tuples-0.2.3/UPSTREAM-README.md",
+        "sha256": "2d81df0a9ae171018f947f962a6705a5c19c7d2db4c623ef6273db99753f232b",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/README.md",
+        "evidence": "exact published crate evidence; author names retained as author names"
+      }
+    ],
+    "resolution": "explicit-apache-option-standard-text-and-source-grant",
+    "source_archive": {
+      "url": "https://codeload.github.com/bkchr/impl-trait-for-tuples/tar.gz/457d40c9993b7a6607f213bdf84d856c3871e88c",
+      "sha256": "6a9cf42b34488098286ce779216edb63a7336d91e8b811f169fac2bc5350736b"
+    },
+    "selected_license_option": "Apache-2.0",
+    "source_notice_gap": "No standalone license or copyright notice in exact-revision source; no copyright holder inferred",
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "imt-tree",
+    "version": "0.5.2",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/imt-tree-0.5.2",
+    "repository": "https://github.com/valargroup/vote-nullifier-pir",
+    "vcs": {
+      "git": {
+        "sha1": "20e9c4ae34aab0e8b11c2c5f8ebfa866d3a9dba8"
+      },
+      "path_in_vcs": "imt-tree"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "20e9c4ae34aab0e8b11c2c5f8ebfa866d3a9dba8",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/imt-tree-0.5.2/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://codeload.github.com/valargroup/vote-nullifier-pir/tar.gz/20e9c4ae34aab0e8b11c2c5f8ebfa866d3a9dba8#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/imt-tree-0.5.2/LICENSE-MIT",
+        "sha256": "98954f1729d7cc3fd1671c7967e18097849a5f7ab913d1955671889b3095d420",
+        "source": "https://codeload.github.com/valargroup/vote-nullifier-pir/tar.gz/20e9c4ae34aab0e8b11c2c5f8ebfa866d3a9dba8#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/valargroup/vote-nullifier-pir/tar.gz/20e9c4ae34aab0e8b11c2c5f8ebfa866d3a9dba8",
+      "sha256": "a56c07a241468b0c24265efd0c53849a6767ce4e92eae5c1052f63f395ef0cf1"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "informalsystems-pbjson",
+    "version": "0.7.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/informalsystems-pbjson-0.7.0",
+    "repository": "https://github.com/informalsystems/pbjson",
+    "vcs": {
+      "git": {
+        "sha1": "d08d90e71ec342f199a11e0a6f5a594723275ee8"
+      },
+      "path_in_vcs": "pbjson"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "d08d90e71ec342f199a11e0a6f5a594723275ee8",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/informalsystems-pbjson-0.7.0/LICENSE",
+        "sha256": "791a00933f2ea7e512856361e026998362241c3918d7be948c24d29441033b55",
+        "source": "https://codeload.github.com/informalsystems/pbjson/tar.gz/d08d90e71ec342f199a11e0a6f5a594723275ee8#LICENSE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/informalsystems/pbjson/tar.gz/d08d90e71ec342f199a11e0a6f5a594723275ee8",
+      "sha256": "8c39f0c3edf156dc7289f9dd7852d39168f5575247e4147811bcb9bf5f4d6822"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "objc2-core-foundation",
+    "version": "0.3.2",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "Zlib OR Apache-2.0 OR MIT",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/objc2-core-foundation-0.3.2",
+    "repository": "https://github.com/madsmtm/objc2",
+    "vcs": {
+      "git": {
+        "sha1": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b"
+      },
+      "path_in_vcs": "framework-crates/objc2-core-foundation"
+    },
+    "target_normal_or_build": {
+      "linux": false,
+      "android": false
+    },
+    "revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/objc2-core-foundation-0.3.2/LICENSE.md",
+        "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+        "source": "https://codeload.github.com/madsmtm/objc2/tar.gz/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b#LICENSE.md",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/madsmtm/objc2/tar.gz/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "sha256": "a6685e9b30da4c2b9ed807e8344d7248447daf1d5ab5b7af4fa3755545f96a4d"
+    },
+    "included_in_linux_android_supplement": false
+  },
+  {
+    "name": "objc2-io-kit",
+    "version": "0.3.2",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "Zlib OR Apache-2.0 OR MIT",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/objc2-io-kit-0.3.2",
+    "repository": "https://github.com/madsmtm/objc2",
+    "vcs": {
+      "git": {
+        "sha1": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b"
+      },
+      "path_in_vcs": "framework-crates/objc2-io-kit"
+    },
+    "target_normal_or_build": {
+      "linux": false,
+      "android": false
+    },
+    "revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/objc2-io-kit-0.3.2/LICENSE.md",
+        "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+        "source": "https://codeload.github.com/madsmtm/objc2/tar.gz/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b#LICENSE.md",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/madsmtm/objc2/tar.gz/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "sha256": "a6685e9b30da4c2b9ed807e8344d7248447daf1d5ab5b7af4fa3755545f96a4d"
+    },
+    "included_in_linux_android_supplement": false
+  },
+  {
+    "name": "oneshot-fused-workaround",
+    "version": "0.4.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/oneshot-fused-workaround-0.4.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/oneshot-fused-workaround"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/oneshot-fused-workaround-0.4.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/oneshot-fused-workaround-0.4.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "parity-scale-codec-derive",
+    "version": "3.7.5",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/parity-scale-codec-derive-3.7.5",
+    "repository": "https://github.com/paritytech/parity-scale-codec",
+    "vcs": {
+      "git": {
+        "sha1": "085b1ba8ba2fd4fcd3922afed07a034c1cb885d0"
+      },
+      "path_in_vcs": "derive"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "085b1ba8ba2fd4fcd3922afed07a034c1cb885d0",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/parity-scale-codec-derive-3.7.5/SIBLING-parity-scale-codec-3.7.5-LICENSE",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/parity-scale-codec-3.7.5/LICENSE",
+        "evidence": "same repository and exact .cargo_vcs_info commit"
+      }
+    ],
+    "resolution": "same-commit-sibling-texts",
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "pir-client",
+    "version": "0.7.2",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/pir-client-0.7.2",
+    "repository": "https://github.com/valargroup/vote-nullifier-pir",
+    "vcs": {
+      "git": {
+        "sha1": "20e9c4ae34aab0e8b11c2c5f8ebfa866d3a9dba8"
+      },
+      "path_in_vcs": "pir/client"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "20e9c4ae34aab0e8b11c2c5f8ebfa866d3a9dba8",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/pir-client-0.7.2/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://codeload.github.com/valargroup/vote-nullifier-pir/tar.gz/20e9c4ae34aab0e8b11c2c5f8ebfa866d3a9dba8#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/pir-client-0.7.2/LICENSE-MIT",
+        "sha256": "98954f1729d7cc3fd1671c7967e18097849a5f7ab913d1955671889b3095d420",
+        "source": "https://codeload.github.com/valargroup/vote-nullifier-pir/tar.gz/20e9c4ae34aab0e8b11c2c5f8ebfa866d3a9dba8#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/valargroup/vote-nullifier-pir/tar.gz/20e9c4ae34aab0e8b11c2c5f8ebfa866d3a9dba8",
+      "sha256": "a56c07a241468b0c24265efd0c53849a6767ce4e92eae5c1052f63f395ef0cf1"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "pir-types",
+    "version": "0.6.2",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/pir-types-0.6.2",
+    "repository": "https://github.com/valargroup/vote-nullifier-pir",
+    "vcs": {
+      "git": {
+        "sha1": "20e9c4ae34aab0e8b11c2c5f8ebfa866d3a9dba8"
+      },
+      "path_in_vcs": "pir/types"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "20e9c4ae34aab0e8b11c2c5f8ebfa866d3a9dba8",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/pir-types-0.6.2/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://codeload.github.com/valargroup/vote-nullifier-pir/tar.gz/20e9c4ae34aab0e8b11c2c5f8ebfa866d3a9dba8#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/pir-types-0.6.2/LICENSE-MIT",
+        "sha256": "98954f1729d7cc3fd1671c7967e18097849a5f7ab913d1955671889b3095d420",
+        "source": "https://codeload.github.com/valargroup/vote-nullifier-pir/tar.gz/20e9c4ae34aab0e8b11c2c5f8ebfa866d3a9dba8#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/valargroup/vote-nullifier-pir/tar.gz/20e9c4ae34aab0e8b11c2c5f8ebfa866d3a9dba8",
+      "sha256": "a56c07a241468b0c24265efd0c53849a6767ce4e92eae5c1052f63f395ef0cf1"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "primitive-types",
+    "version": "0.12.2",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/primitive-types-0.12.2",
+    "repository": "https://github.com/paritytech/parity-common",
+    "vcs": {
+      "git": {
+        "sha1": "5bfb87dc1dccdf392f32c589b1d734a1cf814261"
+      },
+      "path_in_vcs": "primitive-types"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "5bfb87dc1dccdf392f32c589b1d734a1cf814261",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/primitive-types-0.12.2/LICENSE-APACHE2",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "source": "https://codeload.github.com/paritytech/parity-common/tar.gz/5bfb87dc1dccdf392f32c589b1d734a1cf814261#LICENSE-APACHE2",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/primitive-types-0.12.2/LICENSE-MIT",
+        "sha256": "4fd70c448a560ab3226168373907c277e610a6cc21f8d618decee144421070ca",
+        "source": "https://codeload.github.com/paritytech/parity-common/tar.gz/5bfb87dc1dccdf392f32c589b1d734a1cf814261#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/primitive-types-0.12.2/license-header",
+        "sha256": "110173f32ce46f8f25705cd2d321bf6a4f725f386bd79ba4be380c2e7940a21a",
+        "source": "https://codeload.github.com/paritytech/parity-common/tar.gz/5bfb87dc1dccdf392f32c589b1d734a1cf814261#license-header",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/paritytech/parity-common/tar.gz/5bfb87dc1dccdf392f32c589b1d734a1cf814261",
+      "sha256": "f6a54c1e6fbdea73ad9268f30a50b9ce7db39acc7eebce4cd8733469436ffba3"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "priority-queue",
+    "version": "2.7.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "LGPL-3.0-or-later OR MPL-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/priority-queue-2.7.0",
+    "repository": "https://github.com/garro95/priority-queue",
+    "vcs": {
+      "git": {
+        "sha1": "0c76fb8fe75e4457f16f8e6c8e86508d1a89ba1d"
+      },
+      "path_in_vcs": ""
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0c76fb8fe75e4457f16f8e6c8e86508d1a89ba1d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/priority-queue-2.7.0/LGPL-3.0-or-later.txt",
+        "sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/priority-queue-2.7.0/LGPL-3.0-or-later.txt",
+        "evidence": "exact published crate; nonstandard legal filename"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/priority-queue-2.7.0/MPL-2.0.txt",
+        "sha256": "c73cc0c27b0f24d5612e76bf83b5845c4fbd0374a1a8483f3d16befe58a60c9a",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/priority-queue-2.7.0/MPL-2.0.txt",
+        "evidence": "exact published crate; nonstandard legal filename"
+      }
+    ],
+    "resolution": "exact-crate-nonstandard-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/garro95/priority-queue/tar.gz/0c76fb8fe75e4457f16f8e6c8e86508d1a89ba1d",
+      "sha256": "5a409fccadb748f5ccc6f08960d85bf0ec824c718bbf0f6bae5751cd63807058"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "r-efi",
+    "version": "5.3.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/r-efi-5.3.0",
+    "repository": "https://github.com/r-efi/r-efi",
+    "vcs": {
+      "git": {
+        "sha1": "97b55bed1c2c91dcbf787674849f05337ff80b33"
+      },
+      "path_in_vcs": ""
+    },
+    "target_normal_or_build": {
+      "linux": false,
+      "android": false
+    },
+    "revision": "97b55bed1c2c91dcbf787674849f05337ff80b33",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/r-efi-5.3.0/AUTHORS",
+        "sha256": "ff92bed461f50338dd703a9ba9aee496a425957873df1d91192776e4bdf5dda7",
+        "source": "https://codeload.github.com/r-efi/r-efi/tar.gz/97b55bed1c2c91dcbf787674849f05337ff80b33#AUTHORS",
+        "evidence": "exact revision archive nonstandard legal directory"
+      }
+    ],
+    "resolution": "exact-source-nonstandard-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/r-efi/r-efi/tar.gz/97b55bed1c2c91dcbf787674849f05337ff80b33",
+      "sha256": "e509e16b12d3ce3d5cb74167c3f72d25406e282795af8942818c70bb8cd36bec"
+    },
+    "included_in_linux_android_supplement": false
+  },
+  {
+    "name": "r-efi",
+    "version": "6.0.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/r-efi-6.0.0",
+    "repository": "https://github.com/r-efi/r-efi",
+    "vcs": {
+      "git": {
+        "sha1": "7e1b0322d31d625f81a5656096330934f9cd835d"
+      },
+      "path_in_vcs": ""
+    },
+    "target_normal_or_build": {
+      "linux": false,
+      "android": false
+    },
+    "revision": "7e1b0322d31d625f81a5656096330934f9cd835d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/r-efi-6.0.0/AUTHORS",
+        "sha256": "d027e91dbc9cdbb2f1190068e498bd6b61cff022b6a032b191021ba658d96111",
+        "source": "https://codeload.github.com/r-efi/r-efi/tar.gz/7e1b0322d31d625f81a5656096330934f9cd835d#AUTHORS",
+        "evidence": "exact revision archive nonstandard legal directory"
+      }
+    ],
+    "resolution": "exact-source-nonstandard-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/r-efi/r-efi/tar.gz/7e1b0322d31d625f81a5656096330934f9cd835d",
+      "sha256": "c4c0ce4a68412706de70ba2b5711e0f521aee82f6e72fdc1a6e0a7a89dc017cf"
+    },
+    "included_in_linux_android_supplement": false
+  },
+  {
+    "name": "retry-error",
+    "version": "0.8.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/retry-error-0.8.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/retry-error"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/retry-error-0.8.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/retry-error-0.8.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "rlp",
+    "version": "0.5.2",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/rlp-0.5.2",
+    "repository": "https://github.com/paritytech/parity-common",
+    "vcs": {
+      "git": {
+        "sha1": "86676b08e89cb99fdff0c882453ad0746dd070cf"
+      },
+      "path_in_vcs": "rlp"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "86676b08e89cb99fdff0c882453ad0746dd070cf",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/rlp-0.5.2/LICENSE-APACHE2",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "source": "https://codeload.github.com/paritytech/parity-common/tar.gz/86676b08e89cb99fdff0c882453ad0746dd070cf#LICENSE-APACHE2",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/rlp-0.5.2/LICENSE-MIT",
+        "sha256": "4fd70c448a560ab3226168373907c277e610a6cc21f8d618decee144421070ca",
+        "source": "https://codeload.github.com/paritytech/parity-common/tar.gz/86676b08e89cb99fdff0c882453ad0746dd070cf#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/rlp-0.5.2/license-header",
+        "sha256": "110173f32ce46f8f25705cd2d321bf6a4f725f386bd79ba4be380c2e7940a21a",
+        "source": "https://codeload.github.com/paritytech/parity-common/tar.gz/86676b08e89cb99fdff0c882453ad0746dd070cf#license-header",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/paritytech/parity-common/tar.gz/86676b08e89cb99fdff0c882453ad0746dd070cf",
+      "sha256": "be5bd2b82a91b1e3f1780ec50bde405cff44008aeae1fc1474fbc584678a6ccc"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "ruint",
+    "version": "1.20.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/ruint-1.20.0",
+    "repository": "https://github.com/alloy-rs/ruint",
+    "vcs": {
+      "git": {
+        "sha1": "0fccc1071272affc25d50887c24a9f9a97b746f4"
+      },
+      "path_in_vcs": ""
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0fccc1071272affc25d50887c24a9f9a97b746f4",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/ruint-1.20.0/LICENSE",
+        "sha256": "9de1e5b5b50b059e58009b7044705557dd07ec87555bca518bef8b5acc002908",
+        "source": "https://codeload.github.com/alloy-rs/ruint/tar.gz/0fccc1071272affc25d50887c24a9f9a97b746f4#LICENSE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/alloy-rs/ruint/tar.gz/0fccc1071272affc25d50887c24a9f9a97b746f4",
+      "sha256": "b5dadbc5e35d82c10715d19b9ed524c5da482895095fea5c912fed99da4d24eb"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "ruint-macro",
+    "version": "1.2.1",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/ruint-macro-1.2.1",
+    "repository": "https://github.com/recmo/uint",
+    "vcs": {
+      "git": {
+        "sha1": "89d58efbd4c6de4994e5e404ed6450b8bb927202"
+      },
+      "path_in_vcs": "ruint-macro"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "89d58efbd4c6de4994e5e404ed6450b8bb927202",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/ruint-macro-1.2.1/LICENSE",
+        "sha256": "9de1e5b5b50b059e58009b7044705557dd07ec87555bca518bef8b5acc002908",
+        "source": "https://codeload.github.com/recmo/uint/tar.gz/89d58efbd4c6de4994e5e404ed6450b8bb927202#LICENSE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/recmo/uint/tar.gz/89d58efbd4c6de4994e5e404ed6450b8bb927202",
+      "sha256": "6a7a3d5c8e9fd6ebfaf1f490e2f14a41db99be1f3e7b1ea80d4b8cd761730350"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "rust_lib_zcash_wallet",
+    "version": "0.1.0",
+    "source": "path",
+    "declared_license": "not declared in Cargo.toml",
+    "path": "$WALLET_ROOT/rust",
+    "repository": null,
+    "vcs": {},
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": null,
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/rust_lib_zcash_wallet-0.1.0/LICENSE",
+        "sha256": "c7c68e93eb5d9788c91bf5b886adfea3c472f02505f75763546f9a91e6736d05",
+        "source": "$WALLET_ROOT/LICENSE",
+        "evidence": "local workspace root; no crate-level license declaration"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/rust_lib_zcash_wallet-0.1.0/NOTICE",
+        "sha256": "4a633bb3ab83ef78fede738a0d7aea8c2a8cea7dadec6dac4f1186e220889982",
+        "source": "$WALLET_ROOT/NOTICE",
+        "evidence": "local workspace root; no crate-level license declaration"
+      }
+    ],
+    "resolution": "workspace-root-texts",
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "safelog",
+    "version": "0.6.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/safelog-0.6.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/safelog"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/safelog-0.6.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/safelog-0.6.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "schemerz",
+    "version": "0.2.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT/Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/schemerz-0.2.0",
+    "repository": "https://github.com/zcash/schemerz",
+    "vcs": {
+      "git": {
+        "sha1": "23a5f277a0b7a0b2209d801aaf983a35d64a3d6d"
+      },
+      "path_in_vcs": "schemerz"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "23a5f277a0b7a0b2209d801aaf983a35d64a3d6d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/schemerz-0.2.0/LICENSE-APACHE",
+        "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08",
+        "source": "https://codeload.github.com/zcash/schemerz/tar.gz/23a5f277a0b7a0b2209d801aaf983a35d64a3d6d#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/schemerz-0.2.0/LICENSE-MIT",
+        "sha256": "74db69f6f403d70f9ad9f1fc0112636bc522b5fa1e7a0220314597900b626f18",
+        "source": "https://codeload.github.com/zcash/schemerz/tar.gz/23a5f277a0b7a0b2209d801aaf983a35d64a3d6d#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/zcash/schemerz/tar.gz/23a5f277a0b7a0b2209d801aaf983a35d64a3d6d",
+      "sha256": "2319e3a4e29a10727f65a8114108a391de62d371a2143f235a1a089d993b13d3"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "schemerz-rusqlite",
+    "version": "0.370.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/schemerz-rusqlite-0.370.0",
+    "repository": "https://github.com/zcash/schemerz",
+    "vcs": {
+      "git": {
+        "sha1": "de4244d4f4e5f06232311619195996a7485459e7"
+      },
+      "path_in_vcs": "schemerz-rusqlite"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "de4244d4f4e5f06232311619195996a7485459e7",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/schemerz-rusqlite-0.370.0/LICENSE-APACHE",
+        "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08",
+        "source": "https://codeload.github.com/zcash/schemerz/tar.gz/de4244d4f4e5f06232311619195996a7485459e7#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/schemerz-rusqlite-0.370.0/LICENSE-MIT",
+        "sha256": "74db69f6f403d70f9ad9f1fc0112636bc522b5fa1e7a0220314597900b626f18",
+        "source": "https://codeload.github.com/zcash/schemerz/tar.gz/de4244d4f4e5f06232311619195996a7485459e7#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/zcash/schemerz/tar.gz/de4244d4f4e5f06232311619195996a7485459e7",
+      "sha256": "4b729010f8972f49424fb556f3f831440241d0dc93e00aab3a40ee65082ea6a0"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "slotmap-careful",
+    "version": "0.4.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/slotmap-careful-0.4.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/slotmap-careful"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/slotmap-careful-0.4.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/slotmap-careful-0.4.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "syn-solidity",
+    "version": "0.8.26",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/syn-solidity-0.8.26",
+    "repository": "https://github.com/alloy-rs/core",
+    "vcs": {
+      "git": {
+        "sha1": "79d0ef6e6a4331f5512957bb62a3018ad782b15d"
+      },
+      "path_in_vcs": "crates/syn-solidity"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "79d0ef6e6a4331f5512957bb62a3018ad782b15d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/syn-solidity-0.8.26/LICENSE-APACHE",
+        "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "source": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/syn-solidity-0.8.26/LICENSE-MIT",
+        "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "source": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/alloy-rs/core/tar.gz/79d0ef6e6a4331f5512957bb62a3018ad782b15d",
+      "sha256": "3ca4164ec55001b947423fd7d0bd225f56145bfc775a855b47653cb273b5474f"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tendermint",
+    "version": "0.40.4",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tendermint-0.40.4",
+    "repository": "https://github.com/informalsystems/tendermint-rs",
+    "vcs": {
+      "git": {
+        "sha1": "d8c361ec5597e3f9a005d7211eec9c74eb9b04df"
+      },
+      "path_in_vcs": "tendermint"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "d8c361ec5597e3f9a005d7211eec9c74eb9b04df",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tendermint-0.40.4/LICENSE",
+        "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+        "source": "https://codeload.github.com/informalsystems/tendermint-rs/tar.gz/d8c361ec5597e3f9a005d7211eec9c74eb9b04df#LICENSE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/informalsystems/tendermint-rs/tar.gz/d8c361ec5597e3f9a005d7211eec9c74eb9b04df",
+      "sha256": "f7b8c0921370a2898b288900ca7c116fda2411eb89217363843ed0b0a4bfcfbc"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tendermint-light-client-verifier",
+    "version": "0.40.4",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tendermint-light-client-verifier-0.40.4",
+    "repository": "https://github.com/informalsystems/tendermint-rs",
+    "vcs": {
+      "git": {
+        "sha1": "d8c361ec5597e3f9a005d7211eec9c74eb9b04df"
+      },
+      "path_in_vcs": "light-client-verifier"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "d8c361ec5597e3f9a005d7211eec9c74eb9b04df",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tendermint-light-client-verifier-0.40.4/LICENSE",
+        "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+        "source": "https://codeload.github.com/informalsystems/tendermint-rs/tar.gz/d8c361ec5597e3f9a005d7211eec9c74eb9b04df#LICENSE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/informalsystems/tendermint-rs/tar.gz/d8c361ec5597e3f9a005d7211eec9c74eb9b04df",
+      "sha256": "f7b8c0921370a2898b288900ca7c116fda2411eb89217363843ed0b0a4bfcfbc"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tendermint-proto",
+    "version": "0.40.4",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tendermint-proto-0.40.4",
+    "repository": "https://github.com/informalsystems/tendermint-rs",
+    "vcs": {
+      "git": {
+        "sha1": "d8c361ec5597e3f9a005d7211eec9c74eb9b04df"
+      },
+      "path_in_vcs": "proto"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "d8c361ec5597e3f9a005d7211eec9c74eb9b04df",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tendermint-proto-0.40.4/LICENSE",
+        "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+        "source": "https://codeload.github.com/informalsystems/tendermint-rs/tar.gz/d8c361ec5597e3f9a005d7211eec9c74eb9b04df#LICENSE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/informalsystems/tendermint-rs/tar.gz/d8c361ec5597e3f9a005d7211eec9c74eb9b04df",
+      "sha256": "f7b8c0921370a2898b288900ca7c116fda2411eb89217363843ed0b0a4bfcfbc"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tonic-prost",
+    "version": "0.14.6",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tonic-prost-0.14.6",
+    "repository": "https://github.com/hyperium/tonic",
+    "vcs": {
+      "git": {
+        "sha1": "6cb6056b5a748bc5a29bd48f4602dbc4e552bb7d"
+      },
+      "path_in_vcs": "tonic-prost"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "6cb6056b5a748bc5a29bd48f4602dbc4e552bb7d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tonic-prost-0.14.6/SIBLING-tonic-build-0.14.6-LICENSE",
+        "sha256": "e24a56698aa6feaf3a02272b3624f9dc255d982970c5ed97ac4525a95056a5b3",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tonic-build-0.14.6/LICENSE",
+        "evidence": "same repository and exact .cargo_vcs_info commit"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tonic-prost-0.14.6/SIBLING-tonic-0.14.6-LICENSE",
+        "sha256": "e24a56698aa6feaf3a02272b3624f9dc255d982970c5ed97ac4525a95056a5b3",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tonic-0.14.6/LICENSE",
+        "evidence": "same repository and exact .cargo_vcs_info commit"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tonic-prost-0.14.6/SIBLING-tonic-reflection-0.14.6-LICENSE",
+        "sha256": "e24a56698aa6feaf3a02272b3624f9dc255d982970c5ed97ac4525a95056a5b3",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tonic-reflection-0.14.6/LICENSE",
+        "evidence": "same repository and exact .cargo_vcs_info commit"
+      }
+    ],
+    "resolution": "same-commit-sibling-texts",
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tonic-prost-build",
+    "version": "0.14.6",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tonic-prost-build-0.14.6",
+    "repository": "https://github.com/hyperium/tonic",
+    "vcs": {
+      "git": {
+        "sha1": "6cb6056b5a748bc5a29bd48f4602dbc4e552bb7d"
+      },
+      "path_in_vcs": "tonic-prost-build"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "6cb6056b5a748bc5a29bd48f4602dbc4e552bb7d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tonic-prost-build-0.14.6/SIBLING-tonic-build-0.14.6-LICENSE",
+        "sha256": "e24a56698aa6feaf3a02272b3624f9dc255d982970c5ed97ac4525a95056a5b3",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tonic-build-0.14.6/LICENSE",
+        "evidence": "same repository and exact .cargo_vcs_info commit"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tonic-prost-build-0.14.6/SIBLING-tonic-0.14.6-LICENSE",
+        "sha256": "e24a56698aa6feaf3a02272b3624f9dc255d982970c5ed97ac4525a95056a5b3",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tonic-0.14.6/LICENSE",
+        "evidence": "same repository and exact .cargo_vcs_info commit"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tonic-prost-build-0.14.6/SIBLING-tonic-reflection-0.14.6-LICENSE",
+        "sha256": "e24a56698aa6feaf3a02272b3624f9dc255d982970c5ed97ac4525a95056a5b3",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tonic-reflection-0.14.6/LICENSE",
+        "evidence": "same repository and exact .cargo_vcs_info commit"
+      }
+    ],
+    "resolution": "same-commit-sibling-texts",
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-async-utils",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-async-utils-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-async-utils"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-async-utils-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-async-utils-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-basic-utils",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-basic-utils-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-basic-utils"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-basic-utils-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-basic-utils-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-bytes",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-bytes-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-bytes"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-bytes-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-bytes-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-cell",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-cell-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-cell"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-cell-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-cell-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-cert",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-cert-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-cert"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-cert-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-cert-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-chanmgr",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-chanmgr-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-chanmgr"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-chanmgr-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-chanmgr-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-checkable",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-checkable-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-checkable"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-checkable-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-checkable-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-circmgr",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-circmgr-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-circmgr"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-circmgr-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-circmgr-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-config",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-config-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-config"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-config-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-config-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-config-path",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-config-path-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-config-path"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-config-path-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-config-path-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-consdiff",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-consdiff-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-consdiff"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-consdiff-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-consdiff-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-dirclient",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-dirclient-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-dirclient"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-dirclient-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-dirclient-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-dircommon",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-dircommon-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-dircommon"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-dircommon-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-dircommon-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-dirmgr",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-dirmgr-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-dirmgr"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-dirmgr-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-dirmgr-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-error",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-error-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-error"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-error-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-error-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-general-addr",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-general-addr-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-general-addr"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-general-addr-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-general-addr-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-guardmgr",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-guardmgr-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-guardmgr"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-guardmgr-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-guardmgr-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-hsclient",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-hsclient-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-hsclient"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-hsclient-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-hsclient-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-hscrypto",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-hscrypto-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-hscrypto"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-hscrypto-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-hscrypto-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-key-forge",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-key-forge-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-key-forge"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-key-forge-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-key-forge-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-keymgr",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-keymgr-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-keymgr"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-keymgr-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-keymgr-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-linkspec",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-linkspec-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-linkspec"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-linkspec-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-linkspec-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-llcrypto",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-llcrypto-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-llcrypto"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-llcrypto-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-llcrypto-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-log-ratelim",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-log-ratelim-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-log-ratelim"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-log-ratelim-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-log-ratelim-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-memquota",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-memquota-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-memquota"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-memquota-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-memquota-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-netdir",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-netdir-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-netdir"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-netdir-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-netdir-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-netdoc",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-netdoc-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-netdoc"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-netdoc-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-netdoc-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-persist",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-persist-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-persist"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-persist-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-persist-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-proto",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-proto-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-proto"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-proto-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-proto-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-protover",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-protover-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-protover"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-protover-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-protover-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-relay-selection",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-relay-selection-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-relay-selection"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-relay-selection-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-relay-selection-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-rtcompat",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-rtcompat-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-rtcompat"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-rtcompat-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-rtcompat-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-rtmock",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-rtmock-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-rtmock"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-rtmock-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-rtmock-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-socksproto",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-socksproto-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-socksproto"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-socksproto-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-socksproto-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "tor-units",
+    "version": "0.35.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/tor-units-0.35.0",
+    "repository": "https://gitlab.torproject.org/tpo/core/arti",
+    "vcs": {
+      "git": {
+        "sha1": "0b636d9d8d3309663de0fb5554255f5f8f82544d"
+      },
+      "path_in_vcs": "crates/tor-units"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "0b636d9d8d3309663de0fb5554255f5f8f82544d",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-units-0.35.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-APACHE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/tor-units-0.35.0/LICENSE-MIT",
+        "sha256": "e40081d18f17b6783fcb554ae42f6fa3548988e4d705a3e4541e2ef240293040",
+        "source": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://gitlab.torproject.org/tpo/core/arti/-/archive/0b636d9d8d3309663de0fb5554255f5f8f82544d/arti-0b636d9d8d3309663de0fb5554255f5f8f82544d.tar.gz",
+      "sha256": "dcd1664503e1d8854b3e2910e95cf99c238119584a5b3d2647a9dc8047f1565a"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "uint",
+    "version": "0.9.5",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/uint-0.9.5",
+    "repository": "https://github.com/paritytech/parity-common",
+    "vcs": {
+      "git": {
+        "sha1": "c41d51df8a314150c46cbbff31f8140a35dfb02c"
+      },
+      "path_in_vcs": "uint"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "c41d51df8a314150c46cbbff31f8140a35dfb02c",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/uint-0.9.5/LICENSE-APACHE2",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "source": "https://codeload.github.com/paritytech/parity-common/tar.gz/c41d51df8a314150c46cbbff31f8140a35dfb02c#LICENSE-APACHE2",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/uint-0.9.5/LICENSE-MIT",
+        "sha256": "4fd70c448a560ab3226168373907c277e610a6cc21f8d618decee144421070ca",
+        "source": "https://codeload.github.com/paritytech/parity-common/tar.gz/c41d51df8a314150c46cbbff31f8140a35dfb02c#LICENSE-MIT",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/uint-0.9.5/license-header",
+        "sha256": "110173f32ce46f8f25705cd2d321bf6a4f725f386bd79ba4be380c2e7940a21a",
+        "source": "https://codeload.github.com/paritytech/parity-common/tar.gz/c41d51df8a314150c46cbbff31f8140a35dfb02c#license-header",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/paritytech/parity-common/tar.gz/c41d51df8a314150c46cbbff31f8140a35dfb02c",
+      "sha256": "838bcafcb5f645437d445d81bf2fb33aca56534fee88bd30e0a037333323d83e"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "valar-spiral-rs",
+    "version": "0.5.2",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/valar-spiral-rs-0.5.2",
+    "repository": "https://github.com/valargroup/spiral-rs",
+    "vcs": {
+      "git": {
+        "sha1": "6f5b66c6a5a639827c6486c59d31c7ec2d4399a8"
+      },
+      "path_in_vcs": ""
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "6f5b66c6a5a639827c6486c59d31c7ec2d4399a8",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/valar-spiral-rs-0.5.2/STANDARD-APACHE-2.0.txt",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+        "evidence": "standard text for an explicitly offered license option; not an invented upstream notice"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/valar-spiral-rs-0.5.2/UPSTREAM-Cargo.toml",
+        "sha256": "ca379dc703854fee203f6e0bda73aa34535d231ae4ba29b60febbeb21c03c286",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/valar-spiral-rs-0.5.2/Cargo.toml",
+        "evidence": "exact published crate evidence; author names retained as author names"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/valar-spiral-rs-0.5.2/UPSTREAM-README.md",
+        "sha256": "d4e11c7cca2eb6902a14035f1e4e844599944ee49314335dac3998c93bafa5b2",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/valar-spiral-rs-0.5.2/README.md",
+        "evidence": "exact published crate evidence; author names retained as author names"
+      }
+    ],
+    "resolution": "explicit-apache-option-standard-text-and-source-grant",
+    "source_archive": {
+      "url": "https://codeload.github.com/valargroup/spiral-rs/tar.gz/6f5b66c6a5a639827c6486c59d31c7ec2d4399a8",
+      "sha256": "56f6144019d7416b003db6acb7713262dc2f37744d728984e906dbac64d491aa"
+    },
+    "selected_license_option": "Apache-2.0",
+    "source_notice_gap": "No standalone license or copyright notice in exact-revision source; no copyright holder inferred",
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "valuable",
+    "version": "0.1.1",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/valuable-0.1.1",
+    "repository": "https://github.com/tokio-rs/valuable",
+    "vcs": {
+      "git": {
+        "sha1": "9efc29b6e58cef28f6566a47aa7e142a55fead77"
+      },
+      "path_in_vcs": "valuable"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "9efc29b6e58cef28f6566a47aa7e142a55fead77",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/valuable-0.1.1/LICENSE",
+        "sha256": "ed60d479b8fd1f64e9cbc3de449a16a53ac1b3d1b6aeb9bf9d190a8e93061b44",
+        "source": "https://codeload.github.com/tokio-rs/valuable/tar.gz/9efc29b6e58cef28f6566a47aa7e142a55fead77#LICENSE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/tokio-rs/valuable/tar.gz/9efc29b6e58cef28f6566a47aa7e142a55fead77",
+      "sha256": "3414d7860b88c946b1ac6136bb2b9cc3055a16a2bd243d1caac2b23723e937e0"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "vizor-contact-core",
+    "version": "0.1.0",
+    "source": "path",
+    "declared_license": "not declared in Cargo.toml",
+    "path": "$WALLET_ROOT/rust/contact-core",
+    "repository": null,
+    "vcs": {},
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": null,
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/vizor-contact-core-0.1.0/LICENSE",
+        "sha256": "c7c68e93eb5d9788c91bf5b886adfea3c472f02505f75763546f9a91e6736d05",
+        "source": "$WALLET_ROOT/LICENSE",
+        "evidence": "local workspace root; no crate-level license declaration"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/vizor-contact-core-0.1.0/NOTICE",
+        "sha256": "4a633bb3ab83ef78fede738a0d7aea8c2a8cea7dadec6dac4f1186e220889982",
+        "source": "$WALLET_ROOT/NOTICE",
+        "evidence": "local workspace root; no crate-level license declaration"
+      }
+    ],
+    "resolution": "workspace-root-texts",
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "vizor-zns-core",
+    "version": "0.1.0",
+    "source": "path",
+    "declared_license": "not declared in Cargo.toml",
+    "path": "$WALLET_ROOT/rust/zns-core",
+    "repository": null,
+    "vcs": {},
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": null,
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/vizor-zns-core-0.1.0/LICENSE",
+        "sha256": "c7c68e93eb5d9788c91bf5b886adfea3c472f02505f75763546f9a91e6736d05",
+        "source": "$WALLET_ROOT/LICENSE",
+        "evidence": "local workspace root; no crate-level license declaration"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/vizor-zns-core-0.1.0/NOTICE",
+        "sha256": "4a633bb3ab83ef78fede738a0d7aea8c2a8cea7dadec6dac4f1186e220889982",
+        "source": "$WALLET_ROOT/NOTICE",
+        "evidence": "local workspace root; no crate-level license declaration"
+      }
+    ],
+    "resolution": "workspace-root-texts",
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "void",
+    "version": "1.0.2",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/void-1.0.2",
+    "repository": "https://github.com/reem/rust-void",
+    "vcs": {},
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": null,
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/void-1.0.2/LICENSE-APACHE",
+        "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08",
+        "source": "https://codeload.github.com/reem/rust-void/tar.gz/a6e061227f47ba8798b7e828ed0ac4e25382eb15#LICENSE-APACHE",
+        "evidence": "upstream resolved HEAD; published source identity checked separately"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/void-1.0.2/LICENSE-MIT",
+        "sha256": "cdc52ff9219a75ecc314567c862e31a369afe276ee75884f4211cf8cbacd2667",
+        "source": "https://codeload.github.com/reem/rust-void/tar.gz/a6e061227f47ba8798b7e828ed0ac4e25382eb15#LICENSE-MIT",
+        "evidence": "upstream resolved HEAD; published source identity checked separately"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/void-1.0.2/UPSTREAM-Cargo.toml",
+        "sha256": "ea686f87a150a8e43c4b7db57c56d3eda2a4963420d5570d91d99d7d610dd3fb",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/void-1.0.2/Cargo.toml",
+        "evidence": "exact published crate license and author metadata; recovered upstream MIT text matches identical src/lib.rs"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/void-1.0.2/UPSTREAM-README.md",
+        "sha256": "f85783a6fcf9ecc19edabd710775a88430d9e886f46728bfd7d65cef55ff3e73",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/void-1.0.2/README.md",
+        "evidence": "exact published crate license and author metadata; recovered upstream MIT text matches identical src/lib.rs"
+      }
+    ],
+    "resolution": "upstream-license-with-identical-published-source",
+    "upstream_head_check": {
+      "revision": "a6e061227f47ba8798b7e828ed0ac4e25382eb15",
+      "url": "https://codeload.github.com/reem/rust-void/tar.gz/a6e061227f47ba8798b7e828ed0ac4e25382eb15",
+      "archive_sha256": "9f6a3526652541766a2d8e05ba729c2e08341a4b4f3a9ece45155ec5757a7900",
+      "source_files": [
+        {
+          "path": "src/lib.rs",
+          "identical": true,
+          "sha256": "7ab8269f30715c0729b0e04e5a09be4c413664dc4b530746ea3240ac80a64c66"
+        }
+      ],
+      "legal_files": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    "selected_license_option": "MIT",
+    "source_notice_gap": "Published crate has no VCS revision; upstream HEAD resolved and its sole src/lib.rs is byte-identical. Retained original declared MIT option only.",
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "vote-commitment-tree",
+    "version": "0.6.0",
+    "source": "git+https://github.com/valargroup/zcash_voting.git?tag=v3.1.0-rc.16#46ef27bd637ad8ef3f8f25f87cab5a4b42be0b34",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/git/checkouts/zcash_voting-30c367594087cbf4/46ef27b/vote-commitment-tree",
+    "repository": "https://github.com/valargroup/zcash_voting",
+    "vcs": {},
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "46ef27bd637ad8ef3f8f25f87cab5a4b42be0b34",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/vote-commitment-tree-0.6.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "$CARGO_HOME/git/checkouts/zcash_voting-30c367594087cbf4/46ef27b/LICENSE-APACHE",
+        "evidence": "exact pinned Git checkout root"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/vote-commitment-tree-0.6.0/LICENSE-MIT",
+        "sha256": "98954f1729d7cc3fd1671c7967e18097849a5f7ab913d1955671889b3095d420",
+        "source": "$CARGO_HOME/git/checkouts/zcash_voting-30c367594087cbf4/46ef27b/LICENSE-MIT",
+        "evidence": "exact pinned Git checkout root"
+      }
+    ],
+    "resolution": "exact-git-root-texts",
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "vote-commitment-tree-client",
+    "version": "0.8.0",
+    "source": "git+https://github.com/valargroup/zcash_voting.git?tag=v3.1.0-rc.16#46ef27bd637ad8ef3f8f25f87cab5a4b42be0b34",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/git/checkouts/zcash_voting-30c367594087cbf4/46ef27b/vote-commitment-tree-client",
+    "repository": "https://github.com/valargroup/zcash_voting",
+    "vcs": {},
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "46ef27bd637ad8ef3f8f25f87cab5a4b42be0b34",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/vote-commitment-tree-client-0.8.0/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "$CARGO_HOME/git/checkouts/zcash_voting-30c367594087cbf4/46ef27b/LICENSE-APACHE",
+        "evidence": "exact pinned Git checkout root"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/vote-commitment-tree-client-0.8.0/LICENSE-MIT",
+        "sha256": "98954f1729d7cc3fd1671c7967e18097849a5f7ab913d1955671889b3095d420",
+        "source": "$CARGO_HOME/git/checkouts/zcash_voting-30c367594087cbf4/46ef27b/LICENSE-MIT",
+        "evidence": "exact pinned Git checkout root"
+      }
+    ],
+    "resolution": "exact-git-root-texts",
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "voting-crypto-deps",
+    "version": "0.2.2",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/voting-crypto-deps-0.2.2",
+    "repository": "https://github.com/valargroup/voting-circuits",
+    "vcs": {
+      "git": {
+        "sha1": "bd2531f096bd67d17e2f46481533f1dfccfe2b39"
+      },
+      "path_in_vcs": "voting-crypto-deps"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "bd2531f096bd67d17e2f46481533f1dfccfe2b39",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/voting-crypto-deps-0.2.2/SIBLING-voting-circuits-0.11.2-LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/voting-circuits-0.11.2/LICENSE-APACHE",
+        "evidence": "same repository and exact .cargo_vcs_info commit"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/voting-crypto-deps-0.2.2/SIBLING-voting-circuits-0.11.2-LICENSE-MIT",
+        "sha256": "98954f1729d7cc3fd1671c7967e18097849a5f7ab913d1955671889b3095d420",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/voting-circuits-0.11.2/LICENSE-MIT",
+        "evidence": "same repository and exact .cargo_vcs_info commit"
+      }
+    ],
+    "resolution": "same-commit-sibling-texts",
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "winapi-i686-pc-windows-gnu",
+    "version": "0.4.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT/Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/winapi-i686-pc-windows-gnu-0.4.0",
+    "repository": "https://github.com/retep998/winapi-rs",
+    "vcs": {},
+    "target_normal_or_build": {
+      "linux": false,
+      "android": false
+    },
+    "revision": null,
+    "texts": [],
+    "resolution": "unresolved",
+    "reason": "published crate omits .cargo_vcs_info revision or repository",
+    "included_in_linux_android_supplement": false
+  },
+  {
+    "name": "winapi-x86_64-pc-windows-gnu",
+    "version": "0.4.0",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT/Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/winapi-x86_64-pc-windows-gnu-0.4.0",
+    "repository": "https://github.com/retep998/winapi-rs",
+    "vcs": {},
+    "target_normal_or_build": {
+      "linux": false,
+      "android": false
+    },
+    "revision": null,
+    "texts": [],
+    "resolution": "unresolved",
+    "reason": "published crate omits .cargo_vcs_info revision or repository",
+    "included_in_linux_android_supplement": false
+  },
+  {
+    "name": "zakura-client-sqlite",
+    "version": "0.1.0-rc4",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/zakura-client-sqlite-0.1.0-rc4",
+    "repository": "https://github.com/zakura-core/wallet-libraries",
+    "vcs": {
+      "git": {
+        "sha1": "a9142ee100b3a563b7d9ba7a8e94201d00ad8154"
+      },
+      "path_in_vcs": "librustzcash/zcash_client_sqlite"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "a9142ee100b3a563b7d9ba7a8e94201d00ad8154",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/zakura-client-sqlite-0.1.0-rc4/SIBLING-zakura-client-backend-0.1.0-rc4-LICENSE-APACHE",
+        "sha256": "3708458dee7f359ac6c9c5558023ed481be87e5372c43ebd7f2ca7ad23c12026",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/zakura-client-backend-0.1.0-rc4/LICENSE-APACHE",
+        "evidence": "same repository and exact .cargo_vcs_info commit"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/zakura-client-sqlite-0.1.0-rc4/SIBLING-zakura-client-backend-0.1.0-rc4-LICENSE-MIT",
+        "sha256": "5746c0bdf1827f3ae16352345242bd67da23fda8e2d7e504264bc1aaea21c678",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/zakura-client-backend-0.1.0-rc4/LICENSE-MIT",
+        "evidence": "same repository and exact .cargo_vcs_info commit"
+      }
+    ],
+    "resolution": "same-commit-sibling-texts",
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "zakura-pczt",
+    "version": "0.1.0-rc2",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/zakura-pczt-0.1.0-rc2",
+    "repository": "https://github.com/zakura-core/wallet-libraries",
+    "vcs": {
+      "git": {
+        "sha1": "a9142ee100b3a563b7d9ba7a8e94201d00ad8154"
+      },
+      "path_in_vcs": "librustzcash/pczt"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "a9142ee100b3a563b7d9ba7a8e94201d00ad8154",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/zakura-pczt-0.1.0-rc2/SIBLING-zakura-client-backend-0.1.0-rc4-LICENSE-APACHE",
+        "sha256": "3708458dee7f359ac6c9c5558023ed481be87e5372c43ebd7f2ca7ad23c12026",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/zakura-client-backend-0.1.0-rc4/LICENSE-APACHE",
+        "evidence": "same repository and exact .cargo_vcs_info commit"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/zakura-pczt-0.1.0-rc2/SIBLING-zakura-client-backend-0.1.0-rc4-LICENSE-MIT",
+        "sha256": "5746c0bdf1827f3ae16352345242bd67da23fda8e2d7e504264bc1aaea21c678",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/zakura-client-backend-0.1.0-rc4/LICENSE-MIT",
+        "evidence": "same repository and exact .cargo_vcs_info commit"
+      }
+    ],
+    "resolution": "same-commit-sibling-texts",
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "zakura-wallet-lib",
+    "version": "0.1.0-rc4",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/zakura-wallet-lib-0.1.0-rc4",
+    "repository": "https://github.com/zakura-core/wallet-libraries",
+    "vcs": {
+      "git": {
+        "sha1": "a9142ee100b3a563b7d9ba7a8e94201d00ad8154"
+      },
+      "path_in_vcs": "wallet-lib"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "a9142ee100b3a563b7d9ba7a8e94201d00ad8154",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/zakura-wallet-lib-0.1.0-rc4/SIBLING-zakura-client-backend-0.1.0-rc4-LICENSE-APACHE",
+        "sha256": "3708458dee7f359ac6c9c5558023ed481be87e5372c43ebd7f2ca7ad23c12026",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/zakura-client-backend-0.1.0-rc4/LICENSE-APACHE",
+        "evidence": "same repository and exact .cargo_vcs_info commit"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/zakura-wallet-lib-0.1.0-rc4/SIBLING-zakura-client-backend-0.1.0-rc4-LICENSE-MIT",
+        "sha256": "5746c0bdf1827f3ae16352345242bd67da23fda8e2d7e504264bc1aaea21c678",
+        "source": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/zakura-client-backend-0.1.0-rc4/LICENSE-MIT",
+        "evidence": "same repository and exact .cargo_vcs_info commit"
+      }
+    ],
+    "resolution": "same-commit-sibling-texts",
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "zcash_script",
+    "version": "0.4.5",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "declared_license": "Apache-2.0",
+    "path": "$CARGO_HOME/registry/src/index.crates.io-1949cf8c6b5b557f/zcash_script-0.4.5",
+    "repository": "https://github.com/ZcashFoundation/zcash_script",
+    "vcs": {
+      "git": {
+        "sha1": "cc4ec7ee8b96103586588e51e0f7cb3ebad4d944"
+      },
+      "path_in_vcs": "zcash_script"
+    },
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "cc4ec7ee8b96103586588e51e0f7cb3ebad4d944",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/zcash_script-0.4.5/LICENSE",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "source": "https://codeload.github.com/ZcashFoundation/zcash_script/tar.gz/cc4ec7ee8b96103586588e51e0f7cb3ebad4d944#LICENSE",
+        "evidence": "exact published .cargo_vcs_info commit archive"
+      }
+    ],
+    "resolution": "exact-revision-source-texts",
+    "source_archive": {
+      "url": "https://codeload.github.com/ZcashFoundation/zcash_script/tar.gz/cc4ec7ee8b96103586588e51e0f7cb3ebad4d944",
+      "sha256": "1d3fa940bb4a7f58613ce8fdce20e35f751449e1e794d5345cb7d80991a3d2db"
+    },
+    "included_in_linux_android_supplement": true
+  },
+  {
+    "name": "zcash_voting",
+    "version": "3.1.0-rc.16",
+    "source": "git+https://github.com/valargroup/zcash_voting.git?tag=v3.1.0-rc.16#46ef27bd637ad8ef3f8f25f87cab5a4b42be0b34",
+    "declared_license": "MIT OR Apache-2.0",
+    "path": "$CARGO_HOME/git/checkouts/zcash_voting-30c367594087cbf4/46ef27b/zcash_voting",
+    "repository": "https://github.com/valargroup/zcash_voting",
+    "vcs": {},
+    "target_normal_or_build": {
+      "linux": true,
+      "android": true
+    },
+    "revision": "46ef27bd637ad8ef3f8f25f87cab5a4b42be0b34",
+    "texts": [
+      {
+        "path": "tools/licensing/licenses/rust-supplement/zcash_voting-3.1.0-rc.16/LICENSE-APACHE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "source": "$CARGO_HOME/git/checkouts/zcash_voting-30c367594087cbf4/46ef27b/LICENSE-APACHE",
+        "evidence": "exact pinned Git checkout root"
+      },
+      {
+        "path": "tools/licensing/licenses/rust-supplement/zcash_voting-3.1.0-rc.16/LICENSE-MIT",
+        "sha256": "98954f1729d7cc3fd1671c7967e18097849a5f7ab913d1955671889b3095d420",
+        "source": "$CARGO_HOME/git/checkouts/zcash_voting-30c367594087cbf4/46ef27b/LICENSE-MIT",
+        "evidence": "exact pinned Git checkout root"
+      }
+    ],
+    "resolution": "exact-git-root-texts",
+    "included_in_linux_android_supplement": true
+  }
+]

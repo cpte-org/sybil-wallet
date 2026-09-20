@@ -1,16 +1,14 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/config/near_intents_endpoint_config.dart';
 
 import '../integrations/near_intents/near_intents_one_click_swap_adapter.dart';
 import '../models/swap_models.dart';
 
-final _oneClickBaseUri = Uri.parse(
-  'https://functions.vizor.cash/api/near-intents/1click',
-);
-
 final swapIntentProvider = Provider<SwapProvider>((ref) {
   return NearIntentsOneClickSwapAdapter(
-    baseUri: _oneClickBaseUri,
-    referral: 'vizor',
+    endpointConfig: NearIntentsEndpointConfig.build,
   );
 });
 

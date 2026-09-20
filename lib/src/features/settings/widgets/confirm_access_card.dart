@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/widgets.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -45,7 +45,7 @@ class ConfirmAccessCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = FamiliarPalette.of(context);
+    final palette = SybilPalette.of(context);
     final cardTextColor = palette.ink;
     final hasError = errorText != null && errorText!.trim().isNotEmpty;
 

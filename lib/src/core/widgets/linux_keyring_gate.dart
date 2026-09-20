@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async' show unawaited;
 
 import 'package:flutter/material.dart';
@@ -141,7 +141,7 @@ class _LinuxKeyringStartupHostState extends State<LinuxKeyringStartupHost> {
     if (_app case final app?) return app;
 
     return MaterialApp(
-      title: 'Sigil',
+      title: 'Sybil',
       debugShowCheckedModeBanner: false,
       builder: (context, child) => AppTheme(
         data: MediaQuery.platformBrightnessOf(context) == Brightness.dark
@@ -166,7 +166,7 @@ class _LinuxKeyringStartupHostState extends State<LinuxKeyringStartupHost> {
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
-                    _failed ? 'Unable to open Sigil' : 'Opening Sigil',
+                    _failed ? 'Unable to open Sybil' : 'Opening Sybil',
                     style: AppTypography.headlineLarge.copyWith(
                       color: context.colors.text.accent,
                     ),
@@ -175,7 +175,7 @@ class _LinuxKeyringStartupHostState extends State<LinuxKeyringStartupHost> {
                   if (_failed) ...[
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      'Quit and restart Sigil to try again.',
+                      'Quit and restart Sybil to try again.',
                       style: AppTypography.bodyMedium.copyWith(
                         color: context.colors.text.secondary,
                       ),
@@ -248,19 +248,19 @@ class _LinuxKeyringNoticeState extends State<_LinuxKeyringNotice> {
     };
     final body = switch (phase) {
       LinuxKeyringPhase.outcomeUnknown =>
-        'Sigil could not confirm whether your changes were saved. '
-            'Quit and restart Sigil before continuing.',
+        'Sybil could not confirm whether your changes were saved. '
+            'Quit and restart Sybil before continuing.',
       LinuxKeyringPhase.serviceUnavailable =>
-        'Sigil cannot connect to the system keyring. '
-            'Try again, or quit and restart Sigil.',
+        'Sybil cannot connect to the system keyring. '
+            'Try again, or quit and restart Sybil.',
       LinuxKeyringPhase.storageCorrupt =>
-        'Sigil could not read the data in your system keyring. '
-            'Retry after restoring access, or quit Sigil.',
+        'Sybil could not read the data in your system keyring. '
+            'Retry after restoring access, or quit Sybil.',
       LinuxKeyringPhase.keyringLocked =>
-        'Sigil cannot access your system keyring. '
+        'Sybil cannot access your system keyring. '
             'Unlock the keyring, then choose Retry. '
             'A system prompt may ask for your keyring password.',
-      _ => 'Complete any system keyring prompt to continue in Sigil.',
+      _ => 'Complete any system keyring prompt to continue in Sybil.',
     };
 
     return FocusScope(

@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 /// The offscreen Gift Card share surface rendered into a PNG.
 ///
 /// It lives apart from the desktop step views because it is not a screen: it
@@ -25,8 +26,7 @@ class PaymentLinkQrShareCard extends StatelessWidget {
   static const size = Size(396, 270);
   static const _foreground = Color(0xFFFFFFFF);
   static const _secondary = Color(0xFFA3A4A4);
-  static const brandBadgeAssetPath =
-      'assets/icons/payment_link_share_badge.png';
+  static const brandBadgeAssetPath = 'assets/icons/sybil_share_badge.png';
 
   final PaymentLinkCardArtwork artwork;
   final String qrData;
@@ -143,7 +143,7 @@ class _PaymentLinkShareBrand extends StatelessWidget {
         ),
         const SizedBox(width: 9),
         Text(
-          'vizor.cash',
+          'sybil.cash',
           style: AppTypography.labelMedium.copyWith(
             color: PaymentLinkQrShareCard._foreground,
             fontSize: 12.5,

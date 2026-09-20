@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async' show unawaited;
 
 import 'package:flutter/foundation.dart'
@@ -236,21 +236,21 @@ class _StorageUnavailableContent extends ConsumerWidget {
       return 'Unable to update wallet database';
     }
     if (failureKind == AppBootstrapFailureKind.startupFailure) {
-      return 'Unable to open Sigil';
+      return 'Unable to open Sybil';
     }
     return _isLinux ? 'Unlock your keyring' : 'Secure storage is locked';
   }
 
   String _body(AppBootstrapFailureKind? failureKind) {
     if (failureKind == AppBootstrapFailureKind.walletDbMigrationFailed) {
-      return 'Sigil needs to update the local wallet database before opening this version. Try again, or quit and restart Sigil.';
+      return 'Sybil needs to update the local wallet database before opening this version. Try again, or quit and restart Sybil.';
     }
     if (failureKind == AppBootstrapFailureKind.startupFailure) {
-      return 'Sigil could not load the local startup state. Try again, or quit and restart Sigil.';
+      return 'Sybil could not load the local startup state. Try again, or quit and restart Sybil.';
     }
     return _isLinux
-        ? 'Sigil needs access to the system keyring before it can open your wallet. Unlock the keyring, then try again.'
-        : 'Sigil needs access to secure storage before it can open your wallet. Unlock secure storage, then try again.';
+        ? 'Sybil needs access to the system keyring before it can open your wallet. Unlock the keyring, then try again.'
+        : 'Sybil needs access to secure storage before it can open your wallet. Unlock secure storage, then try again.';
   }
 
   bool get _isLinux => !kIsWeb && defaultTargetPlatform == TargetPlatform.linux;

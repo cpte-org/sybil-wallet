@@ -90,7 +90,7 @@ void main() {
         expect(alice.state.error, contains('Create a contact request first'));
         expect(alice.state.contacts.single.address, firstShare.address);
 
-        // Native validation rejects both a changed signed payload and mainnet.
+        // Native validation rejects changed signed payloads and wrong-network addresses.
         final wrongRequest = await alice.gateway.createRequest(
           alice.scope,
           null,
@@ -132,7 +132,7 @@ void main() {
             network: 'main',
             address: firstShare.address,
           ),
-          throwsA(anything),
+          isFalse,
         );
         expect(
           await native_contacts.contactsValidateUnifiedAddress(

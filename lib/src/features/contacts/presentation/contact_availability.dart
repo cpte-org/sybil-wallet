@@ -23,8 +23,8 @@ final contactUnavailableMessageProvider = Provider<String?>((ref) {
     return 'Private connections do not support hardware accounts yet. You can still save a name and Zcash address.';
   }
   final network = ref.watch(rpcEndpointFailoverProvider).current.networkName;
-  if (!['test', 'regtest'].contains(network)) {
-    return 'Private connections are being tested on testnet. You can save names and addresses on this network.';
+  if (!['main', 'test', 'regtest'].contains(network)) {
+    return 'Private connections are not available on this network.';
   }
   return 'Private connections are paused. Reopen People after unlocking your wallet.';
 });

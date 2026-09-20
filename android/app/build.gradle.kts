@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import java.net.URI
 import java.util.Base64
 
@@ -39,7 +39,7 @@ val dartDefines: Map<String, String> = providers.gradleProperty("dart-defines")
     ?.toMap()
     .orEmpty()
 
-val defaultVizorDeeplinkBaseUrl = "https://link.vizor.cash"
+val defaultVizorDeeplinkBaseUrl = "https://sybil.cash"
 val vizorDeeplinkBaseUrl = (
     dartDefines["VIZOR_DEEPLINK_BASE_URL"] ?: defaultVizorDeeplinkBaseUrl
     ).trim()
@@ -136,7 +136,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.keplr.vizor"
+        applicationId = "cash.sybil.wallet"
         // CMake otherwise adds wrapper-only ABIs to an ARM64 Flutter APK,
         // causing Android to choose an ABI with no Flutter/native core.
         providers.gradleProperty("target-platform").orNull?.let { platforms ->

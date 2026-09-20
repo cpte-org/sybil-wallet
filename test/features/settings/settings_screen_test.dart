@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:typed_data';
 import 'dart:ui' show PointerDeviceKind;
 
@@ -11,9 +11,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zcash_wallet/src/app_bootstrap.dart';
 import 'package:zcash_wallet/src/core/config/rpc_endpoint_config.dart';
+import 'package:zcash_wallet/src/core/config/swap_feature_config.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
 import 'package:zcash_wallet/src/core/widgets/app_button.dart';
 import 'package:zcash_wallet/src/core/widgets/app_icon.dart';
+import 'package:zcash_wallet/src/features/contacts/application/contact_delivery_preferences.dart';
+import 'package:zcash_wallet/src/features/contacts/application/contact_ui_preferences.dart';
+import 'package:zcash_wallet/src/features/settings/contact_settings.dart';
 import 'package:zcash_wallet/src/features/settings/screens/settings_screen.dart';
 import 'package:zcash_wallet/src/features/settings/screens/settings_base_key_screen.dart';
 import 'package:zcash_wallet/src/features/settings/base_key_export.dart';
@@ -163,7 +167,7 @@ void main() {
     expect(_hasFocusRing(tester), isTrue);
   });
 
-  testWidgets('settings sections are grouped Personal to Danger zone', (
+  testWidgets('settings sections stay grouped without duplicate People links', (
     tester,
   ) async {
     await tester.pumpWidget(_settingsHarness());
@@ -172,7 +176,6 @@ void main() {
     double sectionTop(String title) =>
         tester.getTopLeft(find.text(title).last).dy;
 
-    expect(sectionTop('Personal'), lessThan(sectionTop('You and your wallet')));
     expect(
       sectionTop('You and your wallet'),
       lessThan(sectionTop('People and names')),
@@ -182,13 +185,107 @@ void main() {
       lessThan(sectionTop('Network and app settings')),
     );
 
-    // People is the public contact surface; gift cards stay out of Settings.
-    expect(find.text('People'), findsAtLeastNWidgets(1));
+    // The sidebar keeps its People entry; the settings list must not repeat it.
+    expect(find.text('People'), findsOneWidget);
     expect(find.text('My gift cards'), findsNothing);
     expect(find.text('Address book'), findsNothing);
     expect(find.text('Contacts'), findsNothing);
-    expect(sectionTop('People'), lessThan(sectionTop('Account')));
     expect(find.text('Public Zcash names'), findsOneWidget);
+  });
+
+  testWidgets('connection backup is beside wallet recovery and opens safely', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1512, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(_settingsHarness());
+    await tester.pump();
+    await tester.ensureVisible(find.text('Security and recovery'));
+    await tester.tap(find.text('Security and recovery'));
+    await tester.pumpAndSettle();
+    expect(find.text('Wallet recovery phrase'), findsOneWidget);
+    expect(find.text('Connection backup'), findsOneWidget);
+    expect(
+      find.text('Private connections need a separate backup'),
+      findsOneWidget,
+    );
+    expect(
+      tester.getTopLeft(find.text('Wallet recovery phrase')).dy,
+      lessThan(tester.getTopLeft(find.text('Connection backup')).dy),
+    );
+    await tester.ensureVisible(find.text('Connection backup'));
+    await tester.tap(find.text('Connection backup'));
+    await tester.pumpAndSettle();
+    expect(find.text('connection backup route'), findsOneWidget);
+  });
+
+  testWidgets('enabled Exchange ZEC row opens the existing swap route', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1512, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      _settingsHarness(
+        extraOverrides: [swapFeatureEnabledProvider.overrideWithValue(true)],
+      ),
+    );
+    await tester.pump();
+    await tester.ensureVisible(find.text('Exchange ZEC'));
+    await tester.tap(find.text('Exchange ZEC'));
+    await tester.pumpAndSettle();
+    expect(find.text('swap route'), findsOneWidget);
+
+    await tester.pumpWidget(
+      _settingsHarness(
+        extraOverrides: [swapFeatureEnabledProvider.overrideWithValue(false)],
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Exchange ZEC'), findsNothing);
+  });
+
+  testWidgets('unreadable delivery preference offers retry without a switch', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1512, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final store = _DeliveryPreferenceStore();
+    await tester.pumpWidget(
+      _settingsHarness(
+        extraOverrides: [
+          contactDeliveryPreferenceStoreProvider.overrideWithValue(store),
+          contactUiPreferenceStoreProvider.overrideWithValue(
+            _ContactUiPreferenceStore(),
+          ),
+        ],
+      ),
+    );
+    await tester.pump();
+    await tester.ensureVisible(find.text('Contact options'));
+    await tester.tap(find.text('Contact options'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Could not read your setting. Private delivery stays paused.'),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('contact-simplex-delivery-switch')),
+      findsNothing,
+    );
+    expect(find.text('Connection backup'), findsOneWidget);
+    store.failReads = false;
+    await tester.tap(find.byKey(const Key('contact-simplex-delivery-retry')));
+    await tester.pumpAndSettle();
+    final toggle = tester.widget<SwitchListTile>(
+      find.byKey(const Key('contact-simplex-delivery-switch')),
+    );
+    expect(toggle.value, isFalse);
+    expect(toggle.onChanged, isNotNull);
+    expect(
+      find.byKey(const Key('contact-simplex-delivery-retry')),
+      findsNothing,
+    );
+    expect(store.writes, 0);
   });
 
   testWidgets('uninstall setting is hidden on Windows', (tester) async {
@@ -200,7 +297,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('Remove this app'), findsNothing);
-      expect(find.text('Uninstall Sigil'), findsNothing);
+      expect(find.text('Uninstall Sybil'), findsNothing);
     } finally {
       _resetPlatformOverride();
     }
@@ -285,14 +382,14 @@ void main() {
     }
   });
 
-  testWidgets('settings hides legal links while keeping About Sigil', (
+  testWidgets('settings hides legal links while keeping About Sybil', (
     tester,
   ) async {
     await tester.pumpWidget(_settingsHarness());
     await _openNetworkOptions(tester);
     await tester.pump();
 
-    expect(find.text('About Sigil'), findsOneWidget);
+    expect(find.text('About Sybil'), findsOneWidget);
     expect(find.text('Privacy policy'), findsNothing);
     expect(find.text('Terms of usage'), findsNothing);
     expect(find.text('Use Tor'), findsOneWidget);
@@ -635,7 +732,7 @@ void main() {
         await tester.pump();
 
         expect(find.text('Remove this app'), findsOneWidget);
-        expect(find.text('Uninstall Sigil'), findsOneWidget);
+        expect(find.text('Uninstall Sybil'), findsOneWidget);
       }
     } finally {
       _resetPlatformOverride();
@@ -660,6 +757,15 @@ Widget _settingsHarness({
     initialLocation: '/settings',
     routes: [
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
+      GoRoute(path: '/swap', builder: (_, _) => const Text('swap route')),
+      GoRoute(
+        path: '/settings/contacts',
+        builder: (_, _) => const ContactSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/contacts/backup',
+        builder: (_, _) => const Text('connection backup route'),
+      ),
       GoRoute(
         path: '/settings/security',
         builder: (_, _) => const SettingsScreen(),
@@ -687,6 +793,7 @@ Widget _settingsHarness({
   );
 
   return ProviderScope(
+    retry: (_, _) => null,
     overrides: [
       appBootstrapProvider.overrideWithValue(_bootstrap),
       syncProvider.overrideWith(FakeSyncNotifier.new),
@@ -703,6 +810,28 @@ Widget _settingsHarness({
       builder: (_, child) => AppTheme(data: AppThemeData.light, child: child!),
     ),
   );
+}
+
+class _DeliveryPreferenceStore implements ContactDeliveryPreferenceStore {
+  bool failReads = true;
+  int writes = 0;
+
+  @override
+  Future<bool> readDeliveryEnabled() async {
+    if (failReads) throw StateError('Storage unavailable');
+    return false;
+  }
+
+  @override
+  Future<void> writeDeliveryEnabled(bool enabled) async => writes++;
+}
+
+class _ContactUiPreferenceStore implements ContactUiPreferenceStore {
+  @override
+  Future<bool> readAdvancedTools() async => false;
+
+  @override
+  Future<void> writeAdvancedTools(bool enabled) async {}
 }
 
 class _FakeNetworkPrivacyNotifier extends NetworkPrivacyNotifier {

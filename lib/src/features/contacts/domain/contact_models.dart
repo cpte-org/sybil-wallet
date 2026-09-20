@@ -1,4 +1,4 @@
-// Experimental direct contacts. Local labels never confer signing authority.
+// Network-scoped direct contacts. Local labels never confer signing authority.
 import 'dart:convert';
 
 enum ContactTrustStatus { accepted, suspended, restored, retired }

@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart' show FontLoader, rootBundle;
@@ -58,14 +58,14 @@ void main() {
     await tester.pumpWidget(_routerHarness(router, _walletBootstrap('/about')));
     await tester.pumpAndSettle();
 
-    expect(find.text('About Sigil'), findsNothing);
-    expect(find.text('About Sigil Wallet'), findsOneWidget);
+    expect(find.text('About Sybil'), findsNothing);
+    expect(find.text('About Sybil Beta'), findsOneWidget);
     expect(find.text('Version: 0.0.0 Public Beta'), findsOneWidget);
     expect(find.text('Independent fork of Vizor'), findsOneWidget);
     expect(find.text('Designed for shielded Zcash'), findsOneWidget);
     expect(find.text('Open source, self-custodied'), findsOneWidget);
-    expect(find.text('Upstream GitHub'), findsOneWidget);
-    expect(find.text('Upstream website'), findsOneWidget);
+    expect(find.text('Sybil source'), findsOneWidget);
+    expect(find.text('Sybil website'), findsOneWidget);
     await tester.ensureVisible(find.text('Open-source licenses'));
     await tester.tap(find.text('Open-source licenses'));
     await tester.pumpAndSettle();
@@ -109,8 +109,8 @@ void main() {
     await tester.pumpWidget(_routerHarness(router, _walletBootstrap('/about')));
     await tester.pumpAndSettle();
 
-    expect(find.text('About Sigil'), findsNothing);
-    expect(find.text('About Sigil Wallet'), findsOneWidget);
+    expect(find.text('About Sybil'), findsNothing);
+    expect(find.text('About Sybil Beta'), findsOneWidget);
     final backLink = find.byType(AppRouteBackLink);
     expect(
       find.descendant(of: backLink, matching: find.text('Home')),
@@ -170,7 +170,7 @@ void main() {
     _expectScrollbarFillsPaneEdge(tester, const Size(1280, 900));
     _expectUtilityContentCentered(
       tester,
-      titleText: 'About Sigil Wallet',
+      titleText: 'About Sybil Beta',
       headingText: 'Independent fork of Vizor',
     );
   });
@@ -194,7 +194,7 @@ void main() {
     expect(find.text('Not published yet'), findsOneWidget);
     expect(
       find.text(
-        'This test build does not provide a finalized Sigil privacy policy or '
+        'This beta does not provide a finalized Sybil privacy policy or '
         'terms of usage.',
       ),
       findsOneWidget,
@@ -301,7 +301,7 @@ void _expectScrollbarFillsPaneEdge(WidgetTester tester, Size viewport) {
   final scrollbarRect = tester.getRect(
     find.byKey(AppPaneScrollScaffold.scrollbarKey),
   );
-  // The signed-in Sigil shell fills the window; pre-wallet utility pages
+  // The signed-in Sybil shell fills the window; pre-wallet utility pages
   // retain their outer inset. The scrollbar must follow either pane edge.
   final paneRect = tester.getRect(find.byType(AppDesktopPane));
   expect(scrollbarRect.top, moreOrLessEquals(paneRect.top));

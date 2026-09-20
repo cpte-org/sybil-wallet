@@ -1,10 +1,10 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/widgets.dart';
 
 import '../../../core/formatting/address_display.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_icon.dart';
-import '../../../core/widgets/familiar_widgets.dart';
+import '../../../core/widgets/sybil_widgets.dart';
 import '../../../core/widgets/review_info_row.dart';
 import '../../../core/widgets/review_list_row.dart';
 
@@ -134,7 +134,7 @@ class SendReviewInfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FamiliarCard(
+    return SybilCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -144,7 +144,7 @@ class SendReviewInfoSection extends StatelessWidget {
             leading: const ReviewZecCoinImage(),
             bottomLeftText: fiatText,
             valueStyle: AppTypography.displayLarge.copyWith(
-              color: FamiliarPalette.of(context).ink,
+              color: SybilPalette.of(context).ink,
             ),
             rowHeight: 110,
           ),
@@ -195,7 +195,7 @@ class SendReviewInfoSection extends StatelessWidget {
         key: rowKey,
         label: rowLabel,
         value: name,
-        leading: FamiliarAvatar(label: name, identity: address, size: 40),
+        leading: SybilAvatar(label: name, identity: address, size: 40),
         struckThrough: recipientStruckThrough,
         bottomLeftIconName: _contactRecipientBottomLeftIconName,
         bottomLeftText: _contactRecipientBottomLeftText(address),
@@ -244,7 +244,7 @@ class SendReviewContentColumn extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              FamiliarPageHeader(title: title),
+              SybilPageHeader(title: title),
               for (final child in children) ...[
                 const SizedBox(height: _sectionGap),
                 child,

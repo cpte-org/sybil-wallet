@@ -1,1 +1,1 @@
-Sigil - Zcash Wallet
+Sybil - Zcash Wallet

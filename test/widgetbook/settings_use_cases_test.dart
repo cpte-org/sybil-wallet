@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/material.dart' show MaterialApp;
 import 'package:flutter/services.dart' show FontLoader, rootBundle;
 import 'package:flutter/widgets.dart';
@@ -157,7 +157,7 @@ void main() {
     );
 
     _expectNoCrash(errors);
-    expect(find.text('Uninstall Sigil'), findsWidgets);
+    expect(find.text('Uninstall Sybil'), findsWidgets);
     expect(find.text('This cannot be undone.'), findsOneWidget);
   });
 
@@ -185,7 +185,7 @@ void main() {
     );
 
     _expectNoCrash(errors);
-    expect(find.text('Link Sigil Mobile'), findsOneWidget);
+    expect(find.text('Link Sybil Mobile'), findsOneWidget);
     expect(find.text('Start linking'), findsOneWidget);
   });
 
@@ -199,7 +199,7 @@ void main() {
 
     _expectNoCrash(errors);
     expect(find.text('Confirm access'), findsOneWidget);
-    expect(find.text('To link Sigil Mobile.'), findsOneWidget);
+    expect(find.text('To link Sybil Mobile.'), findsOneWidget);
   });
 
   testWidgets('settings wallet link QR use case renders the timer', (
@@ -211,9 +211,9 @@ void main() {
     );
 
     _expectNoCrash(errors);
-    expect(find.text('Scan with Sigil mobile'), findsOneWidget);
+    expect(find.text('Scan with Sybil mobile'), findsOneWidget);
     expect(
-      find.text('Open Sigil on your phone → Add a wallet → Link Sigil Desktop'),
+      find.text('Open Sybil on your phone → Add a wallet → Link Sybil Desktop'),
       findsOneWidget,
     );
     expect(find.text('Expires in 0:59'), findsOneWidget);
@@ -228,7 +228,7 @@ void main() {
     );
 
     _expectNoCrash(errors);
-    expect(find.text('Sigil Mobile linked successfully'), findsOneWidget);
+    expect(find.text('Sybil Mobile linked successfully'), findsOneWidget);
     expect(
       find.text('6 accounts and 20 contacts were imported on mobile.'),
       findsOneWidget,
@@ -279,22 +279,27 @@ Future<List<FlutterErrorDetails>> _pumpSettingsUseCase(
   final errors = <FlutterErrorDetails>[];
   final previousOnError = FlutterError.onError;
   FlutterError.onError = errors.add;
-  addTearDown(() => FlutterError.onError = previousOnError);
-
-  await tester.pumpWidget(
-    MaterialApp(
-      key: UniqueKey(),
-      home: AppTheme(
-        data: AppThemeData.light,
-        child: Builder(builder: builder),
+  try {
+    await tester.pumpWidget(
+      MaterialApp(
+        key: UniqueKey(),
+        home: AppTheme(
+          data: AppThemeData.light,
+          child: Builder(builder: builder),
+        ),
       ),
-    ),
-  );
-  // Not pumpAndSettle: these screens carry indefinite animations (e.g. the
-  // sync spinner) that never settle.
-  await tester.pump();
-  if (settleDuration != null) {
-    await tester.pump(settleDuration);
+    );
+    // Not pumpAndSettle: these screens carry indefinite animations (e.g. the
+    // sync spinner) that never settle.
+    await tester.pump();
+    if (settleDuration != null) {
+      await tester.pump(settleDuration);
+    }
+  } finally {
+    // Restore the binding before the caller inspects the captured errors. If
+    // an assertion runs while the handler is still overridden, flutter_test
+    // reports its own pending-exception failure instead of the real error.
+    FlutterError.onError = previousOnError;
   }
 
   return errors;

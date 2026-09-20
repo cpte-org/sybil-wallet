@@ -1,9 +1,9 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 // ignore_for_file: depend_on_referenced_packages
 // This is a dev-only entry point and is not reachable from lib/main.dart.
 
 import 'dart:io';
 
-import 'package:desktop_window_bootstrap/desktop_window_bootstrap.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -32,9 +32,6 @@ Future<void> main() async {
   // Rust runtime, wallet, storage, sync, and network initialization.
   await initializeDesktopWindow();
   if (isDesktopLayoutPlatform) {
-    await DesktopWindowBootstrap.initialize(
-      visualStyle: DesktopWindowVisualStyle.opaque,
-    );
     if (!Platform.isWindows) await showDesktopWindow();
   }
 

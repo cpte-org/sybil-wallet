@@ -1,5 +1,5 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
-import 'package:zcash_wallet/src/features/contacts/presentation/familiar_choose_recipient_screen.dart';
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
+import 'package:zcash_wallet/src/features/contacts/presentation/sybil_choose_recipient_screen.dart';
 import 'dart:ui' show PointerDeviceKind;
 
 import 'package:flutter/material.dart';
@@ -20,7 +20,7 @@ import 'package:zcash_wallet/src/core/widgets/app_pane_modal_overlay.dart';
 import 'package:zcash_wallet/src/features/activity/screens/activity_screen.dart';
 import 'package:zcash_wallet/src/features/activity/gift_card_activity_index.dart';
 import 'package:zcash_wallet/src/features/home/screens/home_screen.dart';
-import 'package:zcash_wallet/src/features/home/widgets/familiar_home_dashboard.dart';
+import 'package:zcash_wallet/src/features/home/widgets/sybil_home_dashboard.dart';
 import 'package:zcash_wallet/src/features/activity/widgets/activity_feed.dart';
 import 'package:zcash_wallet/src/features/migration/providers/ironwood_migration_announcement_provider.dart';
 import 'package:zcash_wallet/src/features/migration/providers/ironwood_migration_coordinator_provider.dart';
@@ -83,7 +83,7 @@ void main() {
       expect(
         tester
             .widget<Text>(
-              find.byKey(const ValueKey('familiar_available_balance')),
+              find.byKey(const ValueKey('sybil_available_balance')),
             )
             .data,
         '****** ZEC',
@@ -93,7 +93,7 @@ void main() {
     },
   );
 
-  testWidgets('Familiar home shows wallet funds without fiat market badges', (
+  testWidgets('Sybil home shows wallet funds without fiat market badges', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -138,10 +138,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('familiar_home_send')));
-    await _pumpUntilPresent(tester, find.byType(FamiliarChooseRecipientScreen));
+    await tester.tap(find.byKey(const ValueKey('sybil_home_send')));
+    await _pumpUntilPresent(tester, find.byType(SybilChooseRecipientScreen));
 
-    expect(find.byType(FamiliarChooseRecipientScreen), findsOneWidget);
+    expect(find.byType(SybilChooseRecipientScreen), findsOneWidget);
   });
 
   testWidgets('home desktop send hover uses dark primary label hover color', (
@@ -162,7 +162,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final sendButton = find.byKey(const ValueKey('familiar_home_send'));
+    final sendButton = find.byKey(const ValueKey('sybil_home_send'));
     final sendText = find.descendant(
       of: sendButton,
       matching: find.text('Send'),
@@ -195,7 +195,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('familiar_home_receive')));
+    await tester.tap(find.byKey(const ValueKey('sybil_home_receive')));
     await _pumpUntilPresent(tester, find.byType(ReceiveScreen));
 
     expect(find.byType(ReceiveScreen), findsOneWidget);
@@ -272,9 +272,9 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('home_desktop_send_button')));
       await _pumpUntilPresent(
         tester,
-        find.byType(FamiliarChooseRecipientScreen),
+        find.byType(SybilChooseRecipientScreen),
       );
-      expect(find.byType(FamiliarChooseRecipientScreen), findsOneWidget);
+      expect(find.byType(SybilChooseRecipientScreen), findsOneWidget);
     },
   );
 
@@ -627,7 +627,7 @@ void main() {
     expect(
       tester
           .widget<Text>(
-            find.byKey(const ValueKey('familiar_available_balance')),
+            find.byKey(const ValueKey('sybil_available_balance')),
           )
           .data,
       '143.12 ZEC',
@@ -658,7 +658,7 @@ void main() {
     expect(
       tester
           .widget<Text>(
-            find.byKey(const ValueKey('familiar_available_balance')),
+            find.byKey(const ValueKey('sybil_available_balance')),
           )
           .data,
       '0.44291 ZEC',
@@ -695,7 +695,7 @@ void main() {
       expect(
         tester
             .widget<Text>(
-              find.byKey(const ValueKey('familiar_available_balance')),
+              find.byKey(const ValueKey('sybil_available_balance')),
             )
             .data,
         '40.11 ZEC',
@@ -723,9 +723,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Yours to spend'), findsOneWidget);
-      expect(find.byKey(const ValueKey('familiar_home_send')), findsOneWidget);
+      expect(find.byKey(const ValueKey('sybil_home_send')), findsOneWidget);
       expect(
-        find.byKey(const ValueKey('familiar_home_receive')),
+        find.byKey(const ValueKey('sybil_home_receive')),
         findsOneWidget,
       );
       for (final label in [
@@ -1113,7 +1113,7 @@ void main() {
 
     final scrollViewFinder = find
         .descendant(
-          of: find.byType(FamiliarHomeDashboard),
+          of: find.byType(SybilHomeDashboard),
           matching: find.byType(ListView),
         )
         .first;
@@ -1171,11 +1171,11 @@ void main() {
     await tester.pump();
 
     final balanceFinder = find.byKey(
-      const ValueKey('familiar_available_balance'),
+      const ValueKey('sybil_available_balance'),
     );
     final activityFinder = find
         .descendant(
-          of: find.byType(FamiliarHomeDashboard),
+          of: find.byType(SybilHomeDashboard),
           matching: find.byType(ActivityFeedRow),
         )
         .first;

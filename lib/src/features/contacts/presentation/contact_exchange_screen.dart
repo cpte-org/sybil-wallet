@@ -14,7 +14,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/app_toast.dart';
-import '../../../core/widgets/familiar_widgets.dart';
+import '../../../core/widgets/sybil_widgets.dart';
 import '../application/contact_ui_preferences.dart';
 import 'contact_code_widgets.dart';
 import '../../address_book/models/address_book_contact.dart';
@@ -69,7 +69,7 @@ class ContactExchangeScreen extends ConsumerWidget {
               unavailableReason:
                   ref.watch(contactUnavailableMessageProvider) ??
                   state.unavailableReason ??
-                  'Contact exchange is available only for unlocked software accounts on testnet or regtest.',
+                  'Open an unlocked software account to connect with someone.',
             ),
       callbacks: ContactExchangeCallbacks(
         onDone: () {
@@ -240,6 +240,7 @@ class ContactExchangeView extends StatefulWidget {
 
 class _ContactExchangeViewState extends State<ContactExchangeView>
     with WidgetsBindingObserver {
+  final _scroll = ScrollController();
   final _response = TextEditingController();
   final _incomingRequest = TextEditingController();
   final _label = TextEditingController();
@@ -268,32 +269,6 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
       data.shareReview != null ||
       data.response != null;
   bool expired(DateTime deadline) => !now.isBefore(deadline);
-  Future<void> _importPacket(String packet) async {
-    if (!enabled) return;
-    final epoch = ++_importEpoch;
-    actions.onPauseReview?.call();
-    // Let the controller's review-clearing update settle before pre-filling.
-    // Account/lock changes dispose or invalidate this view in the meantime.
-    await WidgetsBinding.instance.endOfFrame;
-    if (!mounted || epoch != _importEpoch || !data.available) return;
-    setState(() {
-      _verified = false;
-      _shareConsent = false;
-      _response.clear();
-      _incomingRequest.clear();
-      _responseTooLong = false;
-      _requestTooLong = false;
-      switch (contactPacketKind(packet)) {
-        case ContactPacketKind.request:
-          _incomingRequest.text = packet;
-        case ContactPacketKind.response:
-          _response.text = packet;
-        default:
-          _localError = 'This packet is not a direct contact exchange.';
-      }
-    });
-  }
-
   String? candidateKey(ContactCandidateView? value) => value == null
       ? null
       : '${value.identity}|${value.address}|${value.previousAddress}|${value.sequence}|${value.expiresAt.toIso8601String()}';
@@ -342,9 +317,11 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
         candidateKey(data.candidate)) {
       _verified = false;
       _label.text = data.candidate?.label ?? '';
+      if (data.candidate != null) _revealReview();
     }
     if (shareKey(oldWidget.state.shareReview) != shareKey(data.shareReview)) {
       _shareConsent = false;
+      if (data.shareReview != null) _revealReview();
     }
     if (oldWidget.state.request?.json != data.request?.json) {
       _response.clear();
@@ -358,6 +335,20 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
         !data.contacts.any((c) => c.id == _confirmSuspend && c.canPay)) {
       _confirmSuspend = null;
     }
+  }
+
+  void _revealReview() {
+    final epoch = _importEpoch;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || epoch != _importEpoch || !_scroll.hasClients) return;
+      unawaited(
+        _scroll.animateTo(
+          0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        ),
+      );
+    });
   }
 
   @override
@@ -379,6 +370,7 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _expiryTimer.cancel();
+    _scroll.dispose();
     _response.dispose();
     _incomingRequest.dispose();
     _label.dispose();
@@ -407,6 +399,7 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
   }
 
   void cancel() {
+    _importEpoch++;
     _response.clear();
     _incomingRequest.clear();
     _label.clear();
@@ -427,158 +420,63 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
   }
 
   @override
-  Widget build(BuildContext context) {
-    if (!widget.advanced) return _guided(context);
-    final candidate = data.candidate;
-    final request = data.request;
-    final share = data.shareReview;
-    return SingleChildScrollView(
-      key: const Key('contacts-scroll'),
-      padding: EdgeInsets.all(
-        kAppFormFactor == AppFormFactor.mobile ? AppSpacing.sm : AppSpacing.md,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 660),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.s,
-                children: [
-                  if (actions.onBackup != null)
-                    AppButton(
-                      onPressed: enabled ? actions.onBackup : null,
-                      child: const Text('Contact backup'),
-                    ),
-                  Text(
-                    'Contact exchange',
-                    style: AppTypography.headlineLarge.copyWith(
-                      color: context.colors.text.accent,
-                    ),
-                  ),
-                  AppButton(
-                    key: const Key('contacts-reload'),
-                    onPressed: enabled && actions.onReload != null
-                        ? () => unawaited(run(actions.onReload!))
-                        : null,
-                    size: AppButtonSize.small,
-                    variant: AppButtonVariant.ghost,
-                    child: const Text('Refresh contacts'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.s),
-              _paragraph(
-                context,
-                'Experimental · test accounts only',
-                accent: true,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              if (!data.available)
-                _Notice(
-                  title: 'Contact exchange is unavailable',
-                  text:
-                      data.unavailableReason ??
-                      'Use an unlocked software account on testnet or regtest.',
-                ),
-              if (data.available) ...[
-                if (widget.inboxBuilder != null)
-                  widget.inboxBuilder!(_importPacket),
-                if (actions.onIntroductions != null)
-                  AppButton(
-                    onPressed: enabled ? actions.onIntroductions : null,
-                    variant: AppButtonVariant.ghost,
-                    child: const Text('Introductions and reciprocal setup'),
-                  ),
-                const _Notice(
-                  title: 'A direct exchange, with no funds sent',
-                  text:
-                      'Use a trusted channel to exchange requests and replies. Your local labels stay on this device. Experimental contact keys are not recovered from your wallet seed.',
-                ),
-                if (data.error != null || _localError != null) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  _Notice(
-                    title: 'Exchange needs attention',
-                    text: _localError ?? data.error!,
-                    isError: true,
-                    action: AppButton(
-                      onPressed: data.busy
-                          ? null
-                          : () {
-                              setState(() => _localError = null);
-                              actions.onClearError?.call();
-                            },
-                      size: AppButtonSize.small,
-                      variant: AppButtonVariant.ghost,
-                      child: const Text('Dismiss'),
-                    ),
-                  ),
-                ],
-                if (data.loading) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  const _Notice(
-                    title: 'Loading contacts',
-                    text: 'Reading the contact book for this account.',
-                  ),
-                ] else ...[
-                  if (data.busy || _working) ...[
-                    const SizedBox(height: AppSpacing.s),
-                    Semantics(
-                      liveRegion: true,
-                      child: _paragraph(context, 'Preparing the exchange…'),
-                    ),
-                  ],
-                  if (candidate != null) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    _candidateCard(context, candidate),
-                  ] else if (request != null) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    _requestCard(context, request),
-                  ],
-                  if (share != null) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    _shareCard(context, share),
-                  ],
-                  if (data.response != null) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    _responseCard(context, data.response!),
-                  ],
-                  if (!transient && data.contacts.isNotEmpty) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    ExpansionTile(
-                      title: const Text('Your connected people'),
-                      children: [_contactsCard(context)],
-                    ),
-                  ],
-                  if (!transient) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    _startCard(context),
-                  ],
-                  if (transient || data.contacts.isEmpty) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    ExpansionTile(
-                      title: const Text('Your connected people'),
-                      children: [_contactsCard(context)],
-                    ),
-                  ],
-                ],
-              ],
-              const SizedBox(height: AppSpacing.md),
-            ],
-          ),
+  Widget build(BuildContext context) => _guided(context);
+
+  /// Additive advanced surface: the guided flow stays primary; these raw tools
+  /// appear below it only while the advanced preference is on.
+  List<Widget> _advancedTools(BuildContext context) {
+    final candidate = data.candidate,
+        request = data.request,
+        share = data.shareReview;
+    return [
+      const SizedBox(height: AppSpacing.lg),
+      _paragraph(context, 'Advanced connection tools', accent: true),
+      const SizedBox(height: AppSpacing.sm),
+      if (actions.onIntroductions != null)
+        AppButton(
+          onPressed: enabled ? actions.onIntroductions : null,
+          variant: AppButtonVariant.ghost,
+          child: const Text('Introductions and reciprocal setup'),
         ),
+      if (request != null) _requestCard(context, request),
+      if (!transient && candidate == null && share == null)
+        _shareRequestTools(context),
+      if (data.response != null) _responseCard(context, data.response!),
+      if (actions.onBackup != null)
+        AppButton(
+          onPressed: enabled ? actions.onBackup : null,
+          child: const Text('Contact backup'),
+        ),
+      AppButton(
+        key: const Key('contacts-reload'),
+        onPressed: enabled && actions.onReload != null
+            ? () => unawaited(run(actions.onReload!))
+            : null,
+        size: AppButtonSize.small,
+        variant: AppButtonVariant.ghost,
+        child: const Text('Refresh contacts'),
       ),
-    );
+      ExpansionTile(
+        title: const Text('Your connected people'),
+        children: [_contactsCard(context)],
+      ),
+    ];
   }
 
   Future<void> _readCode(String code) async {
     if (!enabled) return;
     final epoch = ++_importEpoch;
+    setState(() {
+      _verified = false;
+      _shareConsent = false;
+      _response.clear();
+      _incomingRequest.clear();
+      _responseTooLong = false;
+      _requestTooLong = false;
+    });
     actions.onPauseReview?.call();
+    // QR, paste and the private inbox all enter the same reviewed flow. Pause
+    // drops prior consent/signing material while retaining our live invitation.
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted || epoch != _importEpoch || !data.available) return;
     switch (contactPacketKind(code)) {
@@ -598,7 +496,7 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
       default:
         setState(
           () => _localError =
-              'This is not a contact invitation or reply. Introduction codes open in Settings → Contact options → Introductions.',
+              'This is not a contact invitation or reply. Open introduction codes in People → Introductions.',
         );
     }
   }
@@ -646,6 +544,7 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
       type: MaterialType.transparency,
       child: SingleChildScrollView(
         key: const Key('contacts-scroll'),
+        controller: _scroll,
         padding: EdgeInsets.all(
           kAppFormFactor == AppFormFactor.mobile ? 20 : 32,
         ),
@@ -656,7 +555,7 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const FamiliarPageHeader(
+                const SybilPageHeader(
                   title: 'Connect privately',
                   subtitle: 'A person in your wallet. A name you choose.',
                 ),
@@ -666,7 +565,7 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
                     title: 'Private connections are not available here',
                     text:
                         data.unavailableReason ??
-                        'Use an unlocked software account on the test network.',
+                        'Use an unlocked software account.',
                   )
                 else if (data.loading)
                   const Center(child: CircularProgressIndicator())
@@ -751,6 +650,14 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
                                 : (text) =>
                                       actions.onCopy!(text, 'Reply copied'),
                           ),
+                          if (widget.sendBuilder != null &&
+                              data.responseExpiresAt != null)
+                            widget.sendBuilder!(
+                              data.response!,
+                              data.responseExpiresAt!,
+                              null,
+                              null,
+                            ),
                           if (data.responseExpiresAt != null)
                             Padding(
                               padding: const EdgeInsets.only(top: 12),
@@ -791,6 +698,13 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
                                     'Invitation copied',
                                   ),
                           ),
+                          if (widget.sendBuilder != null)
+                            widget.sendBuilder!(
+                              request.json,
+                              request.expiresAt,
+                              request.contactId,
+                              request.identity,
+                            ),
                           const SizedBox(height: 12),
                           Text(
                             _validFor(request.expiresAt),
@@ -842,6 +756,12 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
                       ),
                     ),
                   ],
+                  if (widget.inboxBuilder != null)
+                    Padding(
+                      key: const Key('contacts-private-inbox'),
+                      padding: const EdgeInsets.only(top: 16),
+                      child: widget.inboxBuilder!(_readCode),
+                    ),
                   if (data.busy || _working)
                     const Padding(
                       padding: EdgeInsets.only(top: 16),
@@ -849,13 +769,15 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
                     ),
                   const SizedBox(height: 24),
                   Text(
-                    'No payment is sent. Private connections are currently available on test accounts.',
+                    'Connecting does not send a payment.',
                     style: AppTypography.bodySmall.copyWith(
                       color: context.colors.text.secondary,
                     ),
                     textAlign: TextAlign.center,
                   ),
                 ],
+                if (widget.advanced && data.available)
+                  ..._advancedTools(context),
               ],
             ),
           ),
@@ -965,14 +887,9 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
           'This shares a receiving address with the person who sent the invitation. It gives no access to your wallet or funds.',
         ),
         const SizedBox(height: 20),
-        ExpansionTile(
-          title: const Text('What you’ll share'),
-          children: [
-            _value(context, 'Receiving address', share.address),
-            _value(context, 'Your contact identity for them', share.identity),
-            _value(context, 'Invitation from', share.audience),
-          ],
-        ),
+        _value(context, 'Receiving address', share.address),
+        _value(context, 'Your contact identity for them', share.identity),
+        _value(context, 'Invitation from', share.audience),
         const SizedBox(height: 16),
         _Consent(
           key: const Key('contacts-share-consent'),
@@ -1004,29 +921,10 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
     ),
   );
 
-  Widget _startCard(BuildContext context) => _Card(
+  Widget _shareRequestTools(BuildContext context) => _Card(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _heading(context, 'Add someone by direct exchange'),
-        _paragraph(
-          context,
-          'Share a request with them, then bring their reply here. You choose what to call them.',
-        ),
-        const SizedBox(height: AppSpacing.s),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: AppButton(
-            key: const Key('contacts-new-request'),
-            onPressed: enabled && actions.onStartRequest != null
-                ? () => unawaited(run(() => actions.onStartRequest!()))
-                : null,
-            child: const Text('Create contact request'),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        _divider(context),
-        const SizedBox(height: AppSpacing.md),
         _heading(context, 'Reply to someone’s request'),
         _paragraph(
           context,
@@ -1091,13 +989,6 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
           title: const Text('Show request contents'),
           children: [_payloadOutput('Request to share', request.json)],
         ),
-        if (widget.sendBuilder != null)
-          widget.sendBuilder!(
-            request.json,
-            request.expiresAt,
-            request.contactId,
-            request.identity,
-          ),
         const SizedBox(height: AppSpacing.s),
         Align(
           alignment: Alignment.centerLeft,
@@ -1155,205 +1046,6 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
     ),
   );
 
-  Widget _candidateCard(BuildContext context, ContactCandidateView candidate) {
-    final labelError = validateAddressBookLabel(_label.text);
-    final isExpired = expired(candidate.expiresAt);
-    return _Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _heading(
-            context,
-            candidate.isUpdate
-                ? 'Review the address update'
-                : 'Verify this contact',
-          ),
-          _paragraph(
-            context,
-            candidate.requiresRecoveryCheck
-                ? 'This contact came from a backup that may be outdated. Independently compare the complete identity and fresh receiving address with the person before enabling payments.'
-                : candidate.isUpdate
-                ? 'This reply uses the recognized contact identity. Review the receiving address before accepting the update.'
-                : 'A valid signature identifies a key, not a person. Compare the complete identity and receiving address in person or through an independently authenticated channel.',
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          _value(
-            context,
-            'Full contact identity · compare every character',
-            candidate.identity,
-          ),
-          if (candidate.previousAddress != null) ...[
-            const SizedBox(height: AppSpacing.sm),
-            _value(
-              context,
-              'Previously accepted address',
-              candidate.previousAddress!,
-            ),
-          ],
-          const SizedBox(height: AppSpacing.sm),
-          _value(
-            context,
-            candidate.isUpdate
-                ? 'New receiving address'
-                : 'Receiving address to accept',
-            candidate.address,
-          ),
-          const SizedBox(height: AppSpacing.s),
-          _paragraph(
-            context,
-            'Address revision ${candidate.sequence} · reply expires ${deadline(candidate.expiresAt)}',
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          AppTextField(
-            key: const Key('contacts-label'),
-            label: 'Your local label',
-            controller: _label,
-            enabled: enabled,
-            hintText: 'For example, Alice',
-            messageText: _label.text.isEmpty
-                ? 'Choose 1–20 characters. This label is not shared.'
-                : labelError,
-            tone: _label.text.isNotEmpty && labelError != null
-                ? AppTextFieldTone.destructive
-                : AppTextFieldTone.neutral,
-            onChanged: (_) => setState(() {}),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          _Consent(
-            key: const Key('contacts-verify-acceptance'),
-            checked: _verified,
-            enabled: enabled && !isExpired,
-            label: candidate.isUpdate && !candidate.requiresRecoveryCheck
-                ? 'I reviewed this recognized identity and its receiving address update.'
-                : 'I independently compared this complete identity and receiving address with the person.',
-            onChanged: (value) => setState(() => _verified = value),
-          ),
-          if (isExpired) ...[
-            const SizedBox(height: AppSpacing.s),
-            const _Notice(
-              title: 'Reply expired',
-              text: 'Cancel this exchange and request a fresh reply.',
-              isError: true,
-            ),
-          ],
-          const SizedBox(height: AppSpacing.sm),
-          Wrap(
-            spacing: AppSpacing.s,
-            runSpacing: AppSpacing.s,
-            children: [
-              AppButton(
-                key: const Key('contacts-accept-response'),
-                onPressed:
-                    enabled &&
-                        !isExpired &&
-                        _verified &&
-                        labelError == null &&
-                        actions.onAcceptResponse != null
-                    ? () => unawaited(
-                        run(
-                          () => actions.onAcceptResponse!(
-                            label: _label.text.trim(),
-                            independentlyVerified: _verified,
-                          ),
-                        ),
-                      )
-                    : null,
-                child: Text(
-                  candidate.isUpdate
-                      ? 'Accept address update'
-                      : 'Accept contact',
-                ),
-              ),
-              _cancelButton(),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.s),
-          _paragraph(
-            context,
-            'The signature binds this address to the contact key. It does not prove control of the funds received there.',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _shareCard(BuildContext context, ContactShareReview share) => _Card(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _heading(
-          context,
-          share.isUpdate
-              ? 'Share an updated receiving address'
-              : 'Review what you will share',
-        ),
-        _paragraph(
-          context,
-          'Check who requested this reply. Sharing confirms only the receiving address below; it sends no funds and grants no spending or viewing access.',
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _value(context, 'Requesting contact identity', share.audience),
-        const SizedBox(height: AppSpacing.sm),
-        _value(
-          context,
-          'Your contact identity for this relationship',
-          share.identity,
-        ),
-        if (share.previousAddress != null) ...[
-          const SizedBox(height: AppSpacing.sm),
-          _value(context, 'Previously shared address', share.previousAddress!),
-        ],
-        const SizedBox(height: AppSpacing.sm),
-        _value(context, 'Fresh receiving address to share', share.address),
-        const SizedBox(height: AppSpacing.s),
-        _paragraph(
-          context,
-          'Reply expires ${deadline(share.expiresAt)}. Send the reply only to this requester using your trusted channel.',
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _Consent(
-          key: const Key('contacts-share-consent'),
-          checked: _shareConsent,
-          enabled: enabled && !expired(share.expiresAt),
-          label:
-              'I intend to share this receiving address with this requesting identity.',
-          onChanged: (value) => setState(() => _shareConsent = value),
-        ),
-        if (expired(share.expiresAt)) ...[
-          const SizedBox(height: AppSpacing.s),
-          const _Notice(
-            title: 'Request expired',
-            text: 'Cancel this exchange and ask for a fresh request.',
-            isError: true,
-          ),
-        ],
-        const SizedBox(height: AppSpacing.sm),
-        Wrap(
-          spacing: AppSpacing.s,
-          runSpacing: AppSpacing.s,
-          children: [
-            AppButton(
-              key: const Key('contacts-confirm-share'),
-              onPressed:
-                  enabled &&
-                      !expired(share.expiresAt) &&
-                      _shareConsent &&
-                      actions.onConfirmShare != null
-                  ? () => unawaited(
-                      run(
-                        () => actions.onConfirmShare!(consent: _shareConsent),
-                      ),
-                    )
-                  : null,
-              child: const Text('Create signed reply'),
-            ),
-            _cancelButton(),
-          ],
-        ),
-      ],
-    ),
-  );
-
   Widget _responseCard(BuildContext context, String response) => _Card(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1368,8 +1060,6 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
           title: const Text('Show reply contents'),
           children: [_payloadOutput('Signed reply to share', response)],
         ),
-        if (widget.sendBuilder != null && data.responseExpiresAt != null)
-          widget.sendBuilder!(response, data.responseExpiresAt!, null, null),
         const SizedBox(height: AppSpacing.sm),
         Wrap(
           spacing: AppSpacing.s,
@@ -1488,7 +1178,7 @@ class _ContactExchangeViewState extends State<ContactExchangeView>
             _Notice(
               title: 'Suspend ${contact.label}?',
               text:
-                  'This blocks payments and signed address updates, and cancels outstanding exchanges for this contact. The record remains visible. This experiment cannot reactivate a suspended identity.',
+                  'This blocks payments and signed address updates, and cancels outstanding exchanges for this contact. The record remains visible. A suspended identity cannot be reactivated.',
               action: Wrap(
                 spacing: AppSpacing.s,
                 runSpacing: AppSpacing.s,
@@ -1589,7 +1279,7 @@ class _Card extends StatelessWidget {
   const _Card({required this.child});
   final Widget child;
   @override
-  Widget build(BuildContext context) => FamiliarCard(
+  Widget build(BuildContext context) => SybilCard(
     child: Material(type: MaterialType.transparency, child: child),
   );
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:zcash_wallet/src/core/layout/app_form_factor.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
 import 'package:zcash_wallet/src/core/widgets/app_button.dart';
 import 'package:zcash_wallet/src/features/zns/presentation/zns_screen.dart';
@@ -10,9 +11,10 @@ void main() {
     WidgetTester tester,
     ZnsViewData data, {
     ZnsCallbacks callbacks = const ZnsCallbacks(),
+    double height = 2000,
   }) async {
     tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(1000, 2000);
+    tester.view.physicalSize = Size(1000, height);
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetPhysicalSize);
     await tester.pumpWidget(
@@ -29,6 +31,79 @@ void main() {
 
   bool enabled(WidgetTester tester, String key) =>
       tester.widget<AppButton>(find.byKey(Key(key))).onPressed != null;
+
+  testWidgets('initial and manual refresh work has visible feedback', (
+    tester,
+  ) async {
+    await show(
+      tester,
+      const ZnsViewData(isConfigured: true, isBusy: true),
+      callbacks: ZnsCallbacks(onRefresh: () async {}, onLookup: (_) {}),
+    );
+    expect(find.text('Checking name service…'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    if (kAppFormFactor == AppFormFactor.desktop) {
+      expect(enabled(tester, 'zns-refresh-balances'), isFalse);
+    }
+  });
+
+  testWidgets(
+    'registration preparation shows progress then brings retry failure into view',
+    (tester) async {
+      const rateLimitError = 'The name service is busy. Try again shortly.';
+      const available = ZnsLookupView(
+        name: 'river',
+        status: ZnsLookupStatus.available,
+      );
+      const ready = ZnsViewData(
+        isConfigured: true,
+        walletUnifiedAddress: ZnsPreviewFixtures.address,
+        lookup: available,
+        error: rateLimitError,
+      );
+      var reviewCalls = 0;
+      final callbacks = ZnsCallbacks(
+        onPrepareRegistration: (_) => reviewCalls++,
+      );
+      await show(tester, ready, callbacks: callbacks, height: 600);
+      await tester.enterText(find.byKey(const Key('zns-name')), 'river');
+      await tester.pump();
+      await tester.ensureVisible(find.byKey(const Key('zns-prepare')));
+      await tester.tap(find.byKey(const Key('zns-prepare')));
+      expect(reviewCalls, 1);
+      await show(
+        tester,
+        const ZnsViewData(
+          isConfigured: true,
+          walletUnifiedAddress: ZnsPreviewFixtures.address,
+          lookup: available,
+          error: rateLimitError,
+          isBusy: true,
+          isPreparingRegistration: true,
+        ),
+        callbacks: callbacks,
+        height: 600,
+      );
+      expect(find.text('Preparing review…'), findsOneWidget);
+      expect(enabled(tester, 'zns-prepare'), isFalse);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('zns-prepare')),
+          matching: find.byType(CircularProgressIndicator),
+        ),
+        findsOneWidget,
+      );
+
+      // Even the same repeated failure must become visible after a retry.
+      await show(tester, ready, callbacks: callbacks, height: 600);
+      await tester.pumpAndSettle();
+      final errorRect = tester.getRect(find.text(rateLimitError));
+      expect(errorRect.top, greaterThanOrEqualTo(0));
+      expect(errorRect.bottom, lessThanOrEqualTo(600));
+      expect(enabled(tester, 'zns-prepare'), isTrue);
+      expect(find.text('Preparing review…'), findsNothing);
+    },
+  );
 
   testWidgets(
     'registration review distinguishes the USD minimum floor from extra',

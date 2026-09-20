@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:io' show Platform;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,6 +29,7 @@ abstract interface class SwapDepositSender {
   Future<SwapDepositBroadcastResult> sendZecDeposit({
     required String accountUuid,
     required SwapQuote quote,
+    BigInt? maximumFeeZatoshi,
   });
 }
 
@@ -81,6 +82,7 @@ class RustSwapDepositSender implements SwapDepositSender {
   Future<SwapDepositBroadcastResult> sendZecDeposit({
     required String accountUuid,
     required SwapQuote quote,
+    BigInt? maximumFeeZatoshi,
   }) async {
     final requestGeneration = ++_depositRequestGeneration;
     final secretGuard = LinuxSecretOperationGuard(
@@ -152,6 +154,7 @@ class RustSwapDepositSender implements SwapDepositSender {
       );
 
       if (Platform.isMacOS && !secretGuard.enabled) {
+        checkSwapDepositFee(proposal.feeZatoshi, maximumFeeZatoshi);
         beforeSoftwareSign?.call(proposal.feeZatoshi);
         final password = _ref
             .read(appSecurityProvider.notifier)
@@ -182,6 +185,7 @@ class RustSwapDepositSender implements SwapDepositSender {
           if (mnemonicBytes == null || mnemonicBytes.isEmpty) {
             throw StateError('Mnemonic not found for the active account');
           }
+          checkSwapDepositFee(proposal.feeZatoshi, maximumFeeZatoshi);
           beforeSoftwareSign?.call(proposal.feeZatoshi);
           resultFuture = rust_sync.executeProposal(
             dbPath: dbPath,
@@ -276,4 +280,18 @@ String _shortSwapValue(String? value) {
   if (trimmed == null || trimmed.isEmpty) return '-';
   if (trimmed.length <= 14) return trimmed;
   return '${trimmed.substring(0, 7)}...${trimmed.substring(trimmed.length - 6)}';
+}
+
+/// Refuse a changed proposal before any software signature can be produced.
+void checkSwapDepositFee(BigInt actualFee, BigInt? reviewedFee) {
+  if (reviewedFee != null && actualFee > reviewedFee) {
+    throw const SwapDepositFeeChanged();
+  }
+}
+
+class SwapDepositFeeChanged implements Exception {
+  const SwapDepositFeeChanged();
+  @override
+  String toString() =>
+      'Zcash network fee increased. Review the swap again before sending.';
 }

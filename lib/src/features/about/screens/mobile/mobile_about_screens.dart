@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 
 import 'package:flutter/material.dart' show Scaffold;
@@ -6,7 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/app_version_config.dart';
-import '../../../../core/legal/sigil_licenses_button.dart';
+import '../../../../core/legal/sybil_licenses_button.dart';
 import '../../../../core/layout/mobile/mobile_top_nav.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_icon.dart';
@@ -30,7 +30,7 @@ class MobileAboutScreen extends StatelessWidget {
         child: Column(
           children: [
             MobileTopNav.back(
-              title: 'About Sigil Wallet',
+              title: 'About Sybil Beta',
               onBack: () => context.pop(),
             ),
             Expanded(
@@ -64,20 +64,20 @@ class MobileAboutScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       _LinkButton(
-                        label: 'Upstream GitHub',
+                        label: 'Sybil source',
                         iconName: AppIcons.link,
-                        url: kVizorGithubUrl,
+                        url: kSybilGithubUrl,
                       ),
                       const SizedBox(width: AppSpacing.md),
                       _LinkButton(
-                        label: 'Upstream website',
+                        label: 'Sybil website',
                         iconName: AppIcons.endpoint,
-                        url: kVizorWebsiteUrl,
+                        url: kSybilWebsiteUrl,
                       ),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  const SigilLicensesButton(),
+                  const SybilLicensesButton(),
                 ],
               ),
             ),

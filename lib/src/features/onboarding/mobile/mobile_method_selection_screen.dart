@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/material.dart' show Scaffold;
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
@@ -11,7 +11,7 @@ const double _methodCardHeight = 90;
 const double _methodSelectionProgress = 60 / 196;
 
 /// Second onboarding step — Figma `Method Selection` (4752:26334): the
-/// "Welcome to Sigil" title over four illustrated cards (create /
+/// "Welcome to Sybil" title over four illustrated cards (create /
 /// import / desktop link / Keystone), reached from the Welcome screen's "Get started"
 /// button. Keeps the `mobile_welcome_*` keys so the onboarding flow
 /// helpers route through here unchanged.
@@ -51,7 +51,7 @@ class MobileMethodSelectionScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Welcome to Sigil',
+                      'Welcome to Sybil',
                       textAlign: TextAlign.center,
                       style: AppTypography.displayLarge.copyWith(
                         color: colors.text.accent,
@@ -87,7 +87,7 @@ class MobileMethodSelectionScreen extends StatelessWidget {
                     _MethodCard(
                       buttonKey: const ValueKey('mobile_welcome_link_desktop'),
                       iconName: AppIcons.monitor,
-                      label: 'Link Sigil Desktop',
+                      label: 'Link Sybil Desktop',
                       illustration:
                           'assets/illustrations/method_link_desktop_card_bg.png',
                       onTap: () => context.push('/onboarding/link-desktop'),

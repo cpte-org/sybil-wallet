@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zcash_wallet/src/core/navigation/vizor_deep_link.dart';
 
@@ -9,7 +10,7 @@ void main() {
         defaultValue: kDefaultVizorDeeplinkBaseUrl,
       );
 
-      expect(kDefaultVizorDeeplinkBaseUrl, 'https://link.vizor.cash');
+      expect(kDefaultVizorDeeplinkBaseUrl, 'https://sybil.cash');
       expect(VizorDeepLink.baseUrl, configuredBaseUrl);
       expect(VizorDeepLink.host, Uri.parse(configuredBaseUrl).host);
     });
@@ -42,6 +43,10 @@ void main() {
         isNull,
       );
       expect(VizorDeepLink.routeFor(Uri.parse('https://example.com/')), isNull);
+      expect(
+        VizorDeepLink.routeFor(Uri.parse('https://sybil.cash.attacker/')),
+        isNull,
+      );
       expect(
         VizorDeepLink.routeFor(
           Uri.parse('https://user@${VizorDeepLink.host}/'),

@@ -1,11 +1,11 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/material.dart' show MaterialApp;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zcash_wallet/src/core/formatting/address_display.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
 import 'package:zcash_wallet/src/core/widgets/app_icon.dart';
-import 'package:zcash_wallet/src/core/widgets/familiar_widgets.dart';
+import 'package:zcash_wallet/src/core/widgets/sybil_widgets.dart';
 import 'package:zcash_wallet/src/core/widgets/review_buttons_stack.dart';
 import 'package:zcash_wallet/src/core/widgets/review_info_row.dart';
 import 'package:zcash_wallet/src/core/widgets/review_list_row.dart';
@@ -179,7 +179,7 @@ void main() {
     );
 
     expect(find.text('Mike'), findsOneWidget);
-    expect(find.byType(FamiliarAvatar), findsOneWidget);
+    expect(find.byType(SybilAvatar), findsOneWidget);
     // The truncated address moves to the sub-line; the Shielded badge and
     // the wallet icon circle are replaced.
     expect(find.text(truncatedAddress(_address)), findsOneWidget);
@@ -207,7 +207,7 @@ void main() {
     );
 
     expect(find.text('Mike'), findsOneWidget);
-    expect(find.byType(FamiliarAvatar), findsOneWidget);
+    expect(find.byType(SybilAvatar), findsOneWidget);
     expect(find.text('TEX - ${truncatedAddress(_texAddress)}'), findsOneWidget);
     expect(find.text('Transparent'), findsNothing);
     expect(find.text('Shielded'), findsNothing);
@@ -380,7 +380,7 @@ void main() {
       expect(
         find.descendant(
           of: find.byType(SendReviewInfoSection),
-          matching: find.byType(FamiliarAvatar),
+          matching: find.byType(SybilAvatar),
         ),
         findsOneWidget,
       );

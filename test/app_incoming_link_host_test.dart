@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -180,12 +181,12 @@ void main() {
     );
   });
 
-  testWidgets('an unknown link on the Vizor host is dropped without a word', (
+  testWidgets('an unknown link on the Sybil host is dropped without a word', (
     tester,
   ) async {
     final (container, router, incomingUris) = await pumpHost(tester);
 
-    incomingUris.emit('https://link.vizor.cash/not-a-route#v1=secret');
+    incomingUris.emit('https://sybil.cash/not-a-route#v1=secret');
     await tester.pumpAndSettle();
 
     expect(container.read(paymentRequestFlowProvider), isNull);
@@ -193,6 +194,21 @@ void main() {
     expect(container.read(paymentLinkIntakeProvider).pendingLink, isNull);
     expect(router.routerDelegate.currentConfiguration.uri.path, '/home');
     // No ZIP-321 rejection sentence: the link never reached that parser.
+    expect(find.textContaining('payment link'), findsNothing);
+  });
+
+  testWidgets('an attacker-controlled subdomain is dropped without a word', (
+    tester,
+  ) async {
+    final (container, router, incomingUris) = await pumpHost(tester);
+
+    incomingUris.emit('https://sybil.cash.attacker/not-a-route#v1=secret');
+    await tester.pumpAndSettle();
+
+    expect(container.read(paymentRequestFlowProvider), isNull);
+    expect(container.read(paymentUriPrefillProvider), isNull);
+    expect(container.read(paymentLinkIntakeProvider).pendingLink, isNull);
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/home');
     expect(find.textContaining('payment link'), findsNothing);
   });
 }

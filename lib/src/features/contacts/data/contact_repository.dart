@@ -49,9 +49,7 @@ class SecureContactRepository implements ContactRepository {
   @override
   Future<void> save(ContactScope scope, List<VerifiedContact> contacts) async {
     if (contacts.length > 100) {
-      throw const ContactFailure(
-        'This experiment supports up to 100 contacts.',
-      );
+      throw const ContactFailure('You can save up to 100 connected contacts.');
     }
     // Caller holds ContactMutationGate across read/compare/write. Preserve all
     // introduction records when a direct contact is accepted or suspended.

@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 import 'dart:io' show Platform;
 
@@ -48,7 +48,7 @@ enum SettingsUninstallStage { confirm, gate, removing, done }
 // The wipe itself is pure Dart/Rust and platform-agnostic; only the copy
 // references the host platform.
 final String _wipeSubtitle =
-    'Sigil will delete wallet data and secure storage '
+    'Sybil will delete wallet data and secure storage '
     'from ${Platform.isMacOS
         ? 'this Mac'
         : Platform.isWindows
@@ -56,10 +56,10 @@ final String _wipeSubtitle =
         : 'this device'}. Unshared gift card links will be permanently lost.';
 
 final String _finishSubtitle = Platform.isMacOS
-    ? 'To finish uninstallation, remove the Sigil app from Applications.'
+    ? 'To finish uninstallation, remove the Sybil app from Applications.'
     : Platform.isWindows
-    ? 'To finish uninstallation, uninstall Sigil from Windows settings.'
-    : 'To finish uninstallation, remove the Sigil app from this device.';
+    ? 'To finish uninstallation, uninstall Sybil from Windows settings.'
+    : 'To finish uninstallation, remove the Sybil app from this device.';
 
 class _SettingsUninstallScreenState
     extends ConsumerState<SettingsUninstallScreen>
@@ -528,7 +528,7 @@ class _UninstallConfirmView extends StatelessWidget {
 
     return _UninstallCard(
       helmetOpacity: const AlwaysStoppedAnimation(1),
-      title: 'Uninstall Sigil',
+      title: 'Uninstall Sybil',
       subtitle: _wipeSubtitle,
       subtitleWidth: 240,
       action: SizedBox(
@@ -554,7 +554,7 @@ class _UninstallConfirmView extends StatelessWidget {
                 size: 20,
                 animated: isCheckingSwaps,
               ),
-              child: Text(isCheckingSwaps ? 'Checking...' : 'Uninstall Sigil'),
+              child: Text(isCheckingSwaps ? 'Checking...' : 'Uninstall Sybil'),
             ),
             const SizedBox(height: AppSpacing.s),
             AppButton(
@@ -595,7 +595,7 @@ class _UninstallGateView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         ConfirmAccessCard(
-          subtitle: 'To uninstall Sigil.',
+          subtitle: 'To uninstall Sybil.',
           controller: passwordController,
           errorText: errorText,
           isSubmitting: isSubmitting,
@@ -758,7 +758,7 @@ class _UninstallDataRemovalViewState extends State<_UninstallDataRemovalView>
                             variant: AppButtonVariant.primary,
                             size: AppButtonSize.mediumLarge,
                             minWidth: 96,
-                            child: const Text('Close Sigil'),
+                            child: const Text('Close Sybil'),
                           )
                         : SizedBox(
                             width: 256,

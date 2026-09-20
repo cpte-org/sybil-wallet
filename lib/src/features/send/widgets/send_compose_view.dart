@@ -1,11 +1,11 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/widgets.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/amount_price_loading_bar.dart';
 import '../../../core/widgets/app_icon.dart';
-import '../../../core/widgets/familiar_widgets.dart';
+import '../../../core/widgets/sybil_widgets.dart';
 import '../../../core/widgets/app_text_field.dart';
 
 /// Recipient address type used to choose the leading icon.
@@ -179,14 +179,14 @@ class SendComposeView extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      FamiliarPageHeader(
+                      SybilPageHeader(
                         title: title,
                         subtitle: 'Who’s it for?',
                       ),
                       const SizedBox(height: _sectionGap),
                       SizedBox(
                         width: formWidth,
-                        child: FamiliarCard(
+                        child: SybilCard(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.sm,
                             vertical: AppSpacing.md,

@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:math' as math;
 import 'dart:ui' show PointerDeviceKind, Tristate;
 
@@ -1247,7 +1248,7 @@ void main() {
       tester,
       PaymentLinkShareQrDesktopView(
         artwork: PaymentLinkCardArtwork.diamond,
-        qrData: 'https://link.vizor.cash/payment-links/open#v1=test',
+        qrData: 'https://sybil.cash/payment-links/open#v1=test',
         onBack: () {},
         onSaveQr: () => saved = true,
         onCopyLink: () => copied = true,

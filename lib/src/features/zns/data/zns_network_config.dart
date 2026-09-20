@@ -1,3 +1,5 @@
+import '../../../core/config/near_intents_endpoint_config.dart';
+
 /// Deployment configuration is explicit; an unset registry never becomes a
 /// placeholder contract that a user can accidentally fund.
 class ZnsNetworkConfig {
@@ -14,9 +16,12 @@ class ZnsNetworkConfig {
   }) : registryAddress = znsAddress(registryAddress),
        tokenAddress = znsAddress(tokenAddress),
        kyberRouterAddress = znsAddress(kyberRouterAddress),
-       oneClickBaseUri =
-           oneClickBaseUri ??
-           Uri.parse('https://functions.vizor.cash/api/near-intents/1click'),
+       oneClickEndpoint = oneClickBaseUri == null
+           ? NearIntentsEndpointConfig.build
+           : NearIntentsEndpointConfig(
+               baseUrl: oneClickBaseUri.toString(),
+               allowLoopback: allowLocalTestEndpoints,
+             ),
        kyberBaseUri =
            kyberBaseUri ??
            Uri.parse('https://aggregator-api.kyberswap.com/base') {
@@ -36,7 +41,10 @@ class ZnsNetworkConfig {
         'Non-mainnet deployments require explicit test configuration',
       );
     }
-    for (final uri in [rpcUri, this.oneClickBaseUri, this.kyberBaseUri]) {
+    // Explicit injected endpoints are validated immediately; the optional
+    // build-time bridge remains lazy for prefunded/name-management flows.
+    if (oneClickBaseUri != null) oneClickEndpoint.requireBaseUri();
+    for (final uri in [rpcUri, this.kyberBaseUri]) {
       final local = ['localhost', '127.0.0.1', '::1'].contains(uri.host);
       if (uri.host.isEmpty ||
           uri.userInfo.isNotEmpty ||
@@ -63,7 +71,8 @@ class ZnsNetworkConfig {
   final String registryAddress;
   final String tokenAddress;
   final int tokenDecimals;
-  final Uri oneClickBaseUri;
+  final NearIntentsEndpointConfig oneClickEndpoint;
+  Uri get oneClickBaseUri => oneClickEndpoint.requireBaseUri();
   final Uri kyberBaseUri;
   final String kyberRouterAddress;
   final bool allowLocalTestEndpoints;

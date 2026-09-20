@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 //! Read-only participation discovery. No spending key, hotkey, PIR or proof
 //! generation is needed. Network transport stays at the wallet boundary.
 use base64::{engine::general_purpose::STANDARD as B64, Engine};
@@ -19,7 +20,8 @@ use crate::wallet::sync::open_wallet_db_for_read;
 // Captured from the official production/stage RPCs on 2026-09-10. This narrow
 // reader accepts changes only with >2/3 signatures under both the bundled
 // and current voting powers. It does not advance its trust anchor.
-// See docs/voting-participation.md before updating these trust anchors.
+// See rust/src/wallet/voting/README.md and the checked fixtures before updating
+// these trust anchors.
 const PROD_VALIDATORS: &str = "621A1E2C532170C3C0BC2E951D26C1CCA7A0EFB009AA15820D648D336C64F6BD";
 const STAGE_VALIDATORS: &str = "6E81F631CB63A527AB5A659529BA8942C46CCF78BA87D1B3AD4CF8AE5BDC2E8B";
 // Set only by the local integration harness. Production/testnet never consult

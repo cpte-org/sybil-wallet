@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 
 import 'package:flutter/material.dart' show Colors, Scaffold;
@@ -244,7 +244,7 @@ class _LostPasswordContent extends StatelessWidget {
     );
     final buttonLabel = remainingSeconds > 0
         ? 'Reset after ${remainingSeconds}s...'
-        : 'Reset Sigil';
+        : 'Reset Sybil';
     final statusText = error ?? warning ?? 'This cannot be undone.';
 
     return Column(
@@ -283,7 +283,7 @@ class _LostPasswordContent extends StatelessWidget {
                         "If you've lost your password, the only way to recover\nyour account is to ",
                   ),
                   TextSpan(
-                    text: 'completely reset Sigil app',
+                    text: 'completely reset Sybil app',
                     style: strongStyle,
                   ),
                   const TextSpan(

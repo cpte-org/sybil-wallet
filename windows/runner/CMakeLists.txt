@@ -1,3 +1,4 @@
+# Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 cmake_minimum_required(VERSION 3.14)
 project(runner LANGUAGES CXX)
 
@@ -33,11 +34,11 @@ function(vizor_env_or_default OUTPUT_NAME ENV_NAME DEFAULT_VALUE)
 endfunction()
 
 vizor_env_or_default(VIZOR_WINDOWS_COMPANY_NAME VIZOR_WINDOWS_COMPANY_NAME "com.keplr")
-vizor_env_or_default(VIZOR_WINDOWS_FILE_DESCRIPTION VIZOR_WINDOWS_FILE_DESCRIPTION "Vizor")
+vizor_env_or_default(VIZOR_WINDOWS_FILE_DESCRIPTION VIZOR_WINDOWS_FILE_DESCRIPTION "Sybil")
 vizor_env_or_default(VIZOR_WINDOWS_INTERNAL_NAME VIZOR_WINDOWS_INTERNAL_NAME "Vizor")
 vizor_env_or_default(VIZOR_WINDOWS_LEGAL_COPYRIGHT VIZOR_WINDOWS_LEGAL_COPYRIGHT "Copyright (C) 2026 com.keplr. All rights reserved.")
 vizor_env_or_default(VIZOR_WINDOWS_ORIGINAL_FILENAME VIZOR_WINDOWS_ORIGINAL_FILENAME "Vizor.exe")
-vizor_env_or_default(VIZOR_WINDOWS_PRODUCT_NAME VIZOR_WINDOWS_PRODUCT_NAME "Vizor")
+vizor_env_or_default(VIZOR_WINDOWS_PRODUCT_NAME VIZOR_WINDOWS_PRODUCT_NAME "Sybil")
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/resource_values.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/resource_values.h"

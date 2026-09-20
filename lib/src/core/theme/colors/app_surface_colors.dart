@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/painting.dart';
 
 import '../primitives.dart';
@@ -32,23 +32,23 @@ class AppSurfaceColors {
   final Color scrollbarThumb;
 
   static const dark = AppSurfaceColors(
-    card: FamiliarPrimitives.surfaceDark,
+    card: SybilPrimitives.surfaceDark,
     input: AppInputSurfaceColors.dark,
-    nav: FamiliarPrimitives.navDark,
-    navActive: FamiliarPrimitives.limeDark,
-    tooltip: FamiliarPrimitives.softDark,
+    nav: SybilPrimitives.navDark,
+    navActive: SybilPrimitives.limeDark,
+    tooltip: SybilPrimitives.softDark,
     qrCode: Color(0xFFFFFFFF),
-    scrollbarThumb: FamiliarPrimitives.lineDark,
+    scrollbarThumb: SybilPrimitives.lineDark,
   );
 
   static const light = AppSurfaceColors(
-    card: FamiliarPrimitives.surfaceLight,
+    card: SybilPrimitives.surfaceLight,
     input: AppInputSurfaceColors.light,
-    nav: FamiliarPrimitives.paperLight,
-    navActive: FamiliarPrimitives.limeLight,
-    tooltip: FamiliarPrimitives.accentLight,
+    nav: SybilPrimitives.paperLight,
+    navActive: SybilPrimitives.limeLight,
+    tooltip: SybilPrimitives.accentLight,
     qrCode: Color(0xFFFFFFFF),
-    scrollbarThumb: FamiliarPrimitives.lineLight,
+    scrollbarThumb: SybilPrimitives.lineLight,
   );
 }
 
@@ -65,14 +65,14 @@ class AppInputSurfaceColors {
   final Color focus;
 
   static const dark = AppInputSurfaceColors(
-    primary: FamiliarPrimitives.surfaceDark,
-    secondary: FamiliarPrimitives.softDark,
-    focus: FamiliarPrimitives.paperDark,
+    primary: SybilPrimitives.surfaceDark,
+    secondary: SybilPrimitives.softDark,
+    focus: SybilPrimitives.paperDark,
   );
 
   static const light = AppInputSurfaceColors(
-    primary: FamiliarPrimitives.surfaceLight,
-    secondary: FamiliarPrimitives.softLight,
-    focus: FamiliarPrimitives.paperLight,
+    primary: SybilPrimitives.surfaceLight,
+    secondary: SybilPrimitives.softLight,
+    focus: SybilPrimitives.paperLight,
   );
 }

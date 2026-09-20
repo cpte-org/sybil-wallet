@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 @Tags(['mobile'])
 library;
 
@@ -25,11 +25,11 @@ import 'package:zcash_wallet/src/features/contacts/application/contact_exchange_
 import 'package:zcash_wallet/src/features/contacts/application/contact_delivery_providers.dart';
 import 'package:zcash_wallet/src/features/contacts/presentation/contact_backup_screen.dart';
 import 'package:zcash_wallet/src/features/contacts/presentation/contact_delivery_screen.dart';
-import 'package:zcash_wallet/src/features/contacts/presentation/familiar_people_screen.dart';
+import 'package:zcash_wallet/src/features/contacts/presentation/sybil_people_screen.dart';
 import 'package:zcash_wallet/src/features/pay/screens/mobile/mobile_pay_screen.dart';
 import 'package:zcash_wallet/src/features/pay/screens/mobile/mobile_pay_submitted_screen.dart';
 import 'package:zcash_wallet/src/features/receive/screens/mobile/mobile_receive_screen.dart';
-import 'package:zcash_wallet/src/features/contacts/presentation/familiar_choose_recipient_screen.dart';
+import 'package:zcash_wallet/src/features/contacts/presentation/sybil_choose_recipient_screen.dart';
 import 'package:zcash_wallet/src/features/send/models/send_prefill_args.dart';
 import 'package:zcash_wallet/src/features/send/screens/mobile/mobile_send_screen.dart';
 import 'package:zcash_wallet/src/features/swap/models/swap_activity_navigation.dart';
@@ -190,10 +190,10 @@ void main() {
 
     await tester.tap(find.bySemanticsLabel('People').last);
     await tester.pumpAndSettle();
-    expect(find.byType(FamiliarPeopleScreen), findsOneWidget);
+    expect(find.byType(SybilPeopleScreen), findsOneWidget);
   });
 
-  testWidgets('Familiar tabs stay stable when the swap feature is disabled', (
+  testWidgets('Sybil tabs stay stable when the swap feature is disabled', (
     tester,
   ) async {
     await tester.pumpWidget(_app(_router(), swapFeatureEnabled: false));
@@ -210,7 +210,7 @@ void main() {
     expect(find.text('Swap'), findsNothing);
     await tester.tap(find.bySemanticsLabel('People').last);
     await tester.pumpAndSettle();
-    expect(find.byType(FamiliarPeopleScreen), findsOneWidget);
+    expect(find.byType(SybilPeopleScreen), findsOneWidget);
   });
 
   testWidgets(
@@ -236,7 +236,7 @@ void main() {
       await tester.tap(find.bySemanticsLabel('Back'));
       await tester.pumpAndSettle();
       expect(find.byType(MobileSwapScreen), findsNothing);
-      expect(find.byType(FamiliarPeopleScreen), findsOneWidget);
+      expect(find.byType(SybilPeopleScreen), findsOneWidget);
       expect(router.routerDelegate.currentConfiguration.uri.path, '/people');
     },
   );
@@ -274,7 +274,7 @@ void main() {
       await tester.tap(find.byTooltip('Back'));
       await tester.pumpAndSettle();
       expect(screen, findsNothing);
-      expect(find.byType(FamiliarPeopleScreen), findsOneWidget);
+      expect(find.byType(SybilPeopleScreen), findsOneWidget);
     });
   }
 
@@ -287,15 +287,15 @@ void main() {
     await tester.tap(find.text('Send'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(FamiliarChooseRecipientScreen), findsOneWidget);
+    expect(find.byType(SybilChooseRecipientScreen), findsOneWidget);
     final route = ModalRoute.of(
-      tester.element(find.byType(FamiliarChooseRecipientScreen)),
+      tester.element(find.byType(SybilChooseRecipientScreen)),
     );
     expect(route, isA<CupertinoRouteTransitionMixin<dynamic>>());
 
     await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
-    expect(find.byType(FamiliarChooseRecipientScreen), findsNothing);
+    expect(find.byType(SybilChooseRecipientScreen), findsNothing);
     expect(find.byType(MobileHomeScreen), findsOneWidget);
   });
 

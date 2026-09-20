@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 pub(crate) mod account_secret;
 pub mod contact_backup;
 use std::num::NonZeroU32;

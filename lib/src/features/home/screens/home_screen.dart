@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 // ignore_for_file: unused_element, unused_field
 
 import 'dart:async';
@@ -50,7 +50,7 @@ import '../../swap/models/swap_fiat_value_formatting.dart';
 import '../../swap/providers/swap_activity_tracker.dart';
 import '../services/transparent_shielding_service.dart';
 import '../widgets/keystone_shield_signing_overlay.dart';
-import '../widgets/familiar_home_dashboard.dart';
+import '../widgets/sybil_home_dashboard.dart';
 
 const _shieldErrorTooltipIconSize = 14.0;
 const _shieldErrorTooltipGap = AppSpacing.xxs;
@@ -574,9 +574,9 @@ class _HomePaneState extends ConsumerState<_HomePane> {
     );
 
     // Preserve the existing import/migration guidance and its ownership gates.
-    // The normal wallet uses the shared desktop/mobile Familiar surface.
+    // The normal wallet uses the shared desktop/mobile Sybil surface.
     if (!isImporting && !widget.ironwoodMigrationCta.visible) {
-      return FamiliarHomeDashboard(
+      return SybilHomeDashboard(
         sync: widget.sync,
         networkPrivacy: ref.watch(networkPrivacyProvider),
         ironwoodOnly: widget.showsIronwoodOnlyBalance,

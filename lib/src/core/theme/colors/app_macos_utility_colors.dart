@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/painting.dart';
 
 import '../primitives.dart';
@@ -22,22 +22,22 @@ class AppMacosUtilityColors {
   final Color innerBorder;
 
   static const dark = AppMacosUtilityColors(
-    window: FamiliarPrimitives.paperDark,
+    window: SybilPrimitives.paperDark,
     windowTransparent: Color(0x0019261F),
     navPanel: Color(0x4D13251C),
-    font: FamiliarPrimitives.inkDark,
-    thinBorder: FamiliarPrimitives.lineDark,
+    font: SybilPrimitives.inkDark,
+    thinBorder: SybilPrimitives.lineDark,
     // The glass panel's inner ring is a white highlight in both Figma
     // modes (inner shadow #FFFFFF @ 15%), not a dark outline.
     innerBorder: Color(0x26FFFFFF),
   );
 
   static const light = AppMacosUtilityColors(
-    window: FamiliarPrimitives.paperLight,
+    window: SybilPrimitives.paperLight,
     windowTransparent: Color(0x00F7F6EF),
     navPanel: Color(0x4DFFFEF9),
-    font: FamiliarPrimitives.inkLight,
-    thinBorder: FamiliarPrimitives.lineLight,
+    font: SybilPrimitives.inkLight,
+    thinBorder: SybilPrimitives.lineLight,
     innerBorder: Color(0x26FFFFFF),
   );
 }

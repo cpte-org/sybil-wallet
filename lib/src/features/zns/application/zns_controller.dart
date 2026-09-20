@@ -27,6 +27,7 @@ String znsFriendlyError(Object? error) {
     'Bad state: ',
     'Exception: ',
     'FormatException: ',
+    'OneClickApiException: ',
   ]) {
     if (text.startsWith(prefix)) return text.substring(prefix.length);
   }
@@ -52,6 +53,7 @@ class ZnsController extends Notifier<ZnsViewData> {
   String? _notice;
   String _owner = '';
   bool _busy = false;
+  bool _preparingRegistration = false;
   bool _disposed = false;
   int _epoch = 0;
 
@@ -107,6 +109,7 @@ class ZnsController extends Notifier<ZnsViewData> {
     _owner = '';
     _error = null;
     _busy = true;
+    _preparingRegistration = false;
     _publish();
     try {
       if (!_unlocked || _uuid.isEmpty) return;
@@ -182,9 +185,13 @@ class ZnsController extends Notifier<ZnsViewData> {
             input.chainId == 31337 || input.chainId == 84532,
       );
 
-  Future<void> _run(Future<void> Function() action) async {
+  Future<void> _run(
+    Future<void> Function() action, {
+    bool preparingRegistration = false,
+  }) async {
     if (_busy || _disposed) return;
     _busy = true;
+    _preparingRegistration = preparingRegistration;
     _error = null;
     _notice = null;
     _publish();
@@ -196,6 +203,7 @@ class ZnsController extends Notifier<ZnsViewData> {
     } finally {
       if (!_disposed && epoch == _epoch) {
         _busy = false;
+        _preparingRegistration = false;
         _publish();
       }
     }
@@ -260,7 +268,7 @@ class ZnsController extends Notifier<ZnsViewData> {
         extraDeposit: znsParseAmount(input.extraDeposit, 8),
       );
       if (epoch == _epoch && _unlocked) _review = review;
-    }),
+    }, preparingRegistration: true),
   );
 
   void confirm() => unawaited(
@@ -417,15 +425,38 @@ class ZnsController extends Notifier<ZnsViewData> {
     }),
   );
 
-  void saveConfiguration(ZnsConfigurationInput input) => unawaited(
-    _run(() async {
+  void saveConfiguration(ZnsConfigurationInput input) =>
+      unawaited(_changeConfiguration(() => input));
+
+  /// Changing only the transport preserves the journal's deployment scope.
+  /// Paused work can therefore recover from an unavailable RPC without being
+  /// archived; loading that journal never restores permission to sign.
+  Future<bool> updateRpcEndpoint(String rpcUrl) => _changeConfiguration(
+    () => _config.withRpcUrl(rpcUrl.trim()),
+    endpointOnly: true,
+  );
+
+  Future<bool> _changeConfiguration(
+    ZnsConfigurationInput Function() inputForCurrentAccount, {
+    bool endpointOnly = false,
+  }) async {
+    var updated = false;
+    await _run(() async {
       final epoch = _epoch;
       if (!_unlocked) throw StateError('Unlock the wallet first.');
-      if (_engine?.operation != null && !_engine!.operation!.isComplete) {
+      if (_engine?.busy == true || _engine?.authorized == true) {
+        throw StateError(
+          'Pause the Names operation before changing its endpoint.',
+        );
+      }
+      if (!endpointOnly &&
+          _engine?.operation != null &&
+          !_engine!.operation!.isComplete) {
         throw StateError(
           'Finish or archive the saved operation before changing its deployment.',
         );
       }
+      final input = inputForCurrentAccount();
       final config = _networkConfig(input);
       if (input.delegateAddress.isNotEmpty) znsAddress(input.delegateAddress);
       // A locally verified address is still user-configured deployment data, not
@@ -464,8 +495,15 @@ class ZnsController extends Notifier<ZnsViewData> {
       if (epoch != _epoch || !_unlocked) return;
       _config = input;
       await _initialize();
-    }),
-  );
+      if (_epoch != epoch + 1 || !_unlocked) return;
+      updated = _error == null;
+      if (updated && endpointOnly) {
+        _notice = 'Base RPC endpoint updated.';
+        _publish();
+      }
+    });
+    return updated;
+  }
 
   String exportRecovery() {
     if (!_unlocked || _engine?.operation == null) {
@@ -689,6 +727,7 @@ class ZnsController extends Notifier<ZnsViewData> {
       isSoftwareAccount: account?.activeAccount?.isHardware != true,
       isLocked: locked,
       isBusy: _busy || (_engine?.busy ?? false),
+      isPreparingRegistration: !locked && _preparingRegistration,
       walletUnifiedAddress: locked ? '' : _ua,
       baseOwnerAddress: locked ? '' : _owner,
       baseRecoveryDescription:
@@ -857,6 +896,8 @@ class ZnsController extends Notifier<ZnsViewData> {
               name: op.name,
               title: op.isComplete
                   ? '$action confirmed'
+                  : _engine?.progressMessage != null
+                  ? _engine!.progressMessage!
                   : phase == 'waiting'
                   ? 'Waiting to register'
                   : '$action in progress',
@@ -893,11 +934,15 @@ class ZnsController extends Notifier<ZnsViewData> {
                   : null,
               transactionId:
                   op.pending?['hash'] as String? ??
+                  (op.transactions.isNotEmpty
+                      ? op.transactions.last['hash'] as String?
+                      : null) ??
                   op.funding?['txHash'] as String?,
               recoveryMessage: op.isComplete
                   ? null
-                  : op.message ??
-                        'Unlock and review to resume after restarting. Existing signed transactions can still confirm.',
+                  : op.message != null
+                  ? znsFriendlyError(op.message)
+                  : 'Unlock and review to resume after restarting. Existing signed transactions can still confirm.',
             ),
     );
   }

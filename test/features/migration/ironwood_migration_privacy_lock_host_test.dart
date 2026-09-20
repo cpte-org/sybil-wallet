@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -210,7 +210,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Enter your password to open Vizor.'), findsNothing);
-    expect(find.text('Unlock Sigil'), findsOneWidget);
+    expect(find.text('Unlock Sybil'), findsOneWidget);
     expect(find.text('Forgot password?'), findsNothing);
     expect(find.byKey(ironwoodMigrationVirtualUnlockScreenKey), findsOneWidget);
     expect(find.byKey(ironwoodMigrationInProgressBadgeKey), findsOneWidget);
@@ -436,7 +436,7 @@ void main() {
 
       expect(find.text('Migration in progress'), findsNothing);
       expect(find.text('Welcome back'), findsOneWidget);
-      expect(find.text('Unlock Sigil'), findsOneWidget);
+      expect(find.text('Unlock Sybil'), findsOneWidget);
       expect(
         find.byKey(ironwoodMigrationVirtualUnlockScreenKey),
         findsOneWidget,

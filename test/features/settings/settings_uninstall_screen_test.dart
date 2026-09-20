@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 
 import 'package:flutter/foundation.dart'
@@ -72,7 +72,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(AppButton, 'Uninstall Sigil'));
+      await tester.tap(find.widgetWithText(AppButton, 'Uninstall Sybil'));
       await tester.pumpAndSettle();
 
       // The password gate never opens and nothing is wiped: the claim would
@@ -123,7 +123,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(AppButton, 'Uninstall Sigil'));
+      await tester.tap(find.widgetWithText(AppButton, 'Uninstall Sybil'));
       await tester.pump();
 
       // The wait covers the Gift Card claim check too, so the label must not
@@ -178,7 +178,7 @@ Future<void> _runUninstallFlow(
     await tester.pumpAndSettle();
 
     if (openFromSettings) {
-      final uninstallEntry = find.text('Uninstall Sigil');
+      final uninstallEntry = find.text('Uninstall Sybil');
       await tester.ensureVisible(uninstallEntry);
       await tester.pumpAndSettle();
       await tester.tap(uninstallEntry);
@@ -189,7 +189,7 @@ Future<void> _runUninstallFlow(
       find.textContaining('Unshared gift card links will be permanently lost.'),
       findsOneWidget,
     );
-    await tester.tap(find.widgetWithText(AppButton, 'Uninstall Sigil'));
+    await tester.tap(find.widgetWithText(AppButton, 'Uninstall Sybil'));
     await tester.pumpAndSettle();
     expect(find.text('Confirm access'), findsOneWidget);
 
@@ -216,7 +216,7 @@ Future<void> _runUninstallFlow(
 
     expect(accountNotifier.resetWalletCalled, isTrue);
     expect(find.text('Your data has been removed'), findsOneWidget);
-    expect(find.text('Close Sigil'), findsOneWidget);
+    expect(find.text('Close Sybil'), findsOneWidget);
     expect(find.byType(WelcomeScreen), findsNothing);
   } finally {
     debugDefaultTargetPlatformOverride = null;

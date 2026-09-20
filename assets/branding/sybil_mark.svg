@@ -1,0 +1,6 @@
+<!-- Original Sybil geometric mark. Palette follows Sybil's forest / lime roles. -->
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" fill="#294A35"/>
+  <path d="M102 82H400L350 151H154C130 151 113 164 113 182C113 198 126 209 149 216L334 268C390 284 423 319 423 373C423 439 369 477 300 477H70L120 408H294C322 408 339 394 339 376C339 359 324 350 300 343L115 291C59 275 27 239 27 188C27 127 71 82 102 82Z" fill="#E0EBAF"/>
+  <circle cx="423" cy="91" r="16" fill="#FFF" fill-opacity="0.88"/>
+</svg>

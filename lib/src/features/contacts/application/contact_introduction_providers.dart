@@ -17,7 +17,7 @@ final contactIntroductionGatewayProvider = Provider<ContactIntroductionGateway>(
   (ref) => RustContactIntroductionGateway(),
 );
 
-// Lazily created behind the same unlocked software test-network scope as direct
+// Lazily created behind the same unlocked software account scope as direct
 // exchange. The next UI slice can use this without inventing another authority.
 final contactIntroductionCoordinatorProvider =
     Provider<ContactIntroductionCoordinator>((ref) {

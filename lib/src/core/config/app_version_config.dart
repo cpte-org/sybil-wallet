@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 const kVizorReleaseVersionEnvKey = 'VIZOR_RELEASE_VERSION';
 const kVizorReleaseVersion = String.fromEnvironment(
   kVizorReleaseVersionEnvKey,
@@ -21,7 +22,7 @@ const kVizorReleaseArch = String.fromEnvironment(kVizorReleaseArchEnvKey);
 const kVizorReleaseRepositoryEnvKey = 'VIZOR_RELEASE_REPOSITORY';
 const kVizorReleaseRepository = String.fromEnvironment(
   kVizorReleaseRepositoryEnvKey,
-  defaultValue: 'chainapsis/vizor-wallet',
+  defaultValue: 'cpte-org/sybil-wallet',
 );
 
 const kVizorUpdateCheckEnabledEnvKey = 'VIZOR_UPDATE_CHECK_ENABLED';

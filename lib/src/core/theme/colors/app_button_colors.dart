@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/painting.dart';
 
 import '../primitives.dart';
@@ -61,25 +61,25 @@ class AppPrimaryButtonColors {
   final Color labelHover;
 
   static const dark = AppPrimaryButtonColors(
-    bg: FamiliarPrimitives.accentDark,
+    bg: SybilPrimitives.accentDark,
     bgHover: Color(0xFFE8F1C1),
     bgPressed: Color(0xFFCEDC94),
-    border: FamiliarPrimitives.accentDark,
-    borderHover: FamiliarPrimitives.accentDark,
-    borderPressed: FamiliarPrimitives.accentDark,
-    label: FamiliarPrimitives.onAccentDark,
-    labelHover: FamiliarPrimitives.onAccentDark,
+    border: SybilPrimitives.accentDark,
+    borderHover: SybilPrimitives.accentDark,
+    borderPressed: SybilPrimitives.accentDark,
+    label: SybilPrimitives.onAccentDark,
+    labelHover: SybilPrimitives.onAccentDark,
   );
 
   static const light = AppPrimaryButtonColors(
-    bg: FamiliarPrimitives.accentLight,
+    bg: SybilPrimitives.accentLight,
     bgHover: Color(0xFF365D43),
     bgPressed: Color(0xFF233A2E),
-    border: FamiliarPrimitives.accentLight,
-    borderHover: FamiliarPrimitives.accentLight,
-    borderPressed: FamiliarPrimitives.accentLight,
-    label: FamiliarPrimitives.onAccentLight,
-    labelHover: FamiliarPrimitives.onAccentLight,
+    border: SybilPrimitives.accentLight,
+    borderHover: SybilPrimitives.accentLight,
+    borderPressed: SybilPrimitives.accentLight,
+    label: SybilPrimitives.onAccentLight,
+    labelHover: SybilPrimitives.onAccentLight,
   );
 }
 
@@ -97,17 +97,17 @@ class AppSecondaryButtonColors {
   final Color label;
 
   static const dark = AppSecondaryButtonColors(
-    bg: FamiliarPrimitives.surfaceDark,
-    bgHover: FamiliarPrimitives.softDark,
-    bgPressed: FamiliarPrimitives.sageDark,
-    label: FamiliarPrimitives.inkDark,
+    bg: SybilPrimitives.surfaceDark,
+    bgHover: SybilPrimitives.softDark,
+    bgPressed: SybilPrimitives.sageDark,
+    label: SybilPrimitives.inkDark,
   );
 
   static const light = AppSecondaryButtonColors(
-    bg: FamiliarPrimitives.surfaceLight,
-    bgHover: FamiliarPrimitives.softLight,
-    bgPressed: FamiliarPrimitives.sageLight,
-    label: FamiliarPrimitives.inkLight,
+    bg: SybilPrimitives.surfaceLight,
+    bgHover: SybilPrimitives.softLight,
+    bgPressed: SybilPrimitives.sageLight,
+    label: SybilPrimitives.inkLight,
   );
 }
 
@@ -127,17 +127,17 @@ class AppGhostButtonColors {
   final Color label;
 
   static const dark = AppGhostButtonColors(
-    bg: FamiliarPrimitives.paperDark,
-    bgHover: FamiliarPrimitives.softDark,
-    border: FamiliarPrimitives.lineDark,
-    label: FamiliarPrimitives.inkDark,
+    bg: SybilPrimitives.paperDark,
+    bgHover: SybilPrimitives.softDark,
+    border: SybilPrimitives.lineDark,
+    label: SybilPrimitives.inkDark,
   );
 
   static const light = AppGhostButtonColors(
-    bg: FamiliarPrimitives.paperLight,
-    bgHover: FamiliarPrimitives.softLight,
-    border: FamiliarPrimitives.lineLight,
-    label: FamiliarPrimitives.inkLight,
+    bg: SybilPrimitives.paperLight,
+    bgHover: SybilPrimitives.softLight,
+    border: SybilPrimitives.lineLight,
+    label: SybilPrimitives.inkLight,
   );
 }
 
@@ -148,12 +148,12 @@ class AppDisabledButtonColors {
   final Color label;
 
   static const dark = AppDisabledButtonColors(
-    bg: FamiliarPrimitives.softDark,
+    bg: SybilPrimitives.softDark,
     label: Color(0xFF7F9382),
   );
 
   static const light = AppDisabledButtonColors(
-    bg: FamiliarPrimitives.softLight,
+    bg: SybilPrimitives.softLight,
     label: Color(0xFF899286),
   );
 }
@@ -178,22 +178,22 @@ class AppDestructiveButtonColors {
   final Color label;
 
   static const dark = AppDestructiveButtonColors(
-    bg: FamiliarPrimitives.errorDark,
+    bg: SybilPrimitives.errorDark,
     bgHover: Color(0xFFFCC1B9),
     bgPressed: Color(0xFFE99186),
-    border: FamiliarPrimitives.errorDark,
-    borderHover: FamiliarPrimitives.errorDark,
-    borderPressed: FamiliarPrimitives.errorDark,
-    label: FamiliarPrimitives.errorSurfaceDark,
+    border: SybilPrimitives.errorDark,
+    borderHover: SybilPrimitives.errorDark,
+    borderPressed: SybilPrimitives.errorDark,
+    label: SybilPrimitives.errorSurfaceDark,
   );
 
   static const light = AppDestructiveButtonColors(
-    bg: FamiliarPrimitives.errorLight,
+    bg: SybilPrimitives.errorLight,
     bgHover: Color(0xFF922D25),
     bgPressed: Color(0xFF7B251F),
-    border: FamiliarPrimitives.errorLight,
-    borderHover: FamiliarPrimitives.errorLight,
-    borderPressed: FamiliarPrimitives.errorLight,
-    label: FamiliarPrimitives.surfaceLight,
+    border: SybilPrimitives.errorLight,
+    borderHover: SybilPrimitives.errorLight,
+    borderPressed: SybilPrimitives.errorLight,
+    label: SybilPrimitives.surfaceLight,
   );
 }

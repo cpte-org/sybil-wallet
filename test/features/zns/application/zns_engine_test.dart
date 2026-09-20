@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:zcash_wallet/src/features/zns/data/zns_transaction_preflight.dart';
 import 'package:zcash_wallet/src/features/zns/application/zns_engine.dart';
 import 'package:zcash_wallet/src/features/zns/application/zns_journal.dart';
 import 'package:zcash_wallet/src/features/zns/domain/zns_operation.dart';
@@ -46,7 +47,9 @@ class Gateway implements ZnsEngineGateway {
   final receipts = <String, Map<String, dynamic>>{};
   final swapLimits = <BigInt?>[];
   int fundingSends = 0, liveQuotes = 0;
-  int broadcastFailures = 0;
+  int broadcastFailures = 0, unsignedFailures = 0, preflightAttempts = 0;
+  void Function()? onUnsignedFailure;
+  Object? preflightError, broadcastError;
   bool fundingTimeout = false, fundingNotSent = false;
   Map<String, dynamic>? currentExitPreview;
   Map<String, dynamic> fundingState = {'complete': false};
@@ -158,6 +161,13 @@ class Gateway implements ZnsEngineGateway {
     required void Function() ensureAuthorized,
   }) async {
     ensureAuthorized();
+    preflightAttempts++;
+    if (preflightError != null) throw preflightError!;
+    if (unsignedFailures > 0) {
+      unsignedFailures--;
+      onUnsignedFailure?.call();
+      throw const ZnsUnsignedSwapRejected();
+    }
     signs.add({...operation});
     if (signWait != null) await signWait!.future;
     ensureAuthorized();
@@ -173,6 +183,7 @@ class Gateway implements ZnsEngineGateway {
   Future<void> broadcast(String rawTransaction, String expectedHash) async {
     beforeBroadcast?.call();
     broadcasts.add(rawTransaction);
+    if (broadcastError != null) throw broadcastError!;
     if (broadcastFailures > 0) {
       broadcastFailures--;
       throw TimeoutException('RPC response lost');
@@ -292,6 +303,90 @@ void main() {
       item.dispose();
     }
     engines.clear();
+  });
+
+  test(
+    'unsigned swap failure refreshes once within the same caps without funding',
+    () async {
+      gateway.supportsAtomic = true;
+      gateway.token = BigInt.zero;
+      gateway.unsignedFailures = 1;
+      final op = intent();
+      await engine.authorize(op);
+      expect(gateway.preflightAttempts, 2);
+      expect(gateway.signs, hasLength(1));
+      expect(gateway.broadcasts, hasLength(1));
+      expect(gateway.swapLimits, [BigInt.from(1050), BigInt.from(1050)]);
+      expect(gateway.fundingSends, 0);
+      expect(gateway.signs.single['secret'], op.secret);
+      expect(gateway.signs.single['maxDeposit'], '500');
+    },
+  );
+
+  test('second unsigned failure pauses without signing or funding', () async {
+    gateway.supportsAtomic = true;
+    gateway.token = BigInt.zero;
+    gateway.unsignedFailures = 2;
+    await engine.authorize(intent());
+    expect(gateway.preflightAttempts, 2);
+    expect(gateway.signs, isEmpty);
+    expect(gateway.broadcasts, isEmpty);
+    expect(gateway.fundingSends, 0);
+    expect(engine.authorized, isFalse);
+    expect(engine.operation!.pending, isNull);
+    expect(engine.error, contains('No transaction was signed'));
+    await engine.advance();
+    expect(gateway.preflightAttempts, 2);
+  });
+
+  test('locking during unsigned failure stops before requote', () async {
+    gateway.supportsAtomic = true;
+    gateway.token = BigInt.zero;
+    gateway.unsignedFailures = 1;
+    gateway.onUnsignedFailure = () => signable = false;
+    await engine.authorize(intent());
+    expect(gateway.swapLimits, hasLength(1));
+    expect(gateway.signs, isEmpty);
+    expect(gateway.broadcasts, isEmpty);
+  });
+
+  test(
+    'pricing and transport errors do not trigger automatic route retry',
+    () async {
+      gateway.supportsAtomic = true;
+      gateway.token = BigInt.zero;
+      gateway.preflightError = StateError('Registration pricing changed');
+      await engine.authorize(intent());
+      expect(gateway.preflightAttempts, 1);
+      expect(gateway.swapLimits, hasLength(1));
+      expect(gateway.signs, isEmpty);
+    },
+  );
+
+  test(
+    'even misclassified broadcast failure cannot trigger re-signing',
+    () async {
+      gateway.supportsAtomic = true;
+      gateway.token = BigInt.zero;
+      gateway.broadcastError = const ZnsUnsignedSwapRejected();
+      await engine.authorize(intent());
+      expect(gateway.preflightAttempts, 1);
+      expect(gateway.signs, hasLength(1));
+      expect(gateway.broadcasts, hasLength(1));
+      expect(gateway.swapLimits, hasLength(1));
+      expect(engine.operation!.pending, isNotNull);
+    },
+  );
+
+  test('approved resume clears the old saved error before retrying', () async {
+    final op = intent()..message = 'An earlier RPC error';
+    gateway.signWait = Completer<void>();
+    final resumed = engine.authorize(op);
+    await until(() => gateway.signs.isNotEmpty);
+    expect(engine.operation!.message, isNull);
+    expect((await ZnsJournal(storage).load(scope))!.message, isNull);
+    gateway.signWait!.complete();
+    await resumed;
   });
 
   test('extra bond is reviewed and carried into atomic registration', () async {

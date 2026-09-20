@@ -1,0 +1,142 @@
+<!--
+  Original geometric account glyphs for Sybil's stable pfp-01..pfp-15 IDs.
+  The 5x3 sheet is rasterized into assets/profile_pictures/profile_picture_*.png.
+-->
+<svg width="800" height="480" viewBox="0 0 800 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="cell01"><rect width="160" height="160" rx="34"/></clipPath>
+    <clipPath id="cell02"><rect x="160" width="160" height="160" rx="34"/></clipPath>
+    <clipPath id="cell03"><rect x="320" width="160" height="160" rx="34"/></clipPath>
+    <clipPath id="cell04"><rect x="480" width="160" height="160" rx="34"/></clipPath>
+    <clipPath id="cell05"><rect x="640" width="160" height="160" rx="34"/></clipPath>
+    <clipPath id="cell06"><rect y="160" width="160" height="160" rx="34"/></clipPath>
+    <clipPath id="cell07"><rect x="160" y="160" width="160" height="160" rx="34"/></clipPath>
+    <clipPath id="cell08"><rect x="320" y="160" width="160" height="160" rx="34"/></clipPath>
+    <clipPath id="cell09"><rect x="480" y="160" width="160" height="160" rx="34"/></clipPath>
+    <clipPath id="cell10"><rect x="640" y="160" width="160" height="160" rx="34"/></clipPath>
+    <clipPath id="cell11"><rect y="320" width="160" height="160" rx="34"/></clipPath>
+    <clipPath id="cell12"><rect x="160" y="320" width="160" height="160" rx="34"/></clipPath>
+    <clipPath id="cell13"><rect x="320" y="320" width="160" height="160" rx="34"/></clipPath>
+    <clipPath id="cell14"><rect x="480" y="320" width="160" height="160" rx="34"/></clipPath>
+    <clipPath id="cell15"><rect x="640" y="320" width="160" height="160" rx="34"/></clipPath>
+  </defs>
+
+  <!-- 01 orbit -->
+  <g>
+    <rect width="160" height="160" fill="#294A35"/>
+    <circle cx="80" cy="80" r="48" stroke="#E0EBAF" stroke-width="12"/>
+    <path d="M24 80H136M80 24V136" stroke="#FFF" stroke-opacity=".86" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="80" cy="80" r="13" fill="#E0EBAF"/>
+  </g>
+
+  <!-- 02 chevron -->
+  <g transform="translate(160)">
+    <rect width="160" height="160" fill="#E0EBAF"/>
+    <path d="M25 42L80 95L135 42M25 92L80 145L135 92" stroke="#294A35" stroke-width="16" stroke-linecap="square" stroke-linejoin="miter"/>
+    <circle cx="80" cy="42" r="8" fill="#F7F6EF"/>
+  </g>
+
+  <!-- 03 nested arcs -->
+  <g transform="translate(320)">
+    <rect width="160" height="160" fill="#F7F6EF"/>
+    <path d="M21 80C21 47 47 21 80 21C113 21 139 47 139 80C139 113 113 139 80 139C47 139 21 113 21 80Z" stroke="#294A35" stroke-width="13"/>
+    <path d="M48 80C48 62 62 48 80 48C98 48 112 62 112 80C112 98 98 112 80 112" stroke="#627065" stroke-width="11" stroke-linecap="round"/>
+    <circle cx="80" cy="80" r="10" fill="#F7DECD"/>
+  </g>
+
+  <!-- 04 prism -->
+  <g transform="translate(480)">
+    <rect width="160" height="160" fill="#DCE8D9"/>
+    <path d="M80 22L136 122H24L80 22Z" fill="#294A35"/>
+    <path d="M80 48L111 104H49L80 48Z" fill="#E0EBAF"/>
+    <circle cx="126" cy="33" r="12" fill="#FFF" fill-opacity=".82"/>
+  </g>
+
+  <!-- 05 facets -->
+  <g transform="translate(640)">
+    <rect width="160" height="160" fill="#F7DECD"/>
+    <path d="M80 21L132 51V111L80 141L28 111V51L80 21Z" fill="#294A35"/>
+    <path d="M80 43L109 60V94L80 111L51 94V60L80 43Z" fill="#FFF" fill-opacity=".85"/>
+    <path d="M80 43V111M51 60L109 94M109 60L51 94" stroke="#E0EBAF" stroke-width="7"/>
+  </g>
+
+  <!-- 06 crosshair -->
+  <g transform="translate(0 160)">
+    <rect width="160" height="160" fill="#DAE7ED"/>
+    <circle cx="80" cy="80" r="46" fill="#294A35"/>
+    <path d="M80 19V51M80 109V141M19 80H51M109 80H141" stroke="#E0EBAF" stroke-width="12" stroke-linecap="round"/>
+    <rect x="66" y="66" width="28" height="28" transform="rotate(45 66 66)" fill="#FFF" fill-opacity=".85"/>
+  </g>
+
+  <!-- 07 rising bars -->
+  <g transform="translate(160 160)">
+    <rect width="160" height="160" fill="#E6E1F2"/>
+    <path d="M26 119H52V74H26V119ZM67 119H93V47H67V119ZM108 119H134V25H108V119Z" fill="#294A35"/>
+    <path d="M27 37L68 65L108 27L135 45" stroke="#E0EBAF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- 08 four points -->
+  <g transform="translate(320 160)">
+    <rect width="160" height="160" fill="#294A35"/>
+    <path d="M80 22L95 65L138 80L95 95L80 138L65 95L22 80L65 65L80 22Z" fill="#E0EBAF"/>
+    <circle cx="80" cy="80" r="13" fill="#FFF"/>
+    <circle cx="31" cy="31" r="7" fill="#FFF" fill-opacity=".8"/>
+    <circle cx="129" cy="129" r="7" fill="#FFF" fill-opacity=".8"/>
+  </g>
+
+  <!-- 09 half moon -->
+  <g transform="translate(480 160)">
+    <rect width="160" height="160" fill="#E0EBAF"/>
+    <path d="M80 27C111 27 136 51 136 80C136 109 111 133 80 133C49 133 24 109 24 80C24 51 49 27 80 27Z" fill="#294A35"/>
+    <path d="M80 27C63 39 54 57 54 80C54 103 63 121 80 133C51 133 30 110 30 80C30 50 51 27 80 27Z" fill="#F7DECD"/>
+    <path d="M92 80H132" stroke="#FFF" stroke-width="9" stroke-linecap="round"/>
+  </g>
+
+  <!-- 10 steps -->
+  <g transform="translate(640 160)">
+    <rect width="160" height="160" fill="#F7F6EF"/>
+    <path d="M25 121H56V91H87V61H118V31H143V121H25Z" fill="#294A35"/>
+    <path d="M25 121H143" stroke="#E0EBAF" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="37" cy="43" r="12" fill="#F7DECD"/>
+  </g>
+
+  <!-- 11 wave -->
+  <g transform="translate(0 320)">
+    <rect width="160" height="160" fill="#DCE8D9"/>
+    <path d="M19 91C37 47 58 47 80 91C102 135 123 135 141 91" stroke="#294A35" stroke-width="22" stroke-linecap="round"/>
+    <path d="M19 91C37 47 58 47 80 91C102 135 123 135 141 91" stroke="#E0EBAF" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="29" cy="44" r="10" fill="#294A35"/>
+  </g>
+
+  <!-- 12 ring and wedge -->
+  <g transform="translate(160 320)">
+    <rect width="160" height="160" fill="#F7DECD"/>
+    <circle cx="80" cy="80" r="52" stroke="#294A35" stroke-width="14"/>
+    <path d="M80 80L80 28A52 52 0 0 1 125 54L80 80Z" fill="#E0EBAF"/>
+    <circle cx="80" cy="80" r="12" fill="#294A35"/>
+  </g>
+
+  <!-- 13 orbiting diamond -->
+  <g transform="translate(320 320)">
+    <rect width="160" height="160" fill="#DAE7ED"/>
+    <path d="M80 22L120 80L80 138L40 80L80 22Z" fill="#294A35"/>
+    <path d="M80 48L99 80L80 112L61 80L80 48Z" fill="#E0EBAF"/>
+    <circle cx="80" cy="80" r="8" fill="#FFF"/>
+  </g>
+
+  <!-- 14 frame -->
+  <g transform="translate(480 320)">
+    <rect width="160" height="160" fill="#E6E1F2"/>
+    <rect x="27" y="27" width="106" height="106" rx="18" stroke="#294A35" stroke-width="15"/>
+    <rect x="57" y="57" width="46" height="46" rx="8" fill="#E0EBAF"/>
+    <path d="M27 80H53M107 80H133" stroke="#294A35" stroke-width="10" stroke-linecap="round"/>
+  </g>
+
+  <!-- 15 diagonal signal -->
+  <g transform="translate(640 320)">
+    <rect width="160" height="160" fill="#294A35"/>
+    <path d="M23 118L67 42M56 137L100 61M89 137L133 61" stroke="#E0EBAF" stroke-width="17" stroke-linecap="round"/>
+    <circle cx="32" cy="31" r="12" fill="#FFF" fill-opacity=".88"/>
+    <circle cx="128" cy="129" r="12" fill="#F7DECD"/>
+  </g>
+</svg>

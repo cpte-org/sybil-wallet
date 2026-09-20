@@ -12,6 +12,142 @@ import 'contact_exchange_fixtures.dart';
 import 'contact_exchange_test_support.dart';
 
 void main() {
+  for (final advanced in [false, true]) {
+    testWidgets(
+      'inbox invitation opens a consent review (advanced: $advanced)',
+      (tester) async {
+        var state = const ContactExchangeState(available: true);
+        var prepared = 0, signed = 0;
+        late StateSetter rebuild;
+        await tester.pumpWidget(
+          MaterialApp(
+            home: AppTheme(
+              data: AppThemeData.dark,
+              child: Scaffold(
+                body: StatefulBuilder(
+                  builder: (_, setState) {
+                    rebuild = setState;
+                    return ContactExchangeView(
+                      state: state,
+                      advanced: advanced,
+                      now: () => contactTestNow,
+                      inboxBuilder: (selected) => TextButton(
+                        onPressed: () => selected(
+                          '["zcash-contact/request","presentation-only"]',
+                        ),
+                        child: const Text('Open received invitation'),
+                      ),
+                      callbacks: ContactExchangeCallbacks(
+                        onPrepareShare: (_) async {
+                          prepared++;
+                          rebuild(
+                            () => state = ContactExchangeFixtures.sharing,
+                          );
+                        },
+                        onConfirmShare: ({required consent}) async => signed++,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+        final incoming = find.text('Open received invitation');
+        expect(incoming, findsOneWidget);
+        await tester.ensureVisible(incoming);
+        await tester.tap(incoming);
+        await tester.pumpAndSettle();
+        expect(prepared, 1);
+        expect(find.text('Let them add you?'), findsOneWidget);
+        expect(
+          tester.getTopLeft(find.text('Let them add you?')).dy,
+          greaterThanOrEqualTo(0),
+        );
+        expect(contactButtonEnabled(tester, 'contacts-confirm-share'), isFalse);
+        expect(signed, 0);
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+
+    testWidgets(
+      'inbox stays available while waiting and reviews reply without accepting (advanced: $advanced)',
+      (tester) async {
+        var state = ContactExchangeState(
+          available: true,
+          request: ContactExchangeFixtures.request,
+        );
+        var reviewed = 0, accepted = 0;
+        late StateSetter rebuild;
+        await tester.pumpWidget(
+          MaterialApp(
+            home: AppTheme(
+              data: AppThemeData.dark,
+              child: Scaffold(
+                body: StatefulBuilder(
+                  builder: (_, setState) {
+                    rebuild = setState;
+                    return ContactExchangeView(
+                      state: state,
+                      advanced: advanced,
+                      now: () => contactTestNow,
+                      inboxBuilder: (selected) => TextButton(
+                        onPressed: () => selected(
+                          '["zcash-contact/exchange","presentation-only"]',
+                        ),
+                        child: const Text('Open received reply'),
+                      ),
+                      callbacks: ContactExchangeCallbacks(
+                        onPauseReview: () => rebuild(() {
+                          state = ContactExchangeState(
+                            available: true,
+                            request: state.request,
+                          );
+                        }),
+                        onPreviewResponse: (_) async {
+                          expect(
+                            state.request,
+                            ContactExchangeFixtures.request,
+                          );
+                          reviewed++;
+                          rebuild(
+                            () => state = ContactExchangeFixtures.newContact,
+                          );
+                        },
+                        onAcceptResponse:
+                            ({
+                              required label,
+                              required independentlyVerified,
+                            }) async => accepted++,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+        final incoming = find.text('Open received reply');
+        expect(incoming, findsOneWidget);
+        await tester.ensureVisible(incoming);
+        await tester.tap(incoming);
+        await tester.pumpAndSettle();
+        expect(reviewed, 1);
+        expect(find.text('Who are you adding?'), findsOneWidget);
+        expect(
+          tester.getTopLeft(find.text('Who are you adding?')).dy,
+          greaterThanOrEqualTo(0),
+        );
+        expect(
+          contactButtonEnabled(tester, 'contacts-accept-response'),
+          isFalse,
+        );
+        expect(accepted, 0);
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+  }
+
   Future<void> codeWidget(WidgetTester tester, Widget child) async {
     await tester.pumpWidget(
       MaterialApp(

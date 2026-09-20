@@ -1,0 +1,30 @@
+Android native dependency notice supplement
+===========================================
+
+These entries cover native Android artifacts observed in the Sybil beta
+resolution. The Android build's generated Flutter `NOTICES.Z` remains the
+source of the Flutter engine and plugin notice set.
+
+* `io.github.zxing-cpp:android:3.1.1` supplies `libzxingcpp_android.so`.
+  The published POM declares Apache License 2.0 and identifies the source at
+  https://github.com/zxing-cpp/zxing-cpp.
+* `androidx.camera:camera-core:1.5.3` supplies the camera/JNI support that
+  produces the observed `libimage_processing_util_jni.so` and
+  `libsurface_util_jni.so` artifacts. AndroidX components are Apache License
+  2.0; source and notices are published by the Android Open Source Project at
+  https://android.googlesource.com/platform/frameworks/support.
+* `androidx.biometric:biometric:1.1.0` is the wallet's direct biometric
+  dependency. Its published POM declares Apache License 2.0 and identifies
+  the AndroidX source repository.
+* AndroidX DataStore `1.1.7` is present in the resolved Android dependency
+  graph used by the secure-storage path. Its components are Apache License
+  2.0 and are covered by the same AndroidX source and notice location.
+
+The Linux zxing-cpp source checkout also retains `LICENSE` for zxing-cpp and
+`zint/LICENSE` for the bundled Zint writer backend. The zxing-cpp license is
+Apache License 2.0; Zint's license is BSD-3-Clause. These notices apply only
+when the corresponding Linux barcode writer is included in the target.
+
+The repository's Apache License 2.0 text is retained alongside these
+attributions. Version and artifact selection must be rechecked against the
+exact APK and Gradle resolution before publishing a later release.

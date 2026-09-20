@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 // ignore_for_file: depend_on_referenced_packages
 import 'dart:async';
 import 'dart:io';
@@ -218,6 +219,55 @@ void main() {
     },
   );
 
+  test(
+    'Linux swap rejects a proposal above the reviewed fee before signing',
+    () async {
+      final send = container
+          .read(swapDepositSenderProvider)
+          .sendZecDeposit(
+            accountUuid: _accountUuid,
+            quote: _quote(),
+            maximumFeeZatoshi: BigInt.from(9999),
+          );
+      final failed = expectLater(
+        send,
+        throwsA(
+          predicate<Object>(
+            (error) => error.toString().toLowerCase().contains('fee'),
+          ),
+        ),
+      );
+      await accounts.started.future.timeout(const Duration(seconds: 3));
+      accounts.release();
+      await failed;
+      expect(rust.executeCalls, 0);
+      expect(rust.discardCalls, 1);
+      expect(accounts.bytes, everyElement(0));
+    },
+  );
+
+  for (final reviewedFee in [10000, 10001]) {
+    test(
+      'Linux swap signs a proposal within the reviewed fee $reviewedFee',
+      () async {
+        final send = container
+            .read(swapDepositSenderProvider)
+            .sendZecDeposit(
+              accountUuid: _accountUuid,
+              quote: _quote(),
+              maximumFeeZatoshi: BigInt.from(reviewedFee),
+            );
+        await accounts.started.future.timeout(const Duration(seconds: 3));
+        accounts.release();
+        final result = await send;
+        expect(result.txHash, 'test-txid');
+        expect(rust.executeCalls, 1);
+        expect(rust.discardCalls, 0);
+        expect(accounts.bytes, everyElement(0));
+      },
+    );
+  }
+
   for (final interruption in [
     'lock and unlock',
     'account removal',
@@ -380,6 +430,8 @@ class _ConsumerSyncNotifier extends SyncNotifier {
   }) => operation();
   @override
   Future<void> refreshAfterSend() async {}
+  @override
+  Future<void> refreshAfterProposalRelease(String accountUuid) async {}
 }
 
 class _Paths extends Fake

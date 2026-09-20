@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 const kDefaultProfilePictureId = 'pfp-01';
 const _kProfilePictureAssetRoot = 'assets/profile_pictures';
 final _legacyKnightVariantPattern = RegExp(r'^knight-(\d{2})$');
@@ -44,21 +45,21 @@ const _kProfilePictureSuffixes = [
 ];
 
 const _kProfilePictureLabelsBySuffix = {
-  '01': 'Knight',
-  '02': 'Viking',
-  '03': 'Samurai',
-  '04': 'Monarch',
-  '05': 'Iron helm',
-  '06': 'Ronin',
-  '07': 'Skull knight',
-  '08': 'Seer',
-  '09': 'Berserker',
-  '10': 'Rogue',
-  '11': 'Mage',
-  '12': 'Masked cat',
-  '13': 'Warden',
-  '14': 'Bronze helm',
-  '15': 'Fish knight',
+  '01': 'Orbit',
+  '02': 'Chevron',
+  '03': 'Nested arcs',
+  '04': 'Prism',
+  '05': 'Facets',
+  '06': 'Crosshair',
+  '07': 'Rising bars',
+  '08': 'Four points',
+  '09': 'Half moon',
+  '10': 'Steps',
+  '11': 'Wave',
+  '12': 'Wedge',
+  '13': 'Diamond',
+  '14': 'Frame',
+  '15': 'Signal',
 };
 
 final kProfilePictureOptions = <ProfilePictureOption>[

@@ -1,11 +1,11 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/material.dart' show MaterialApp;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zcash_wallet/src/core/formatting/address_display.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
 import 'package:zcash_wallet/src/core/widgets/app_icon.dart';
-import 'package:zcash_wallet/src/core/widgets/familiar_widgets.dart';
+import 'package:zcash_wallet/src/core/widgets/sybil_widgets.dart';
 import 'package:zcash_wallet/src/core/widgets/review_buttons_stack.dart';
 import 'package:zcash_wallet/src/features/send/widgets/send_review_layout.dart';
 import 'package:zcash_wallet/src/features/send/widgets/send_status_content_view.dart';
@@ -65,7 +65,7 @@ void main() {
       AppThemeData.light.colors.text.positiveStrong,
     );
 
-    expect(find.byType(FamiliarCard), findsNWidgets(2));
+    expect(find.byType(SybilCard), findsNWidgets(2));
   });
 
   testWidgets('transparent raw recipient keeps a transparent badge', (
@@ -132,7 +132,7 @@ void main() {
     );
 
     expect(find.text('Mike'), findsOneWidget);
-    expect(find.byType(FamiliarAvatar), findsOneWidget);
+    expect(find.byType(SybilAvatar), findsOneWidget);
     expect(find.text('TEX - ${truncatedAddress(_texAddress)}'), findsOneWidget);
     expect(find.text('Transparent'), findsNothing);
     expect(find.text('Shielded'), findsNothing);
@@ -157,7 +157,7 @@ void main() {
       final amountText = tester.widget<Text>(find.text('123.12 ZEC'));
       expect(amountText.style?.decoration, isNull);
 
-      expect(find.byType(FamiliarCard), findsNWidgets(2));
+      expect(find.byType(SybilCard), findsNWidgets(2));
       final colors = AppThemeData.light.colors;
       final statusText = tester.widget<Text>(find.text('Failed'));
       expect(statusText.style?.color, colors.text.destructive);

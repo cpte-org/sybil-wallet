@@ -3,6 +3,90 @@ import '../domain/zns_operation.dart';
 import 'zns_http_transport.dart';
 import 'zns_network_config.dart';
 
+/// Decode only fixed, argument-free errors from the reviewed contracts. Never
+/// display provider prose, arbitrary revert strings, calldata or addresses.
+String? _knownRevertMessage(Object? data) {
+  if (data is! String ||
+      data.length > 266 ||
+      !RegExp(r'^0x(?:[0-9a-fA-F]{2})+$').hasMatch(data)) {
+    return null;
+  }
+  var reason = data.toLowerCase();
+  // ZnsBatchAccount.CallFailed(uint256,bytes), with exactly one four-byte
+  // nested reason, canonical offset/length and zero ABI padding.
+  if (reason.startsWith('0x5c0dee5d')) {
+    if (reason.length != 266) return null;
+    final wrapped = ZnsAbi('0x${reason.substring(10)}');
+    if (wrapped.word(32) != BigInt.from(64) ||
+        wrapped.word(64) != BigInt.from(4) ||
+        reason.substring(210) != '0' * 56) {
+      return null;
+    }
+    reason = '0x${reason.substring(202, 210)}';
+  }
+  return const {
+    '0x02f378dc':
+        'Registration pricing changed. Review the updated bond and pricing mode before continuing.',
+    '0x6adf7e28':
+        'The required registration bond exceeds the reviewed limit. Review the updated bond before continuing.',
+    '0x8727a7f9':
+        'The registration quote expired. Review again before continuing.',
+    '0x8730528d':
+        'The name service could not verify pricing with the available gas. Review again before continuing.',
+  }[reason];
+}
+
+/// Only canonical batch ABI is recognized. The payload is never retained.
+class ZnsRpcRevert extends ZnsDataException {
+  const ZnsRpcRevert(
+    super.message, {
+    super.code,
+    this.batchStep,
+    this.revertSelector,
+  });
+  final int? batchStep;
+  final String? revertSelector;
+}
+
+int? _batchFailureStep(Object? data) {
+  if (data is! String ||
+      data.length < 202 ||
+      data.length > 16586 ||
+      !RegExp(r'^0x5c0dee5d[0-9a-fA-F]+$').hasMatch(data) ||
+      (data.length - 10) % 64 != 0) {
+    return null;
+  }
+  final abi = ZnsAbi('0x${data.substring(10)}');
+  final length = abi.word(64);
+  if (abi.word(0) > BigInt.from(2) ||
+      abi.word(32) != BigInt.from(64) ||
+      length > BigInt.from(8192)) {
+    return null;
+  }
+  final bytes = length.toInt();
+  final padded = ((bytes + 31) ~/ 32) * 64;
+  if (data.length != 202 + padded ||
+      data.substring(202 + bytes * 2) != '0' * (padded - bytes * 2)) {
+    return null;
+  }
+  return abi.word(0).toInt();
+}
+
+// Called only after the canonical batch envelope has been validated.
+String? _safeBatchSelector(String data) {
+  if (data.length < 210) return null;
+  final selector = '0x${data.substring(202, 210).toLowerCase()}';
+  return const {
+        '0x02f378dc', // PricingModeChanged
+        '0x6adf7e28', // DepositLimitExceeded
+        '0x8727a7f9', // QuoteExpired
+        '0x8730528d', // InsufficientOracleGas
+        '0x7c9c6e8f', // Uniswap v4 PriceLimitAlreadyExceeded
+      }.contains(selector)
+      ? selector
+      : null;
+}
+
 class ZnsCall {
   ZnsCall({
     required String from,
@@ -177,14 +261,164 @@ class ZnsFeeQuote {
 }
 
 class ZnsRpcClient {
-  ZnsRpcClient(this.config, {ZnsHttpTransport? transport})
-    : _transport = transport ?? ZnsPolicyHttpTransport();
+  ZnsRpcClient(
+    this.config, {
+    ZnsHttpTransport? transport,
+    Duration? requestSpacing,
+    Future<void> Function(Duration)? wait,
+    DateTime Function()? now,
+  }) : _transport = transport ?? ZnsPolicyHttpTransport(),
+       requestSpacing =
+           requestSpacing ??
+           (_isPublicDrpc(config.rpcUri)
+               ? const Duration(milliseconds: 1100)
+               : const Duration(milliseconds: 250)),
+       _sharedPublicPacing =
+           requestSpacing == null && _isPublicDrpc(config.rpcUri),
+       _wait = wait ?? Future<void>.delayed,
+       _now = now ?? DateTime.now {
+    if (this.requestSpacing.isNegative) {
+      throw ArgumentError('Negative RPC spacing');
+    }
+  }
   final ZnsNetworkConfig config;
   final ZnsHttpTransport _transport;
+  final Duration requestSpacing;
+  final Future<void> Function(Duration) _wait;
+  final DateTime Function() _now;
+  final bool _sharedPublicPacing;
+  static Future<void> _publicDrpcStartQueue = Future<void>.value();
+  static DateTime? _publicDrpcLastStart;
+  Future<void> _queue = Future<void>.value();
+  DateTime? _lastRequestAt, _rateLimitedUntil;
+  bool _closed = false;
   var _id = 0;
-  void close() => _transport.close();
 
-  Future<Object?> request(String method, List<Object?> params) async {
+  static bool _isPublicDrpc(Uri uri) =>
+      uri.scheme == 'https' &&
+      uri.host == 'base.drpc.org' &&
+      uri.port == 443 &&
+      (uri.path.isEmpty || uri.path == '/') &&
+      !uri.hasQuery &&
+      uri.userInfo.isEmpty;
+
+  Future<void> _waitForRequestStart() async {
+    if (!_sharedPublicPacing) {
+      final last = _lastRequestAt;
+      if (last != null) {
+        final remaining = requestSpacing - _now().difference(last);
+        if (remaining > Duration.zero) await _wait(remaining);
+      }
+      return;
+    }
+    // Reserve actual starts across Names clients, including an endpoint editor
+    // and a reopened controller. This gate holds no network request or wallet
+    // state; explicit spacing overrides opt out for controlled diagnostics.
+    final turn = _publicDrpcStartQueue.then((_) async {
+      _checkOpen();
+      final last = _publicDrpcLastStart;
+      if (last != null) {
+        final remaining = requestSpacing - _now().difference(last);
+        if (remaining > Duration.zero) await _wait(remaining);
+      }
+      _checkOpen();
+      _publicDrpcLastStart = _now();
+    });
+    _publicDrpcStartQueue = turn.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
+    );
+    await turn;
+  }
+
+  void close() {
+    _closed = true;
+    _transport.close();
+  }
+
+  // A registry snapshot fans out many reads. Serialize/pause them at the RPC
+  // boundary so a single screen cannot burst through a public endpoint's quota.
+  // Failed reads do not poison the queue; closing cancels queued work as well.
+  Future<Object?> request(String method, List<Object?> params) {
+    final result = _queue.then((_) => _requestWithBackoff(method, params));
+    _queue = result.then<void>((_) {}, onError: (Object _, StackTrace _) {});
+    return result;
+  }
+
+  void _checkOpen() {
+    if (_closed) {
+      throw const ZnsDataException('Name service request cancelled.');
+    }
+  }
+
+  Future<Object?> _requestWithBackoff(
+    String method,
+    List<Object?> params,
+  ) async {
+    _checkOpen();
+    final cooldown = _rateLimitedUntil;
+    if (cooldown != null && _now().isBefore(cooldown)) {
+      throw ZnsRateLimitException(
+        retryAfter: cooldown.difference(_now()),
+        rpcMethod: method,
+      );
+    }
+    const readMethods = {
+      'eth_chainId',
+      'eth_getBlockByNumber',
+      'eth_getCode',
+      'eth_call',
+      'eth_getBalance',
+      'eth_getTransactionCount',
+      'eth_estimateGas',
+      'eth_maxPriorityFeePerGas',
+      'eth_getTransactionReceipt',
+    };
+    for (var attempt = 0; ; attempt++) {
+      _checkOpen();
+      await _waitForRequestStart();
+      _checkOpen();
+      _lastRequestAt = _now();
+      try {
+        final result = await _requestOnce(method, params);
+        _checkOpen();
+        return result;
+      } on ZnsRateLimitException catch (error) {
+        final backoff = Duration(seconds: 1 << attempt.clamp(0, 2));
+        final retryAfter = error.retryAfter;
+        final delay = retryAfter != null && retryAfter > backoff
+            ? retryAfter
+            : backoff;
+        // Never retry a signed transaction here: the engine owns its durable
+        // journal and ambiguous-broadcast reconciliation. Long Retry-After
+        // values also fail promptly, without retrying before the stated time.
+        if (!readMethods.contains(method) ||
+            attempt >= 2 ||
+            delay > const Duration(seconds: 5)) {
+          _rateLimitedUntil = _now().add(delay);
+          throw ZnsRateLimitException(
+            retryAfter: error.retryAfter,
+            rpcMethod: method,
+          );
+        }
+        await _wait(delay);
+      } on ZnsDataException catch (error) {
+        if (error.code == 401 || error.code == 403) {
+          // Never expose the provider's response body or echo a URL that may
+          // contain credentials. Access denial is not a connectivity failure.
+          throw ZnsDataException(
+            'The selected Base RPC endpoint rejected access (${error.code}). '
+            'Saved progress is retained. Choose a different endpoint in '
+            'Settings → Base RPC endpoint.',
+            code: error.code,
+          );
+        }
+        rethrow;
+      }
+    }
+  }
+
+  Future<Object?> _requestOnce(String method, List<Object?> params) async {
     final id = ++_id;
     final response = znsObject(
       await _transport.request(
@@ -198,9 +432,28 @@ class ZnsRpcClient {
     }
     if (response['error'] != null) {
       final error = znsObject(response['error']);
+      if (error['code'] == 429 ||
+          error['code'] == -32005 ||
+          error['code'] == -32016) {
+        throw const ZnsRateLimitException();
+      }
       // Do not propagate provider text: it can contain calldata and addresses.
+      final knownRevert = method == 'eth_call' || method == 'eth_estimateGas'
+          ? _knownRevertMessage(error['data'])
+          : null;
+      final batchStep = method == 'eth_call' || method == 'eth_estimateGas'
+          ? _batchFailureStep(error['data'])
+          : null;
+      if (batchStep != null) {
+        throw ZnsRpcRevert(
+          knownRevert ?? 'Base RPC $method failed. Refresh before retrying.',
+          code: error['code'] is int ? error['code'] as int : null,
+          batchStep: batchStep,
+          revertSelector: _safeBatchSelector(error['data'] as String),
+        );
+      }
       throw ZnsDataException(
-        'Base RPC $method failed. Refresh before retrying.',
+        knownRevert ?? 'Base RPC $method failed. Refresh before retrying.',
         code: error['code'] is int ? error['code'] as int : null,
       );
     }
@@ -260,6 +513,20 @@ class ZnsRpcClient {
     if ((await block(znsQuantity(expected.number))).hash != expected.hash) {
       throw const ZnsDataException(
         'Base reorganized during the read. Refresh before continuing.',
+      );
+    }
+  }
+
+  /// Reject stale execution contexts and reorgs before a signature is created.
+  Future<void> checkFreshCanonical(ZnsBlock at) async {
+    await _canonical(at);
+    final age =
+        BigInt.from(_now().toUtc().millisecondsSinceEpoch ~/ 1000) -
+        at.timestamp;
+    if (age > BigInt.from(60) || age < BigInt.from(-5)) {
+      throw const ZnsDataException(
+        'The Base RPC endpoint returned an outdated block or your device clock is incorrect. '
+        'Check the clock or change the Base RPC endpoint in Settings. No transaction was signed.',
       );
     }
   }
@@ -471,11 +738,14 @@ class ZnsRpcClient {
     );
   }
 
-  Future<ZnsRegistrationQuote> quoteRegistration(String name) async {
-    final at = await block();
-    await verifyProtocol(at: at);
-    final quote = await _registrationQuote(name, at);
-    await _canonical(at);
+  Future<ZnsRegistrationQuote> quoteRegistration(
+    String name, {
+    ZnsBlock? at,
+  }) async {
+    final snapshot = at ?? await block();
+    if (at == null) await verifyProtocol(at: snapshot);
+    final quote = await _registrationQuote(name, snapshot);
+    if (at == null) await _canonical(snapshot);
     return quote;
   }
 

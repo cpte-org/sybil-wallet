@@ -1,3 +1,4 @@
+# Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.13)
 project(runner LANGUAGES CXX)
@@ -5,7 +6,7 @@ project(runner LANGUAGES CXX)
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
 set(APP_IDENTIFIER "vizor")
-set(APP_DISPLAY_NAME "Sigil")
+set(APP_DISPLAY_NAME "Sybil Beta")
 # Flutter tool reads BINARY_NAME without evaluating CMake variable expansion
 # when launching `flutter run`, so keep the default executable name literal.
 set(BINARY_NAME "vizor")
@@ -81,6 +82,17 @@ set_target_properties(${BINARY_NAME}
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
 include(flutter/generated_plugins.cmake)
+
+# Flutter copies plugin shared libraries into the bundle with install(FILES),
+# so CMake does not rewrite their build-tree RPATH during installation. The
+# scanner links the bundled ZXing library beside the plugin in bundle/lib;
+# retain only a relocatable lookup path in the built plugin itself.
+if(TARGET mobile_scanner_plugin)
+  set_target_properties(mobile_scanner_plugin PROPERTIES
+    BUILD_WITH_INSTALL_RPATH TRUE
+    INSTALL_RPATH "$ORIGIN"
+  )
+endif()
 
 
 # === Installation ===

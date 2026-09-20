@@ -327,7 +327,7 @@ class SimplexNativeTransport
       for (var page = 0; ; page++) {
         if (page >= 20) {
           throw const ContactFailure(
-            'Delivery history exceeds this experiment’s limit. No history was discarded.',
+            'Delivery history exceeds the current limit. No history was discarded.',
           );
         }
         final r = await command(

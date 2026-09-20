@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
@@ -63,10 +63,11 @@ abstract final class AppBackResolver {
     '/settings/viewing-key': 'Viewing key',
     '/settings/change-password': 'Change password',
     '/settings/endpoint': 'Endpoint',
+    '/settings/base-endpoint': 'Base RPC endpoint',
     '/settings/names': 'Public Zcash names',
     '/settings/contacts': 'Contact options',
     '/settings/explorer': 'Explorer',
-    '/settings/uninstall': 'Uninstall Sigil',
+    '/settings/uninstall': 'Uninstall Sybil',
     '/onboarding/keystone': 'Connect Keystone',
     '/voting': 'Vote',
     '/voting/poll/:roundId': 'Voting round',

@@ -47,7 +47,7 @@ class SecureContactIntroductionRepository
       book.provenance.length,
     ].any((count) => count > contactBookMaxRecords)) {
       throw const ContactFailure(
-        'This experiment supports up to 100 records of each contact data type.',
+        'Contact storage is full for this type of record (100 maximum).',
       );
     }
     final raw = jsonEncode(book.toJson(scope));

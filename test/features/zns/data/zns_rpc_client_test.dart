@@ -14,6 +14,11 @@ ZnsNetworkConfig configuration() => ZnsNetworkConfig(
   rpcUri: Uri.parse('https://rpc.example'),
   registryAddress: registry,
 );
+ZnsRpcClient fixtureClient(
+  ZnsNetworkConfig config, {
+  ZnsHttpTransport? transport,
+}) => ZnsRpcClient(config, transport: transport, requestSpacing: Duration.zero);
+
 String word(int value) => ZnsAbi.uintWord(BigInt.from(value));
 String tuple(List<Object> values) {
   var tail = '';
@@ -167,7 +172,7 @@ void main() {
       final transport = RpcFixture()
         ..inventorySize = 23
         ..enumerate = true;
-      final rpc = ZnsRpcClient(configuration(), transport: transport);
+      final rpc = fixtureClient(configuration(), transport: transport);
       final first = await rpc.registrySnapshot(owner);
       expect(first.positions, hasLength(20));
       expect(first.totalPositions, BigInt.from(23));
@@ -209,7 +214,7 @@ void main() {
     () async {
       final duplicate = RpcFixture()..inventorySize = 2;
       await expectLater(
-        ZnsRpcClient(
+        fixtureClient(
           configuration(),
           transport: duplicate,
         ).registrySnapshot(owner),
@@ -230,7 +235,7 @@ void main() {
           750,
         ]);
       await expectLater(
-        ZnsRpcClient(
+        fixtureClient(
           configuration(),
           transport: foreign,
         ).registrySnapshot(owner),
@@ -251,7 +256,7 @@ void main() {
           750,
         ]);
       expect(
-        (await ZnsRpcClient(
+        (await fixtureClient(
           configuration(),
           transport: received,
         ).registrySnapshot(owner)).selectedPosition!.unifiedAddress,
@@ -264,7 +269,7 @@ void main() {
     'snapshot reads name quote, actual principal and scaled claims at one canonical block',
     () async {
       final transport = RpcFixture();
-      final snapshot = await ZnsRpcClient(
+      final snapshot = await fixtureClient(
         configuration(),
         transport: transport,
       ).registrySnapshot(owner, registrationName: 'alice');
@@ -288,7 +293,7 @@ void main() {
     },
   );
   test('name lookup binds the stable position id during grace', () async {
-    final result = await ZnsRpcClient(
+    final result = await fixtureClient(
       configuration(),
       transport: RpcFixture(),
     ).lookupName('alice');
@@ -297,7 +302,7 @@ void main() {
     expect(result.expiresAt, BigInt.from(120));
   });
   test('release preview preserves full fractional forfeiture', () async {
-    final result = await ZnsRpcClient(
+    final result = await fixtureClient(
       configuration(),
       transport: RpcFixture(),
     ).exitPreview(BigInt.from(42));
@@ -314,12 +319,12 @@ void main() {
     () async {
       final bad = RpcFixture()..incompatible = true;
       await expectLater(
-        ZnsRpcClient(configuration(), transport: bad).registrySnapshot(owner),
+        fixtureClient(configuration(), transport: bad).registrySnapshot(owner),
         throwsA(isA<ZnsDataException>()),
       );
       expect(bad.selectors, ['0xda1f12ab']);
       await expectLater(
-        ZnsRpcClient(
+        fixtureClient(
           configuration(),
           transport: RpcFixture()..wrongToken = true,
         ).registrySnapshot(owner),
@@ -335,7 +340,7 @@ void main() {
         RpcFixture()..wrongId = true,
       ]) {
         await expectLater(
-          ZnsRpcClient(
+          fixtureClient(
             configuration(),
             transport: transport,
           ).registrySnapshot(owner),
@@ -359,7 +364,7 @@ void main() {
         BigInt.zero,
       ]);
     await expectLater(
-      ZnsRpcClient(
+      fixtureClient(
         configuration(),
         transport: transport,
       ).positionInfo(BigInt.from(42)),
@@ -367,11 +372,11 @@ void main() {
     );
   });
   test('receipt needs depth and a stable second canonical read', () async {
-    final client = ZnsRpcClient(configuration(), transport: RpcFixture());
+    final client = fixtureClient(configuration(), transport: RpcFixture());
     final receipt = (await client.transactionReceipt(transactionHash))!;
     expect(receipt.confirmed, isTrue);
     expect(receipt.confirmations, BigInt.two);
-    final moved = await ZnsRpcClient(
+    final moved = await fixtureClient(
       configuration(),
       transport: RpcFixture()..receiptReorg = true,
     ).transactionReceipt(transactionHash);

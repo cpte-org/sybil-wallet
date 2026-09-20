@@ -1,4 +1,4 @@
-//! Pure address validation for the testnet/regtest direct-contact experiment.
+//! Canonical unified-address validation for network-scoped contacts.
 
 use super::network::WalletNetwork;
 use vizor_contact_core::Network;
@@ -9,6 +9,7 @@ pub fn validate_unified_address(network: Network, address: &str) -> bool {
         return false;
     }
     let wallet_network = match network {
+        Network::Main => WalletNetwork::Main,
         Network::Test => WalletNetwork::Test,
         Network::Regtest => WalletNetwork::Regtest,
     };
@@ -43,6 +44,9 @@ mod tests {
         let test = fixture(NetworkType::Test);
         let regtest = fixture(NetworkType::Regtest);
         let main = fixture(NetworkType::Main);
+        assert!(validate_unified_address(Network::Main, &main));
+        assert!(!validate_unified_address(Network::Main, &test));
+        assert!(!validate_unified_address(Network::Main, &regtest));
         assert!(validate_unified_address(Network::Test, &test));
         assert!(validate_unified_address(Network::Regtest, &regtest));
         assert!(!validate_unified_address(Network::Regtest, &test));

@@ -23,7 +23,7 @@ final contactScopeProvider = Provider<ContactScope?>((ref) {
   if (account == null ||
       account.isHardware ||
       !security.isUnlocked ||
-      !['test', 'regtest'].contains(network) ||
+      !['main', 'test', 'regtest'].contains(network) ||
       !ContactLifecycle.allowed(account.uuid)) {
     return null;
   }
@@ -138,7 +138,7 @@ class ContactExchangeController extends Notifier<ContactExchangeState> {
       busy: _inFlight > 0,
       error: _error,
       unavailableReason: _scope == null
-          ? 'Contact exchange is an enabled test-network experiment for unlocked software accounts.'
+          ? 'Open an unlocked software account to connect with someone.'
           : null,
       contacts: List.unmodifiable(_contacts),
       request: _request,
@@ -185,7 +185,7 @@ class ContactExchangeController extends Notifier<ContactExchangeState> {
     final scope = _scope;
     if (scope == null || !_loaded || _loading) {
       throw const ContactFailure(
-        'Contact data is not available. Unlock this test-network account and reload contacts.',
+        'Contact data is not available. Unlock your account and reopen People.',
       );
     }
     _check(_epoch, scope);

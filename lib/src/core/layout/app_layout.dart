@@ -1,7 +1,6 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:io' show Platform;
 
-import 'package:desktop_window_bootstrap/desktop_window_bootstrap.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,7 +67,6 @@ enum AppLayoutMode {
 /// to imply [AppLayoutMode.large]; below it it's "portrait enough" to
 /// imply [AppLayoutMode.small].
 const double _largeRatioThreshold = (1080.0 / 720.0 + (50.0 * 1.3) / 133.0) / 2;
-const double _windowsContentTopInset = 0.0;
 
 /// Initialize the OS window for desktop at startup.
 ///
@@ -82,12 +80,12 @@ Future<void> initializeDesktopWindow({
   await windowManager.ensureInitialized();
 
   final options = Platform.isWindows
-      ? WindowOptions(title: 'Sigil')
+      ? WindowOptions(title: 'Sybil Beta')
       : WindowOptions(
           size: initialMode.defaultSize,
           minimumSize: initialMode.minimumSize,
           center: true,
-          title: 'Sigil',
+          title: 'Sybil Beta',
         );
 
   await windowManager.waitUntilReadyToShow(options);
@@ -200,9 +198,7 @@ class AppLayoutNotifier extends Notifier<AppLayoutState> with WindowListener {
 
   Future<void> _reconcileLayoutWithWindow() async {
     try {
-      final size = Platform.isWindows
-          ? await DesktopWindowBootstrap.getWindowsClientAreaSize()
-          : await windowManager.getSize();
+      final size = await windowManager.getSize();
       if (size.height <= 0) return;
       final ratio = size.width / size.height;
       final inferred = ratio >= _largeRatioThreshold
@@ -226,13 +222,10 @@ Future<void> _applyWindowsClientAreaLayout(
   bool resize = true,
   bool center = false,
 }) async {
-  await DesktopWindowBootstrap.applyWindowsClientAreaLayout(
-    windowSize: mode.defaultSize,
-    minimumWindowSize: mode.minimumSize,
-    // Windows targets the redesigned content area directly. Its native frame is
-    // added by the plugin after the Flutter client-area size is selected.
-    contentTopInset: _windowsContentTopInset,
-    resize: resize,
-    center: center,
-  );
+  // Use the licensed window_manager sizing API. Native platform runners own
+  // appearance; the public Linux/Android beta has no custom bootstrap plugin.
+  await windowManager.setMinimumSize(mode.minimumSize);
+  await windowManager.setAspectRatio(mode.aspectRatio);
+  if (resize) await windowManager.setSize(mode.defaultSize);
+  if (center) await windowManager.center();
 }

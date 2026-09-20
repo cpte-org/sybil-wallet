@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 @Tags(['mobile'])
 library;
 
@@ -84,8 +84,8 @@ void main() {
       find.text('Tap ••• (top right), then Connect software wallet.'),
       findsOneWidget,
     );
-    expect(find.text('Select Sigil (or ZODL)'), findsOneWidget);
-    expect(find.text('On Sigil'), findsOneWidget);
+    expect(find.text('Select Sybil (or ZODL)'), findsOneWidget);
+    expect(find.text('On Sybil'), findsOneWidget);
     expect(
       find.text('Scan the dynamic QR code on your Keystone.'),
       findsOneWidget,

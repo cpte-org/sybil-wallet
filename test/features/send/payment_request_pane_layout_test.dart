@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 /// Where the app-level payment-request card lands, and whether it fits.
 ///
 /// The card is hosted above the router, so nothing in the route tree bounds
@@ -73,7 +73,7 @@ void main() {
     final container = await _pumpHost(tester, size: _defaultWindow);
     await _present(tester, container, _shortRequest);
 
-    // Sigil's desktop shell is edge-to-edge: derive the pane geometry from
+    // Sybil's desktop shell is edge-to-edge: derive the pane geometry from
     // the mounted shell so this assertion follows its actual sidebar width.
     final pane = tester.getRect(find.byType(AppDesktopPane));
 

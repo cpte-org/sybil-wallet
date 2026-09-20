@@ -1,11 +1,9 @@
-# Experimental Linux and Android SimpleX transport
+# Linux and Android SimpleX transport
 
-This is a local test integration, not a production distribution. **Anomaly** was
-the former internal working name for this experiment; it is not a vendor or a
-separate distribution. Preserve upstream notices and prepare corresponding
-sources/build instructions for the combined release; the private-process
-boundary is not a licensing exemption. Do not remove or replace the wallet's
-existing Apache notices.
+The Sybil beta includes optional foreground contact delivery through SimpleX.
+The process boundary is not a licensing exemption: preserve the upstream
+Apache and AGPL notices and distribute the corresponding source described in
+[the release licensing record](../../docs/SYBIL-LICENSING.md).
 
 ## Pinned native runtime
 
@@ -19,15 +17,16 @@ existing Apache notices.
 
 Verify the archive checksum before extracting it. Keep the complete `libs/`
 directory together; `libsimplex.so` depends on its sibling libraries. No binaries
-are checked into this repository. The archive is a prototype dependency, not a
-completed license/SBOM/corresponding-source release package.
+are checked into this repository. The Sybil beta release attaches a separate
+source archive containing the pinned source and build inputs.
 
 ## Build
 
-The ARM64 Android test build includes the pinned runtime automatically:
+The ARM64 Android beta build includes the pinned runtime automatically
+(release-signing environment required; see [build instructions](../../docs/SYBIL-BETA-BUILD.md)):
 
 ```sh
-bash scripts/build-sigil-testnet.sh android
+bash scripts/build-sybil-beta.sh android
 ```
 
 The script verifies the official APK checksum before extracting its three

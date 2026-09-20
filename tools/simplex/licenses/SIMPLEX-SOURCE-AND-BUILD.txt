@@ -1,39 +1,181 @@
-SimpleX Chat native transport in Sigil test builds
+SimpleX Chat v7.0.2 corresponding-source and build-input record
+================================================================
 
-Copyright and licensing: preserve the upstream notices in the accompanying
-SimpleX-Chat-v7.0.2-LICENSE. SimpleX Chat is licensed under AGPL-3.0.
-The wallet's Apache and other component notices remain applicable.
+This record accompanies the AGPL-3.0 text in
+SimpleX-Chat-v7.0.2-LICENSE. It describes the source package prepared for a
+Sybil beta distribution. It does not change the wallet's repository-level
+Apache License 2.0 or replace any upstream component notice.
 
-Pinned source:
-https://github.com/simplex-chat/simplex-chat/tree/v7.0.2
-https://github.com/simplex-chat/simplex-chat/blob/v7.0.2/flake.nix
-https://github.com/simplex-chat/simplex-chat/blob/v7.0.2/flake.lock
-https://github.com/simplex-chat/simplex-chat/blob/v7.0.2/scripts/android/build-android.sh
+The package preserves exact source and build-input hashes for review. It does
+not claim a bit-for-bit rebuild of the upstream or Sybil binaries.
 
-Android ARM64 input:
-https://github.com/simplex-chat/simplex-chat/releases/download/v7.0.2/simplex-aarch64.apk
-SHA-256: 0a3a0bb7ca1e2411854883ba1ae352b15b11146fe0e137395671fff9ed839871
-Bytes: 87466500
-Sigil uses the unmodified libsimplex.so, libsupport.so and libapp-lib.so
-from that verified APK, with its own app-private process and JNI adapter.
-Other SimpleX application UI and camera libraries are not bundled by Sigil.
+Release source access (AGPL section 6(d) designated place)
+------------------------------------------------------------
 
-Linux x86_64 input:
-https://github.com/simplex-chat/simplex-chat-libs/releases/download/v7.0.2/simplex-chat-libs-linux-x86_64.zip
-SHA-256: 235e8afc1942f098e6ad27b7e2947eced0a670e2ed35f064d802b71bbcfc1610
+Release tag: https://github.com/cpte-org/sybil-wallet/releases/tag/v1.0.0-beta.1
+Corresponding-source asset:
+https://github.com/cpte-org/sybil-wallet/releases/download/v1.0.0-beta.1/sybil-simplex-source-v7.0.2.tar.gz
 
-Local source and build entry points in this Sigil checkout:
-tools/simplex/fetch-android.sh
-tools/simplex/ANDROID-EMBEDDING.md
-tools/simplex/native_host.c
-android/app/src/main/cpp/
-android/app/src/main/kotlin/com/keplr/vizor/simplex/
-lib/src/features/contacts/data/simplex_embedded_host.dart
-lib/src/features/contacts/data/simplex_native_transport.dart
-scripts/build-sigil-testnet.sh
+The release owner must attach that exact asset to the public release before
+conveying a Linux or Android binary that contains the SimpleX runtime. The
+asset is a source/build package, not a copy of private credentials or a
+prebuilt native runtime.
 
-These references identify the test-build inputs and adapter sources. They are
-not a written source offer or a complete corresponding-source/dependency
-package for public distribution. The public-release package is tracked in
-docs/SIGIL-LICENSING.md and must include the applicable component notices,
-complete corresponding sources, modifications and build inputs.
+Pinned SimpleX source inputs
+----------------------------
+
+* `simplex-chat-v7.0.2.tar.gz`
+  * upstream tree: https://github.com/simplex-chat/simplex-chat/tree/v7.0.2
+  * source commit: `417b4cc4db73b94a98fed5b3204d9d78ce272c7e`
+  * SHA-256: `94ab37f56eb1712190a4539f7e948efe6f03c61fd508678ca347c3e41b87eb3f`
+  * size: 170020998 bytes
+* `simplex-chat-libs-v7.0.2.tar.gz`
+  * upstream tree: https://github.com/simplex-chat/simplex-chat-libs/tree/v7.0.2
+  * source commit: `0721dca4504f921f90407b6d0aaf71aedbee35bc`
+  * SHA-256: `0cae121988201a1bb44fedd4213595bcf51c9cc0f843d64bf3578a79eaf1e3df`
+  * size: 12235 bytes
+
+The package also contains `cabal.project`, `flake.nix`, `flake.lock`, the
+Android build script, patches, and the upstream
+`docs/dependencies/licences/` report. The upstream report contains the
+Haskell dependency names, versions, SPDX identifiers where supplied, and
+license text for the pinned dependency set.
+
+Pinned Git source-repository-package inputs
+--------------------------------------------
+
+Each archive below is a public codeload snapshot of the exact commit named in
+`cabal.project`; the SHA-256 is recorded so the build input is reviewable.
+
+* `https://github.com/simplex-chat/simplexmq.git` at
+  `efaad8e73436d60f5052f07dda6b71151ad5039b` —
+  `938ea1ed8e67e6a722144a6f1a0cbb543b9cd5ede2a7a36d4260dd851d3dafe7`
+* `https://github.com/simplex-chat/hs-socks.git` at
+  `a30cc7a79a08d8108316094f8f2f82a0c5e1ac51` —
+  `a00d41c82cfa37f592838874b4e0b4942d215cda2c19c50d1eef587ee4cd6a52`
+* `https://github.com/simplex-chat/direct-sqlcipher.git` at
+  `f814ee68b16a9447fbb467ccc8f29bdd3546bfd9` —
+  `bc2fbfecee19b8ba3ce409494d61345cf3672925be92d455ccc9bd7d437d58c6`
+* `https://github.com/simplex-chat/sqlcipher-simple.git` at
+  `a46bd361a19376c5211f1058908fc0ae6bf42446` —
+  `6ae49a752396feecad516b4ea13a7368a434b08a233ced24b26350406504a231`
+* `https://github.com/simplex-chat/aeson.git` at
+  `aab7b5a14d6c5ea64c64dcaee418de1bb00dcc2b` —
+  `5cedadff2ae3c4603cae46affdbcdf163b191c121993906172fb37c7834f3004`
+* `https://github.com/simplex-chat/haskell-terminal.git` at
+  `f708b00009b54890172068f168bf98508ffcd495` —
+  `48c76372164ab1f3a940f69fe968090f34493318071fd7bbc7ce0ec393f7368e`
+* `https://github.com/simplex-chat/android-support.git` at
+  `9aa09f148089d6752ce563b14c2df1895718d806` —
+  `5f03d6d0e23e387c3275e3d3a16d08cad8b49ebf054b8d723f0418018c63a551`
+* `https://github.com/simplex-chat/zip.git` at
+  `2eff156c3aac389e35d38bf10a52733d7061640a` —
+  `7ae6ce589c90d9a62142354192fbb28e2633accd8d696d81f8637a8907dc579f`
+* `https://github.com/yesodweb/wai.git` at
+  `ec5e017d896a78e787a5acea62b37a4e677dec2e` (subdirectory `warp-tls`) —
+  `fb4027a3f2d08ac00549bf75dc94114ec95fb77270c4aee3c044479e34305ac0`
+* `https://github.com/simplex-chat/wai.git` at
+  `2f6e5aa5f05ba9140ac99e195ee647b4f7d926b0` (subdirectory `warp`) —
+  `cd23123d94e9f347e38be62f48317fe6889164a5d04034093e36978dd6e53ae0`
+
+Exact runtime Haskell source coverage
+-------------------------------------
+
+The inspected Linux runtime contains 157 mapped Haskell runtime identities:
+145 Hackage archives, the ten pinned Git inputs above, and GHC 9.6.3 source
+for the bundled core/RTS libraries. The complete package-level mapping is in
+`manifest/HASKELL-RUNTIME-SOURCES.json`; hashes, sizes, URLs, and license
+file evidence are in `manifest/HACKAGE-PINS.tsv`.
+
+Two shared-library stems need an explicit mapping because they are not ordinary
+package names in the runtime filename parser:
+
+* `libHSrts-1.0.2_thr-...-ghc9.6.3.so` maps to
+  `dependencies/ghc/ghc-9.6.3-src.tar.xz` as the GHC RTS source.
+* `libHSattoparsec-0.14.4-l-attoparsec-internal-...-ghc9.6.3.so` maps to
+  `dependencies/hackage/attoparsec-0.14.4.tar.gz`; it is the internal library
+  built from that same Hackage package, not a separate source package.
+
+The exact runtime mismatches called out by the upstream report remain covered:
+
+| Runtime package | Exact source | License/notice evidence |
+| --- | --- | --- |
+| `ansi-terminal-0.11.5` | Hackage archive, SHA-256 `5b4acedc55eb558381f0b694c2d31a50c332856b823db44cbbf2df78e8c097cb` | `LICENSE` in archive |
+| `ansi-wl-pprint-0.6.9` | Hackage archive, SHA-256 `a7b2e8e7cd3f02f2954e8b17dc60a0ccd889f49e2068ebb15abfa1d42f7a4eac` | `LICENSE` in archive; cabal `BSD3` |
+| `constraints-0.13.4` | Hackage archive, SHA-256 `4186946df4b88c5d7cae3a42aa426f30fd5d249835ea1d290e139cebbf464434` | `LICENSE` in archive; cabal `BSD2` |
+| `digest-0.0.1.3` | Hackage archive, SHA-256 `5596a53e17c036b9b2aefbed069ec819b36fefcd4bed21330ae0ee5be840a3d0` | `LICENSE` in archive; cabal `BSD3` |
+| `direct-sqlcipher-2.3.28` | pinned Git archive at `f814ee68b16a9447fbb467ccc8f29bdd3546bfd9`; SHA-256 `bc2fbfecee19b8ba3ce409494d61345cf3672925be92d455ccc9bd7d437d58c6` | exact Git `LICENSE`; do not replace with Hackage |
+| `http2-4.2.2` | Hackage archive, SHA-256 `e70c51fbd327366664ef9965e7440dd369e5a0ae4133e92492013a294a26ad4d` | `LICENSE` in archive; cabal `BSD3` |
+| `iso8601-time-0.1.5` | Hackage archive, SHA-256 `f2cd444b2be68402c773a4b451912817f06d33093aea691b42ebeed3630ff0c8` | cabal metadata declares `MIT`; no standalone file |
+| `monad-loops-0.4.3` | Hackage archive, SHA-256 `7eaaaf6bc43661e9e86e310ff8c56fbea16eb6bf13c31a2e28103138ac164c18` | cabal metadata declares `PublicDomain`; no standalone file |
+| `optparse-applicative-0.16.1.0` | Hackage archive, SHA-256 `6205278362f333c52256b9dd3edf5f8fe0f84f00cb9ee000291089f6eaccd69a` | `LICENSE` in archive; cabal `BSD3` |
+| `primitive-0.8.0.0` | Hackage archive, SHA-256 `5553c21b4a789f9b591eed69e598cc58484c274af29250e517b5a8bcc62b995f` | `LICENSE` and test license in archive |
+| `simplexmq-7.0.0.6` | pinned Git archive at `efaad8e73436d60f5052f07dda6b71151ad5039b`; SHA-256 `938ea1ed8e67e6a722144a6f1a0cbb543b9cd5ede2a7a36d4260dd851d3dafe7` | exact Git `LICENSE`; cabal `AGPL-3.0-only` |
+| `sqlcipher-simple-0.4.18.1` | pinned Git archive at `a46bd361a19376c5211f1058908fc0ae6bf42446`; SHA-256 `6ae49a752396feecad516b4ea13a7368a434b08a233ced24b26350406504a231` | exact Git `LICENSE` |
+| `th-lift-0.8.4` | Hackage archive, SHA-256 `f9c577238d4ba65fe3e78bc77f0cca54f17d02c0f6075b2487da5c63bdb4a61b` | `COPYING` in archive |
+| `th-lift-instances-0.1.20` | Hackage archive, SHA-256 `f533c3f95addcca461a0ccd1aafef75dd801bfa6599c0d1184d54bfffb61d870` | `LICENSE` in archive; cabal `BSD3` |
+| `uri-bytestring-0.3.3.1` | Hackage archive, SHA-256 `f3e7a0ac26111c426727fed11624efe9ce36ee2e74ca79570ec0985eb6111368` | `LICENSE` and `licenses/` texts in archive; cabal `BSD3` |
+| `zip-2.2.1` | pinned Git archive at `2eff156c3aac389e35d38bf10a52733d7061640a`; SHA-256 `7ae6ce589c90d9a62142354192fbb28e2633accd8d696d81f8637a8907dc579f` | exact Git `LICENSE.md` |
+| `zstd-0.1.3.0` | Hackage archive, SHA-256 `a0c2b5235e66b2696257cdee11a419ca17bff389f78989b5381eb3ce10a1f06d` | `LICENSE` in archive |
+
+Hackage, GHC, native, and build inputs
+--------------------------------------
+
+The exact Hackage resolution is pinned by `cabal.project` index state
+`2023-12-12T00:00:00Z`, `flake.lock`, and the upstream
+`docs/dependencies/licences/haskell/HASKELL.md` report. The package includes
+145 Hackage archives under `dependencies/hackage/` and the matching
+`dependencies/ghc/ghc-9.6.3-src.tar.xz` source. The GHC source SHA-256 is
+`dfcde67b4aa550a0b8a1a9bb8105835dc999fad6397cce33d72fd55d21eb77f5` and its
+size is 29346888 bytes.
+
+The native sources and hashes are:
+
+* OpenSSL 3.0.10 — `1761d4f5b13a1028b9b6f3d4b8e17feb0cedc9370f6afe61d7193d2cdce83323`;
+* GMP 6.3.0 — `ac28211a7cfb609bae2e2c8d6058d66c8fe96434f740cf6fe2e47b000d1c20cb`;
+* libiconv 1.16 — `e6a1b1b589654277ee790cce3734f07876ac4ccfaecbee8afa0b649cf529cc04`;
+* libffi 3.4.4 — `d66c56ad259a82cf2a9dfc408b32bf5da52371500b84745f7fb8b645712df676`; and
+* zlib 1.3 — `ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e`.
+
+The pinned build-source archives are:
+
+* nixpkgs revision `47585496bcb13fb72e4a90daeea2f434e2501998`, SHA-256
+  `39af4dc0c35caa20a5415e9a414444733b54ec57a37661ad440e565c425013a6`;
+* haskell.nix revision `d0c35e75cbbc6858770af42ac32b0b85495fbd71`, SHA-256
+  `69e6f5b276213370f26dc9e5e9ed2c77ff4669c97a2e1c83c813f4eb78dedacf`.
+
+Machine-readable provenance is retained in
+`manifest/HASKELL-RUNTIME-SOURCES.json`,
+`manifest/RUNTIME-SOURCE-MAPPINGS.json`, `manifest/NATIVE-SOURCES.json`, and
+`manifest/BUILD-SOURCES.json`; Nix native definitions are under
+`manifest/nix-native-definitions/`. The SimpleX licensing directory retains
+actual notices extracted from the exact Hackage, Git, GHC, native, and build
+sources, including GPL/LGPL texts where supplied. The package source itself
+retains each complete source archive.
+
+SQLCipher is represented by the pinned `direct-sqlcipher` and
+`sqlcipher-simple` Git archives above, with the upstream SQLCipher notice at
+`docs/dependencies/licences/apps/sqlcipher/LICENSE.md`. Linux may still use a
+target-system `libcrypto.so.3` provider; a target system closure beyond the
+listed sources remains platform-specific and is not silently claimed here.
+
+Runtime provenance
+------------------
+
+The official upstream binary inputs used by the Sybil build are recorded here
+for reproducibility, but are not substituted for corresponding source:
+
+* Android ARM64 APK:
+  `https://github.com/simplex-chat/simplex-chat/releases/download/v7.0.2/simplex-aarch64.apk`
+  SHA-256 `0a3a0bb7ca1e2411854883ba1ae352b15b11146fe0e137395671fff9ed839871`.
+  Sybil extracts the unmodified `libsimplex.so`, `libsupport.so`, and
+  `libapp-lib.so`.
+* Linux x86_64 archive:
+  `https://github.com/simplex-chat/simplex-chat-libs/releases/download/v7.0.2/simplex-chat-libs-linux-x86_64.zip`
+  SHA-256 `235e8afc1942f098e6ad27b7e2947eced0a670e2ed35f064d802b71bbcfc1610`.
+* The inspected Sybil Linux runtime's `libsimplex.so` SHA-256 is
+  `533766ae2dbbd62bf04e877c7950ac01425043a0e3ee5e4248aad72fea2fa3d5`.
+
+The SimpleX source package and its manifests do not attempt to duplicate the
+full Sybil source repository. The Sybil host/JNI adapter, build scripts, and
+integration changes are part of the Sybil repository source at the release tag.

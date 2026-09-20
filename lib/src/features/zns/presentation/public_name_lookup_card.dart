@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/profile_pictures.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/familiar_widgets.dart';
+import '../../../core/widgets/sybil_widgets.dart';
 import '../../address_book/models/address_book_contact.dart';
 import '../../address_book/providers/address_book_provider.dart';
 import '../application/public_name_lookup.dart';
@@ -186,7 +186,7 @@ class _PublicNameLookupCardState extends ConsumerState<PublicNameLookupCard> {
     });
     final enabled = preference.value == true;
     final result = _result;
-    return FamiliarCard(
+    return SybilCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

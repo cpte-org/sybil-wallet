@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/painting.dart';
 
 import '../primitives.dart';
@@ -28,10 +28,10 @@ class AppShadowColors {
   );
 
   static const light = AppShadowColors(
-    shadow1: FamiliarPrimitives.shadow,
-    shadow2: FamiliarPrimitives.shadow,
+    shadow1: SybilPrimitives.shadow,
+    shadow2: SybilPrimitives.shadow,
     shadow3: Color(0x33122119),
     subtle: Color(0x0D1F3622),
-    regular: FamiliarPrimitives.shadow,
+    regular: SybilPrimitives.shadow,
   );
 }

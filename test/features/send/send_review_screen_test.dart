@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 // path_provider / plugin platform fakes back the Keystone PCZT preparation
 // flow (wallet DB path + Sapling params status).
 // ignore_for_file: depend_on_referenced_packages
@@ -23,7 +23,7 @@ import 'package:zcash_wallet/src/core/formatting/address_display.dart';
 import 'package:zcash_wallet/src/core/navigation/payment_uri_busy_surface_provider.dart';
 import 'package:zcash_wallet/src/core/layout/app_desktop_shell.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
-import 'package:zcash_wallet/src/core/widgets/familiar_widgets.dart';
+import 'package:zcash_wallet/src/core/widgets/sybil_widgets.dart';
 import 'package:zcash_wallet/src/core/widgets/review_info_row.dart';
 import 'package:zcash_wallet/src/features/address_book/models/address_book_contact.dart';
 import 'package:zcash_wallet/src/features/address_book/providers/address_book_provider.dart';
@@ -228,7 +228,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byType(SendReviewContentView),
-        matching: find.byType(FamiliarAvatar),
+        matching: find.byType(SybilAvatar),
       ),
       findsOneWidget,
     );
@@ -277,7 +277,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byType(SendReviewContentView),
-        matching: find.byType(FamiliarAvatar),
+        matching: find.byType(SybilAvatar),
       ),
       findsOneWidget,
     );

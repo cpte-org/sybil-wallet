@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import '../../address_book/models/address_book_contact.dart';
 import '../../address_book/models/address_format_validator.dart';
 import '../domain/swap_address_plan.dart';
@@ -61,6 +62,7 @@ class SwapState {
     this.reviewQuote,
     this.reviewAddressPlan,
     this.reviewAccountUuid,
+    this.reviewDepositFeeZatoshi,
     this.quoteLoading = false,
     this.quoteExpired = false,
     this.quoteError,
@@ -101,6 +103,7 @@ class SwapState {
   final SwapQuote? reviewQuote;
   final SwapAddressPlan? reviewAddressPlan;
   final String? reviewAccountUuid;
+  final BigInt? reviewDepositFeeZatoshi;
   final bool quoteLoading;
   final bool quoteExpired;
   final String? quoteError;
@@ -307,6 +310,7 @@ class SwapState {
     SwapQuote? reviewQuote,
     SwapAddressPlan? reviewAddressPlan,
     String? reviewAccountUuid,
+    BigInt? reviewDepositFeeZatoshi,
     bool? quoteLoading,
     bool? quoteExpired,
     String? quoteError,
@@ -356,6 +360,11 @@ class SwapState {
       supportedAssetsError: clearSupportedAssetsError
           ? null
           : supportedAssetsError ?? this.supportedAssetsError,
+      reviewDepositFeeZatoshi: clearReview
+          ? null
+          : reviewQuote != null
+          ? reviewDepositFeeZatoshi
+          : reviewDepositFeeZatoshi ?? this.reviewDepositFeeZatoshi,
       reviewQuote: clearReview ? null : reviewQuote ?? this.reviewQuote,
       reviewAddressPlan: clearReview
           ? null

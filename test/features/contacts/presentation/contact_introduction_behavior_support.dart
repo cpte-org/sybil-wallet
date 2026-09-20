@@ -44,7 +44,6 @@ void introductionWidgetTests(AppFormFactor formFactor) {
                 coordinator: actor.coordinator,
                 advanced: advanced,
                 onConnect: () {},
-                onSettings: () {},
                 inboxBuilder: inboxBuilder,
                 onAccepted: onAccepted,
                 onCopy: (packet) async {
@@ -133,6 +132,28 @@ void introductionWidgetTests(AppFormFactor formFactor) {
       );
       await tap(tester, 'Open an invitation');
       expect(find.byType(ContactCodeInput), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets(
+    'guided overview offers checking a connection without advanced tools',
+    (tester) async {
+      final actor = IntroductionTestActor('guided-check');
+      await actor.peer('Alice', 11, 12, paired: false);
+      await pump(tester, actor, advanced: false, height: 844);
+      expect(find.text('Check a connection'), findsOneWidget);
+      await tap(tester, 'Check a connection');
+      expect(find.text('Who are you checking with?'), findsOneWidget);
+      expect(
+        find.text('The exact key your peer accepted from you'),
+        findsOneWidget,
+      );
+      expect(
+        find.byType(DropdownButtonFormField<IntroductionTask>),
+        findsNothing,
+      );
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     },

@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 @Tags(['mobile'])
 library;
 
@@ -579,8 +579,8 @@ void main() {
       findsNothing,
     );
     expect(find.byKey(const ValueKey('mobile_home_pay')), findsNothing);
-    expect(find.byKey(const ValueKey('familiar_home_send')), findsOneWidget);
-    expect(find.byKey(const ValueKey('familiar_home_receive')), findsOneWidget);
+    expect(find.byKey(const ValueKey('sybil_home_send')), findsOneWidget);
+    expect(find.byKey(const ValueKey('sybil_home_receive')), findsOneWidget);
   });
 
   testWidgets('shows the Figma sync keep-awake prompt copy', (tester) async {
@@ -723,7 +723,7 @@ void main() {
       tester.getTopLeft(emptyActivity).dy,
       greaterThan(
         tester
-            .getBottomLeft(find.byKey(const ValueKey('familiar_home_receive')))
+            .getBottomLeft(find.byKey(const ValueKey('sybil_home_receive')))
             .dy,
       ),
     );
@@ -1942,10 +1942,10 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      final balance = find.byKey(const ValueKey('familiar_available_balance'));
-      final sync = find.byKey(const ValueKey('familiar_balance_sync'));
-      final send = find.byKey(const ValueKey('familiar_home_send'));
-      final receive = find.byKey(const ValueKey('familiar_home_receive'));
+      final balance = find.byKey(const ValueKey('sybil_available_balance'));
+      final sync = find.byKey(const ValueKey('sybil_balance_sync'));
+      final send = find.byKey(const ValueKey('sybil_home_send'));
+      final receive = find.byKey(const ValueKey('sybil_home_receive'));
       expect(tester.widget<Text>(balance).data, '143.12 ZEC');
       expect(find.byTooltip('Hide balances'), findsOneWidget);
       expect(
@@ -1969,10 +1969,10 @@ void main() {
     await tester.pumpWidget(_app(_syncedState()));
     await tester.pump();
 
-    expect(find.byKey(const ValueKey('familiar_home_send')), findsOneWidget);
-    expect(find.byKey(const ValueKey('familiar_home_receive')), findsOneWidget);
+    expect(find.byKey(const ValueKey('sybil_home_send')), findsOneWidget);
+    expect(find.byKey(const ValueKey('sybil_home_receive')), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('familiar_home_receive')));
+    await tester.tap(find.byKey(const ValueKey('sybil_home_receive')));
     await tester.pumpAndSettle();
     expect(find.text('receive route'), findsOneWidget);
   });
@@ -1989,8 +1989,8 @@ void main() {
 
     expect(find.byKey(const ValueKey('mobile_home_pay')), findsNothing);
     // Send/Receive remain.
-    expect(find.byKey(const ValueKey('familiar_home_send')), findsOneWidget);
-    expect(find.byKey(const ValueKey('familiar_home_receive')), findsOneWidget);
+    expect(find.byKey(const ValueKey('sybil_home_send')), findsOneWidget);
+    expect(find.byKey(const ValueKey('sybil_home_receive')), findsOneWidget);
   });
 
   testWidgets('privacy eye masks the balance', (tester) async {
@@ -2163,7 +2163,7 @@ void main() {
     await tester.pump();
 
     final balanceFinder = find.byKey(
-      const ValueKey('familiar_available_balance'),
+      const ValueKey('sybil_available_balance'),
     );
     final activityFinder = find.byType(ActivityFeedRow).first;
     final balanceBeforeTicks = tester.widget(balanceFinder);

@@ -15,6 +15,7 @@ import '../data/simplex_embedded_host.dart';
 import '../domain/contact_models.dart';
 import 'contact_delivery_coordinator.dart';
 import 'contact_binding_coordinator.dart';
+import 'contact_delivery_preferences.dart';
 import 'contact_exchange_controller.dart';
 import 'contact_lifecycle.dart';
 import 'contact_mutation_gate.dart';
@@ -43,14 +44,14 @@ final contactDeliveryUnavailableReasonProvider = Provider<String?>((ref) {
     if (available.asData?.value == true) return null;
     return available.isLoading
         ? 'Checking the Android private delivery component.'
-        : 'The SimpleX native component is not installed in this Android test build. Exchange contact codes with QR or copy and paste.';
+        : 'The SimpleX native component is not installed in this Android build. Exchange contact codes with QR or copy and paste.';
   }
   if (!Platform.isLinux) {
-    return 'Private delivery is available only in supported Linux and Android test builds. Manual exchange is available.';
+    return 'Private delivery is available only in supported Linux and Android builds. Manual exchange is available.';
   }
   final paths = _simplexPaths();
   if (!File(paths.host).existsSync() || !File(paths.library).existsSync()) {
-    return 'The SimpleX native component is not installed in this Linux test build. Manual exchange is available.';
+    return 'The SimpleX native component is not installed in this Linux build. Manual exchange is available.';
   }
   return null;
 });
@@ -67,17 +68,85 @@ final contactDeliveryForegroundProvider = Provider.autoDispose<bool>((ref) {
       state == AppLifecycleState.inactive;
 });
 
-final contactDeliveryScopeProvider = Provider<ContactScope?>((ref) {
-  final current = ref.watch(contactScopeProvider);
+/// Why private delivery is usable or not right now. Presentation-only: every
+/// transport operation is still gated by [contactDeliveryScopeProvider].
+sealed class SimplexDeliveryStatus {
+  const SimplexDeliveryStatus();
+
+  String get message => switch (this) {
+    SimplexDeliveryChecking() => 'Checking private delivery availability.',
+    SimplexDeliveryPreferenceUnavailable() =>
+      'Could not read your private delivery setting. Retry in Contact options.',
+    SimplexDeliveryTurnedOff() =>
+      'Private delivery is turned off. Turn it on in Contact options.',
+    SimplexDeliveryNotInstalled(:final reason) => reason,
+    SimplexDeliveryTorBlocked() =>
+      'Private delivery is unavailable while Tor is enabled.',
+    SimplexDeliveryForegroundOnly() =>
+      'Private delivery is paused while the wallet is in the background.',
+    SimplexDeliveryReady() => '',
+  };
+}
+
+class SimplexDeliveryChecking extends SimplexDeliveryStatus {
+  const SimplexDeliveryChecking();
+}
+
+class SimplexDeliveryTurnedOff extends SimplexDeliveryStatus {
+  const SimplexDeliveryTurnedOff();
+}
+
+class SimplexDeliveryPreferenceUnavailable extends SimplexDeliveryStatus {
+  const SimplexDeliveryPreferenceUnavailable();
+}
+
+class SimplexDeliveryNotInstalled extends SimplexDeliveryStatus {
+  const SimplexDeliveryNotInstalled(this.reason);
+
+  final String reason;
+}
+
+class SimplexDeliveryTorBlocked extends SimplexDeliveryStatus {
+  const SimplexDeliveryTorBlocked();
+}
+
+class SimplexDeliveryForegroundOnly extends SimplexDeliveryStatus {
+  const SimplexDeliveryForegroundOnly();
+}
+
+class SimplexDeliveryReady extends SimplexDeliveryStatus {
+  const SimplexDeliveryReady();
+}
+
+final simplexDeliveryStatusProvider = Provider<SimplexDeliveryStatus>((ref) {
+  final preference = ref.watch(simplexDeliveryEnabledProvider);
+  if (preference.isLoading) return const SimplexDeliveryChecking();
+  if (preference.hasError) {
+    return const SimplexDeliveryPreferenceUnavailable();
+  }
+  if (preference.asData?.value != true) {
+    return const SimplexDeliveryTurnedOff();
+  }
+  final installation = ref.watch(contactDeliveryUnavailableReasonProvider);
+  if (installation != null) return SimplexDeliveryNotInstalled(installation);
   final privacy = ref.watch(networkPrivacyProvider);
-  if (!ref.watch(contactDeliveryForegroundProvider) ||
-      (!Platform.isLinux && !Platform.isAndroid) ||
-      privacy.torEnabled ||
+  if (privacy.torEnabled ||
       privacy.targetTorEnabled == true ||
       privacy.status != NetworkPrivacyConnectionStatus.off) {
-    return null;
+    return const SimplexDeliveryTorBlocked();
   }
-  return current;
+  if (!ref.watch(contactDeliveryForegroundProvider)) {
+    return const SimplexDeliveryForegroundOnly();
+  }
+  return const SimplexDeliveryReady();
+});
+
+/// Delivery transport is allowed only while private delivery is ready and the
+/// contact scope itself is available.
+final contactDeliveryScopeProvider = Provider<ContactScope?>((ref) {
+  final status = ref.watch(simplexDeliveryStatusProvider);
+  if (status is! SimplexDeliveryReady) return null;
+  return ref.watch(contactScopeProvider);
 });
 
 final contactBindingCoordinatorProvider = Provider.autoDispose((ref) {
@@ -130,7 +199,7 @@ final simplexNativeTransportProvider = FutureProvider.autoDispose<SimplexNativeT
   if (unavailable != null) throw ContactFailure(unavailable);
   if (scope == null) {
     throw const ContactFailure(
-      'Private delivery needs an unlocked test account and a supported network route.',
+      'Private delivery needs an unlocked software account and a supported network route.',
     );
   }
   final paths = _simplexPaths();

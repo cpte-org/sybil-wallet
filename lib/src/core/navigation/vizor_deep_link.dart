@@ -1,7 +1,8 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 enum VizorDeepLinkRoute { home, paymentLink }
 
 const kVizorDeeplinkBaseUrlEnvKey = 'VIZOR_DEEPLINK_BASE_URL';
-const kDefaultVizorDeeplinkBaseUrl = 'https://link.vizor.cash';
+const kDefaultVizorDeeplinkBaseUrl = 'https://sybil.cash';
 
 /// The trusted HTTPS boundary and exact in-app route allowlist for Vizor links.
 abstract final class VizorDeepLink {

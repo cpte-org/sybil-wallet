@@ -92,7 +92,7 @@ fn exchange(network: Network) -> (Verified, Verified, Verified, Verified) {
 
 #[test]
 fn four_builders_round_trip_and_preserve_the_exact_transcript() {
-    for network in [Network::Test, Network::Regtest] {
+    for network in [Network::Main, Network::Test, Network::Regtest] {
         let (ask, offer, consent, delivery) = exchange(network);
         let got = verify(
             Role::Delivery,
@@ -123,6 +123,23 @@ fn four_builders_round_trip_and_preserve_the_exact_transcript() {
         assert_eq!(offer.suggestion.as_deref(), Some("Carol"));
         assert!(ask.endpoint_hash.is_none());
         assert!(consent.endorsement_hash.is_none());
+        for other in [Network::Main, Network::Test, Network::Regtest] {
+            if other == network {
+                continue;
+            }
+            assert!(verify(
+                Role::Delivery,
+                other,
+                &id(1),
+                &id(2),
+                Some(&ask.request_json),
+                None,
+                &delivery.packet_json,
+                NOW,
+                validate,
+            )
+            .is_err());
+        }
     }
 }
 

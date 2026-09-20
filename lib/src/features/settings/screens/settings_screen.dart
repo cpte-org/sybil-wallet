@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/material.dart' show ExpansionTile;
 import 'dart:async';
 import 'package:flutter/foundation.dart'
@@ -16,8 +16,9 @@ import '../../../core/profile_pictures.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_profile_picture.dart';
-import '../../../core/widgets/familiar_widgets.dart';
+import '../../../core/widgets/sybil_widgets.dart';
 import '../../../core/widgets/app_pane_modal_overlay.dart';
+import '../../../core/config/swap_feature_config.dart';
 import '../../../providers/account_provider.dart';
 import '../../../core/config/zcash_explorer.dart';
 import '../../../providers/rpc_endpoint_provider.dart';
@@ -151,6 +152,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final themeMode = ref.watch(themeModeProvider);
     final endpoint = ref.watch(rpcEndpointProvider);
     final endpointLabel = endpoint.hostPort;
+    final swapFeatureEnabled = ref.watch(swapFeatureEnabledProvider);
     final explorerLabel = explorerSettingsLabel(
       ref.watch(zcashExplorerProvider),
       networkName: endpoint.networkName,
@@ -197,13 +199,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onEndpoint: () => context.push('/settings/endpoint'),
                 onExplorer: () => context.push('/settings/explorer'),
                 onNames: () => context.push('/settings/names'),
+                onExchange: swapFeatureEnabled
+                    ? () => context.push('/swap')
+                    : null,
                 onAccountName: hasActiveAccount
                     ? () => _showModal(_SettingsModalType.accountName)
                     : null,
                 onProfilePicture: hasActiveAccount
                     ? () => _showModal(_SettingsModalType.profilePicture)
                     : null,
-                onAddressBook: () => context.push('/people'),
                 onLinkMobile: () => context.push('/settings/link-mobile'),
                 onTheme: () => _showModal(_SettingsModalType.theme),
                 onUpdates: updateState == null
@@ -317,9 +321,9 @@ class _SettingsPane extends StatelessWidget {
     required this.onEndpoint,
     required this.onExplorer,
     required this.onNames,
+    required this.onExchange,
     required this.onAccountName,
     required this.onProfilePicture,
-    required this.onAddressBook,
     required this.onLinkMobile,
     required this.onTheme,
     required this.onUpdates,
@@ -343,9 +347,9 @@ class _SettingsPane extends StatelessWidget {
   final VoidCallback onEndpoint;
   final VoidCallback onExplorer;
   final VoidCallback onNames;
+  final VoidCallback? onExchange;
   final VoidCallback? onAccountName;
   final VoidCallback? onProfilePicture;
-  final VoidCallback onAddressBook;
   final VoidCallback onLinkMobile;
   final VoidCallback onTheme;
   final VoidCallback? onUpdates;
@@ -366,7 +370,7 @@ class _SettingsPane extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: AppSpacing.sm),
-              FamiliarPageHeader(
+              SybilPageHeader(
                 title: GoRouterState.of(context).uri.path.endsWith('/security')
                     ? 'Keep what’s yours.'
                     : 'Your wallet, your way.',
@@ -389,9 +393,9 @@ class _SettingsPane extends StatelessWidget {
                 onEndpoint: onEndpoint,
                 onExplorer: onExplorer,
                 onNames: onNames,
+                onExchange: onExchange,
                 onAccountName: onAccountName,
                 onProfilePicture: onProfilePicture,
-                onAddressBook: onAddressBook,
                 onLinkMobile: onLinkMobile,
                 onTheme: onTheme,
                 onUpdates: onUpdates,
@@ -425,9 +429,9 @@ class _SettingsList extends StatelessWidget {
     required this.onEndpoint,
     required this.onExplorer,
     required this.onNames,
+    required this.onExchange,
     required this.onAccountName,
     required this.onProfilePicture,
-    required this.onAddressBook,
     required this.onLinkMobile,
     required this.onTheme,
     required this.onUpdates,
@@ -451,9 +455,9 @@ class _SettingsList extends StatelessWidget {
   final VoidCallback onEndpoint;
   final VoidCallback onExplorer;
   final VoidCallback onNames;
+  final VoidCallback? onExchange;
   final VoidCallback? onAccountName;
   final VoidCallback? onProfilePicture;
-  final VoidCallback onAddressBook;
   final VoidCallback onLinkMobile;
   final VoidCallback onTheme;
   final VoidCallback? onUpdates;
@@ -475,7 +479,7 @@ class _SettingsList extends StatelessWidget {
         _SettingsRow(
           iconName: AppIcons.users,
           label: 'Connection backup',
-          subtitle: 'Connected contacts and relationship keys',
+          subtitle: 'Private connections need a separate backup',
           onTap: () => context.push('/contacts/backup'),
         ),
         _SettingsRow(
@@ -539,7 +543,7 @@ class _SettingsList extends StatelessWidget {
             ),
             _SettingsRow(
               iconName: AppIcons.link,
-              label: 'Link Sigil mobile',
+              label: 'Link Sybil mobile',
               onTap: onLinkMobile,
             ),
           ],
@@ -592,7 +596,7 @@ class _SettingsList extends StatelessWidget {
             _SettingsRow(
               iconName: AppIcons.vizor,
               iconGlyphSize: 16.5,
-              label: 'About Sigil',
+              label: 'About Sybil',
               onTap: onAbout,
             ),
             if (onDonation != null)
@@ -637,6 +641,12 @@ class _SettingsList extends StatelessWidget {
           onTap: onEndpoint,
         ),
         _SettingsRow(
+          iconName: AppIcons.endpoint,
+          label: 'Base RPC endpoint',
+          subtitle: 'Connection for Public Zcash names',
+          onTap: () => context.push('/settings/base-endpoint'),
+        ),
+        _SettingsRow(
           iconName: AppIcons.globe,
           label: 'Explorer',
           value: explorerLabel,
@@ -652,7 +662,7 @@ class _SettingsList extends StatelessWidget {
         _SettingsRow(
           iconName: AppIcons.vizor,
           iconGlyphSize: 16.5,
-          label: 'About Sigil',
+          label: 'About Sybil',
           onTap: onAbout,
         ),
         if (onDonation != null)
@@ -671,7 +681,7 @@ class _SettingsList extends StatelessWidget {
             rows: [
               _SettingsRow(
                 iconName: AppIcons.trash,
-                label: 'Uninstall Sigil',
+                label: 'Uninstall Sybil',
                 destructive: true,
                 onTap: onUninstall!,
               ),
@@ -682,17 +692,6 @@ class _SettingsList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SettingsBlock(
-          title: 'Personal',
-          rows: [
-            _SettingsRow(
-              iconName: AppIcons.users,
-              label: 'People',
-              onTap: onAddressBook,
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
         _SettingsBlock(
           title: 'You and your wallet',
           rows: [
@@ -724,6 +723,12 @@ class _SettingsList extends StatelessWidget {
               value: themeLabel,
               onTap: onTheme,
             ),
+            if (onExchange != null)
+              _SettingsRow(
+                iconName: AppIcons.swapArrows,
+                label: 'Exchange ZEC',
+                onTap: onExchange,
+              ),
           ],
         ),
         const SizedBox(height: 24),
@@ -733,7 +738,7 @@ class _SettingsList extends StatelessWidget {
             _SettingsRow(
               iconName: AppIcons.link,
               label: 'Contact options',
-              subtitle: 'Connections, backup and advanced tools',
+              subtitle: 'Private delivery and advanced tools',
               onTap: () => context.push('/settings/contacts'),
             ),
             _SettingsRow(
@@ -978,14 +983,14 @@ class _WindowsUpdateModal extends ConsumerWidget {
     }
     return switch (state.status) {
       WindowsUpdateStatus.checking => 'Checking for updates.',
-      WindowsUpdateStatus.noUpdate => 'Sigil is up to date.',
+      WindowsUpdateStatus.noUpdate => 'Sybil is up to date.',
       WindowsUpdateStatus.available =>
         'Version ${state.availableVersion} is available.',
       WindowsUpdateStatus.downloading =>
         'Downloading ${state.downloadProgress}%.',
       WindowsUpdateStatus.ready =>
         'Version ${state.availableVersion} is ready.',
-      WindowsUpdateStatus.applying => 'Restarting Sigil.',
+      WindowsUpdateStatus.applying => 'Restarting Sybil.',
       WindowsUpdateStatus.failed =>
         state.message.trim().isEmpty
             ? "Couldn't complete the update. Try again."
@@ -1183,7 +1188,7 @@ class _SettingsBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = FamiliarPalette.of(context);
+    final palette = SybilPalette.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1197,7 +1202,7 @@ class _SettingsBlock extends StatelessWidget {
             ),
           ),
         ),
-        FamiliarCard(
+        SybilCard(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

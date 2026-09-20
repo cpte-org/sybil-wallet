@@ -12,6 +12,7 @@ import '../../swap/providers/swap_zec_staging_address_service.dart';
 import '../data/zns_abi.dart';
 import '../data/zns_network_config.dart';
 import '../data/zns_rpc_client.dart';
+import '../data/zns_transaction_preflight.dart';
 import '../data/zns_http_transport.dart';
 import '../data/zns_funding_gateway.dart';
 import '../data/zns_kyber_gateway.dart';
@@ -479,13 +480,6 @@ class ZnsWalletGateway implements ZnsEngineGateway {
     }
 
     ensureQuoteFresh();
-    await rpc.verifyProtocol();
-    if (intent.kind == 'register') {
-      znsCheckRegistrationQuote(
-        intent,
-        await rpc.quoteRegistration(intent.name),
-      );
-    }
     final previouslyReserved = intent.transactions.fold(
       BigInt.zero,
       (sum, tx) => sum + BigInt.parse(tx['feeCeiling'] as String? ?? '0'),
@@ -536,15 +530,16 @@ class ZnsWalletGateway implements ZnsEngineGateway {
       data: prepared['data'] as String,
       value: BigInt.parse(prepared['value'] as String),
     );
-    await rpc.verifyChain();
-    await rpc.request('eth_call', [call.toJson(), 'pending', ?overrides]);
-    final estimate = znsParseQuantity(
-      await rpc.request('eth_estimateGas', [
-        call.toJson(),
-        'pending',
-        ?overrides,
-      ]),
-    );
+    final preflight = ZnsTransactionPreflight(rpc);
+    final estimate = (await preflight.run(
+      call: call,
+      overrides: overrides,
+      ensureAuthorized: ensureAuthorized,
+      hasAtomicSwap: isAtomic && swap != null,
+      registrationName: intent.kind == 'register' ? intent.name : null,
+      checkQuote: (quote) => znsCheckRegistrationQuote(intent, quote),
+      routeExpiresAt: quoteExpiresAt,
+    ))!;
     final gas =
         estimate * BigInt.from(120) ~/ BigInt.from(100) +
         BigInt.from(isAtomic ? 25000 : 0);
@@ -583,18 +578,27 @@ class ZnsWalletGateway implements ZnsEngineGateway {
       );
     }
     ensureAuthorized();
+    final dbPath = await getWalletDbPath();
+    ensureQuoteFresh();
+    // Re-read a fresh canonical block after fees, nonce and policy checks.
+    // Check the bond and the exact transaction against that same context.
+    await preflight.run(
+      call: call,
+      overrides: overrides,
+      ensureAuthorized: ensureAuthorized,
+      hasAtomicSwap: isAtomic && swap != null,
+      registrationName: intent.kind == 'register' ? intent.name : null,
+      checkQuote: (quote) => znsCheckRegistrationQuote(intent, quote),
+      gasLimit: gas,
+      fees: fees,
+      routeExpiresAt: quoteExpiresAt,
+    );
+    ensureAuthorized();
+    ensureQuoteFresh();
     final bytes = await _secretBytes(ref, accountUuid);
     try {
-      final dbPath = await getWalletDbPath();
       ensureAuthorized();
       ensureQuoteFresh();
-      if (intent.kind == 'register') {
-        znsCheckRegistrationQuote(
-          intent,
-          await rpc.quoteRegistration(intent.name),
-        );
-        ensureAuthorized();
-      }
       final signed =
           jsonDecode(
                 await rust.znsSign(

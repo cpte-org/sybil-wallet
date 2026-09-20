@@ -1,4 +1,4 @@
-//! Experimental, contact-only direct exchange. No wallet authority or storage.
+//! Contact-only direct exchange. No wallet authority or storage.
 //! Strict signature/encoding profile adapted from the research interop-rust
 //! verifier; see README.md for provenance and caller responsibilities.
 
@@ -20,6 +20,7 @@ const EXCHANGE_DOMAIN: &str = "zcash-contact/exchange";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Network {
+    Main,
     Test,
     Regtest,
 }
@@ -27,14 +28,16 @@ pub enum Network {
 impl Network {
     pub fn from_api_name(value: &str) -> Result<Self, &'static str> {
         match value {
+            "main" => Ok(Self::Main),
             "test" => Ok(Self::Test),
             "regtest" => Ok(Self::Regtest),
-            _ => Err("Contacts are available only on testnet and regtest."),
+            _ => Err("Unsupported Zcash contact network."),
         }
     }
 
     pub fn wire_name(self) -> &'static str {
         match self {
+            Self::Main => "zcash-mainnet",
             Self::Test => "zcash-testnet",
             Self::Regtest => "zcash-regtest",
         }

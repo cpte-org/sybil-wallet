@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/painting.dart';
 
 import '../primitives.dart';
@@ -45,30 +45,30 @@ class AppBorderColors {
   final Color brandCrimsonStrong;
 
   static const dark = AppBorderColors(
-    subtle: FamiliarPrimitives.lineDark,
+    subtle: SybilPrimitives.lineDark,
     subtleOpacity: Color(0x33EDF1DE),
     inverseOpacity: Color(0x262C3D31),
-    regular: FamiliarPrimitives.lineDark,
-    medium: FamiliarPrimitives.mutedDark,
-    strong: FamiliarPrimitives.accentDark,
-    utilityDestructive: FamiliarPrimitives.errorDark,
-    utilityDestructiveSubtle: FamiliarPrimitives.errorSurfaceDark,
-    utilitySuccess: FamiliarPrimitives.accentDark,
-    utilityPositiveStrong: FamiliarPrimitives.accentDark,
-    brandCrimsonStrong: FamiliarPrimitives.accentDark,
+    regular: SybilPrimitives.lineDark,
+    medium: SybilPrimitives.mutedDark,
+    strong: SybilPrimitives.accentDark,
+    utilityDestructive: SybilPrimitives.errorDark,
+    utilityDestructiveSubtle: SybilPrimitives.errorSurfaceDark,
+    utilitySuccess: SybilPrimitives.accentDark,
+    utilityPositiveStrong: SybilPrimitives.accentDark,
+    brandCrimsonStrong: SybilPrimitives.accentDark,
   );
 
   static const light = AppBorderColors(
-    subtle: FamiliarPrimitives.lineLight,
+    subtle: SybilPrimitives.lineLight,
     subtleOpacity: Color(0x26243B30),
     inverseOpacity: Color(0x1AFFFFF9),
-    regular: FamiliarPrimitives.lineLight,
-    medium: FamiliarPrimitives.mutedLight,
-    strong: FamiliarPrimitives.accentLight,
-    utilityDestructive: FamiliarPrimitives.errorLight,
-    utilityDestructiveSubtle: FamiliarPrimitives.errorSurfaceLight,
-    utilitySuccess: FamiliarPrimitives.accentLight,
-    utilityPositiveStrong: FamiliarPrimitives.accentLight,
-    brandCrimsonStrong: FamiliarPrimitives.accentLight,
+    regular: SybilPrimitives.lineLight,
+    medium: SybilPrimitives.mutedLight,
+    strong: SybilPrimitives.accentLight,
+    utilityDestructive: SybilPrimitives.errorLight,
+    utilityDestructiveSubtle: SybilPrimitives.errorSurfaceLight,
+    utilitySuccess: SybilPrimitives.accentLight,
+    utilityPositiveStrong: SybilPrimitives.accentLight,
+    brandCrimsonStrong: SybilPrimitives.accentLight,
   );
 }

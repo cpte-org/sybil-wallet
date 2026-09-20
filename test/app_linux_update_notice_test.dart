@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,9 +20,9 @@ void main() {
     await _pumpUpdateNotice(tester, torEnabled: false);
 
     expect(find.byType(UnlockScreen), findsOneWidget);
-    expect(find.text('Upstream Vizor 1.2.3 is available.'), findsOneWidget);
+    expect(find.text('Sybil 1.2.3 is available.'), findsOneWidget);
     expect(find.text('View release'), findsOneWidget);
-    expect(find.textContaining('outside Sigil’s Tor connection'), findsNothing);
+    expect(find.textContaining('outside Sybil’s Tor connection'), findsNothing);
   });
 
   testWidgets('warns about the external browser while Tor is on', (
@@ -32,8 +32,8 @@ void main() {
 
     expect(
       find.text(
-        'Upstream Vizor 1.2.3 is available. The release page opens in your browser, '
-        'outside Sigil’s Tor connection.',
+        'Sybil 1.2.3 is available. The release page opens in your browser, '
+        'outside Sybil’s Tor connection.',
       ),
       findsOneWidget,
     );
@@ -60,7 +60,7 @@ Future<void> _pumpUpdateNotice(
             buildNumber: 123,
             releaseTag: 'release/v1.2.3',
             releaseUrl:
-                'https://github.com/chainapsis/vizor-wallet/releases/tag/release/v1.2.3',
+                'https://github.com/cpte-org/sybil-wallet/releases/tag/release/v1.2.3',
             appImageUrl: 'https://updates.example/Vizor.AppImage',
             sha256Url: 'https://updates.example/Vizor.AppImage.sha256',
             signatureUrl: 'https://updates.example/Vizor.AppImage.asc',

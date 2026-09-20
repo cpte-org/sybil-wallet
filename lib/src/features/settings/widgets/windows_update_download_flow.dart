@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -31,7 +31,7 @@ Future<void> startWindowsUpdateDownload({
           context,
           title: 'Software updates unavailable over Tor',
           message:
-              'Sigil kept direct requests blocked. Retry updates in Settings, '
+              'Sybil kept direct requests blocked. Retry updates in Settings, '
               'or turn off Tor and try the download again.',
         );
         return;
@@ -81,7 +81,7 @@ Future<void> _showTorDisableError(BuildContext context) {
     context,
     title: "Couldn't turn off Tor",
     message:
-        'Tor remains on, so Sigil kept the update blocked. Try again, or turn '
+        'Tor remains on, so Sybil kept the update blocked. Try again, or turn '
         'off Tor in Settings before downloading.',
   );
 }
@@ -111,7 +111,7 @@ class _WindowsUpdatePrivacyChoiceDialog extends StatelessWidget {
         children: [
           Text(
             'Updating over Tor may take longer. Turning Tor off switches '
-            'all Sigil network requests to a direct connection.',
+            'all Sybil network requests to a direct connection.',
             style: AppTypography.bodyMedium.copyWith(
               color: context.colors.text.secondary,
             ),

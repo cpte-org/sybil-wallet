@@ -85,3 +85,10 @@ app.*.map.json
 # Generated when selecting Linux release flavors.
 /linux/FlavorOverrides.cmake
 .design-refs/
+
+# Private release signing credentials; never include in source or assets.
+.local-release-signing/
+
+# Generated Python tooling bytecode.
+__pycache__/
+*.pyc

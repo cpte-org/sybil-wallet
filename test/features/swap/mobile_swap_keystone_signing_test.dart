@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 @Tags(['mobile'])
 library;
 
@@ -1096,6 +1097,7 @@ class _FakeSwapDepositSender implements SwapDepositSender {
   Future<SwapDepositBroadcastResult> sendZecDeposit({
     required String accountUuid,
     required SwapQuote quote,
+    BigInt? maximumFeeZatoshi,
   }) async {
     return const SwapDepositBroadcastResult(
       txHash: 'mobile-zec-deposit-tx',

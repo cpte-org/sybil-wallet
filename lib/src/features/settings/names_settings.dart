@@ -8,10 +8,11 @@ import '../../core/layout/app_pane_scroll_scaffold.dart';
 import '../../core/layout/mobile/mobile_top_nav.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_button.dart';
-import '../../core/widgets/familiar_widgets.dart';
+import '../../core/widgets/sybil_widgets.dart';
 import '../zns/application/zns_controller.dart';
 import '../zns/presentation/zns_screen.dart';
 import '../zns/presentation/public_name_lookup_card.dart';
+import 'screens/settings_base_endpoint_screen.dart';
 
 class NamesSettingsScreen extends ConsumerWidget {
   const NamesSettingsScreen({super.key});
@@ -27,12 +28,12 @@ class NamesSettingsScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const FamiliarPageHeader(
+            const SybilPageHeader(
               title: 'Public Zcash names',
               subtitle: 'Your .zec names and the people you find through them.',
             ),
             const SizedBox(height: AppSpacing.md),
-            FamiliarCard(
+            SybilCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -55,6 +56,25 @@ class NamesSettingsScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
             PublicNameLookupCard(configuration: data.configuration),
             const SizedBox(height: AppSpacing.md),
+            SybilCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Current connection: ${baseRpcEndpointLabel(data.configuration.rpcUrl)}',
+                    style: AppTypography.bodySmall,
+                  ),
+                  const SizedBox(height: AppSpacing.s),
+                  AppButton(
+                    key: const ValueKey('settings_names_base_endpoint'),
+                    variant: AppButtonVariant.secondary,
+                    onPressed: () => context.push('/settings/base-endpoint'),
+                    child: const Text('Base RPC endpoint'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
             if (data.error != null)
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.sm),
@@ -69,26 +89,36 @@ class NamesSettingsScreen extends ConsumerWidget {
               const Padding(
                 padding: EdgeInsets.all(AppSpacing.sm),
                 child: Text(
-                  'Unlock the wallet and finish or archive any pending Names operation before changing settings.',
+                  'Changing the deployment requires an unlocked wallet with no pending Names operation.',
                 ),
               ),
             ExpansionTile(
-              title: const Text('Connection details'),
-              subtitle: const Text('Registry and network settings'),
+              title: const Text('Advanced deployment settings'),
+              subtitle: const Text('Contract addresses and network'),
               initiallyExpanded: data.configuration.registryAddress.isEmpty,
               tilePadding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.sm,
               ),
               children: [
                 ZnsConfigurationForm(
-                  key: ValueKey(
-                    '${data.configuration.registryAddress}:${data.configuration.chainId}',
-                  ),
+                  key: ObjectKey(data.configuration),
                   initial: data.configuration,
+                  showRpcEndpoint: false,
                   enabled: !data.isBusy && !data.isLocked && !pending,
-                  onSave: ref
+                  onSave: (input) => ref
                       .read(znsControllerProvider.notifier)
-                      .saveConfiguration,
+                      .saveConfiguration(
+                        ZnsConfigurationInput(
+                          rpcUrl: ref
+                              .read(znsControllerProvider)
+                              .configuration
+                              .rpcUrl,
+                          chainId: input.chainId,
+                          registryAddress: input.registryAddress,
+                          tokenAddress: input.tokenAddress,
+                          delegateAddress: input.delegateAddress,
+                        ),
+                      ),
                 ),
               ],
             ),

@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -26,7 +27,7 @@ import 'fakes/fake_sync_notifier.dart';
 // the link stack lands on top of this PR, and every one of them resolves from
 // this bootstrap, so the file keeps passing as the host gains lanes.
 void main() {
-  const homeLink = 'https://link.vizor.cash';
+  const homeLink = 'https://sybil.cash';
 
   const account = AccountInfo(
     uuid: 'account-1',

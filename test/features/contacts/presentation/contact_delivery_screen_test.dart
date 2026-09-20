@@ -49,6 +49,8 @@ class _Repository implements ContactDeliveryRepository {
 class _Transport extends SimplexNativeTransport {
   _Transport() : super(scope: _scope, networkAllowed: () => true);
   int sends = 0;
+  int connections = 0;
+  int invitations = 0;
   final updates = StreamController<int>.broadcast();
   @override
   Stream<int> get refreshes => updates.stream;
@@ -62,6 +64,17 @@ class _Transport extends SimplexNativeTransport {
   Future<void> submit(String peer, String id, String packet) async {
     sends++;
   }
+
+  @override
+  Future<String> createInvitation() async {
+    invitations++;
+    return 'simplex:/invitation#test-link';
+  }
+
+  @override
+  Future<void> connect(String invitation) async {
+    connections++;
+  }
 }
 
 Future<void> _show(
@@ -71,6 +84,7 @@ Future<void> _show(
   required Future<SimplexNativeTransport> Function() open,
   _Repository? repository,
   String? unavailable,
+  SimplexDeliveryStatus status = const SimplexDeliveryReady(),
 }) async {
   tester.view.physicalSize = const Size(1200, 1000);
   tester.view.devicePixelRatio = 1;
@@ -132,6 +146,11 @@ Future<void> _show(
         ),
         contactDeliveryScopeProvider.overrideWithValue(scope),
         contactDeliveryUnavailableReasonProvider.overrideWithValue(unavailable),
+        simplexDeliveryStatusProvider.overrideWithValue(
+          unavailable == null
+              ? status
+              : SimplexDeliveryNotInstalled(unavailable),
+        ),
         contactDeliveryCoordinatorProvider.overrideWithValue(coordinator),
         simplexNativeTransportProvider.overrideWith((_) => open()),
       ],
@@ -142,7 +161,11 @@ Future<void> _show(
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  if (status is SimplexDeliveryChecking) {
+    await tester.pump();
+  } else {
+    await tester.pumpAndSettle();
+  }
 }
 
 void main() {
@@ -249,25 +272,82 @@ void main() {
     expect(find.text('Try again'), findsOneWidget);
   });
   testWidgets(
-    'advanced tools off never opens transport and offers code exchange',
+    'guided setup works with advanced tools off and requires connect approval',
     (tester) async {
       var opens = 0;
+      final transport = _Transport();
+      addTearDown(transport.updates.close);
       await _show(
         tester,
         open: () async {
           opens++;
-          return _Transport();
+          return transport;
         },
       );
-      expect(opens, 0);
-      expect(find.text('Connection tools'), findsOneWidget);
-      expect(find.byType(ContactCodeInput), findsNothing);
+      expect(opens, 1);
+      expect(find.text('Create a connection code'), findsOneWidget);
+      expect(find.byType(ContactCodeInput), findsOneWidget);
       expect(find.byType(ContactConnectionBindingPanel), findsNothing);
-      await tester.tap(find.text('Exchange a contact code'));
+      expect(find.text('Open the approved contact code'), findsNothing);
+      expect(find.text('Send a contact code'), findsNothing);
+      await tester.tap(find.text('Create a connection code'));
       await tester.pumpAndSettle();
-      expect(find.text('exchange route'), findsOneWidget);
+      expect(transport.invitations, 1);
+      final output = tester.widget<ContactCodeOutput>(
+        find.byType(ContactCodeOutput),
+      );
+      expect(output.advanced, isFalse);
+      final input = tester.widget<ContactCodeInput>(
+        find.byType(ContactCodeInput),
+      );
+      expect(input.advanced, isFalse);
+      await input.onRead('simplex:/invitation#other-person');
+      await tester.pumpAndSettle();
+      expect(transport.connections, 0);
+      expect(transport.sends, 0);
+      await tester.ensureVisible(find.text('Connect'));
+      await tester.tap(find.text('Connect'));
+      await tester.pumpAndSettle();
+      expect(transport.connections, 1);
+      expect(transport.sends, 0);
     },
   );
+
+  for (final status in <SimplexDeliveryStatus>[
+    const SimplexDeliveryChecking(),
+    const SimplexDeliveryTurnedOff(),
+    const SimplexDeliveryPreferenceUnavailable(),
+    const SimplexDeliveryTorBlocked(),
+    const SimplexDeliveryForegroundOnly(),
+  ]) {
+    testWidgets(
+      'delivery explains ${status.runtimeType} without opening native',
+      (tester) async {
+        var opens = 0;
+        await _show(
+          tester,
+          scope: null,
+          status: status,
+          open: () async {
+            opens++;
+            return _Transport();
+          },
+        );
+        expect(opens, 0);
+        expect(find.text(status.message), findsOneWidget);
+        expect(
+          find.text(
+            'Unlock a supported software test account to use private delivery. You can still save a name and address in People.',
+          ),
+          findsNothing,
+        );
+        if (status is SimplexDeliveryChecking) {
+          expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        }
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+  }
 
   testWidgets(
     'native failure hides connection and send forms and supports retry',

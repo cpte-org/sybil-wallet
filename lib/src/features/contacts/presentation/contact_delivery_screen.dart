@@ -10,7 +10,7 @@ import '../../../core/layout/app_form_factor.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/layout/app_main_sidebar.dart';
 import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/familiar_widgets.dart';
+import '../../../core/widgets/sybil_widgets.dart';
 import '../application/contact_delivery_providers.dart';
 import '../application/contact_ui_preferences.dart';
 import '../domain/contact_delivery.dart';
@@ -51,33 +51,28 @@ class _ContactDeliveryScreenState extends ConsumerState<ContactDeliveryScreen>
 
   @override
   Widget build(BuildContext context) {
-    final advanced =
-        ref.watch(contactAdvancedToolsProvider).asData?.value == true;
-    final scope = advanced ? ref.watch(contactDeliveryScopeProvider) : null;
-    final unavailable = advanced
-        ? ref.watch(contactDeliveryUnavailableReasonProvider)
-        : null;
+    final scope = ref.watch(contactDeliveryScopeProvider);
+    final status = ref.watch(simplexDeliveryStatusProvider);
     ref.listen(contactDeliveryScopeProvider, (previous, next) {
       if (previous != null && previous != next) _paused = true;
     });
-    final content = !advanced
-        ? const _DeliveryUnavailable(
-            title: 'Connection tools',
-            message:
-                'Advanced contact tools are off. You can still connect '
-                'with someone by exchanging a contact code.',
-          )
-        : unavailable != null
+    final content = status is! SimplexDeliveryReady
         ? _DeliveryUnavailable(
-            title: 'Private delivery isn’t available',
-            message: unavailable,
+            title: switch (status) {
+              SimplexDeliveryChecking() => 'Checking private delivery',
+              SimplexDeliveryTurnedOff() => 'Private delivery is turned off',
+              SimplexDeliveryForegroundOnly() => 'Private delivery is paused',
+              _ => 'Private delivery isn’t available',
+            },
+            message: status.message,
+            loading: status is SimplexDeliveryChecking,
           )
         : scope == null
         ? const _DeliveryUnavailable(
             title: 'Private delivery is paused',
             message:
-                'This feature needs an unlocked supported test account and '
-                'a direct network connection.',
+                'Unlock a supported software test account to use private '
+                'delivery. You can still save a name and address in People.',
           )
         : _paused
         ? _DeliveryUnavailable(
@@ -138,8 +133,8 @@ class _DeliveryUnavailable extends StatelessWidget {
   Widget build(BuildContext context) {
     return _DeliveryLayout(
       children: [
-        FamiliarPageHeader(title: title),
-        FamiliarCard(
+        SybilPageHeader(title: title),
+        SybilCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -153,7 +148,7 @@ class _DeliveryUnavailable extends StatelessWidget {
               Text(
                 message,
                 style: AppTypography.bodyMedium.copyWith(
-                  color: FamiliarPalette.of(context).muted,
+                  color: SybilPalette.of(context).muted,
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -162,8 +157,14 @@ class _DeliveryUnavailable extends StatelessWidget {
                 runSpacing: AppSpacing.s,
                 children: [
                   AppButton(
-                    onPressed: () => context.push('/contacts/exchange'),
-                    child: const Text('Exchange a contact code'),
+                    onPressed: () => context.canPop()
+                        ? context.pop()
+                        : context.go('/contacts/exchange'),
+                    child: Text(
+                      context.canPop()
+                          ? 'Back to your exchange'
+                          : 'Exchange a contact code',
+                    ),
                   ),
                   if (onRetry != null)
                     AppButton(
@@ -231,6 +232,9 @@ class _DeliveryViewState extends ConsumerState<_DeliveryView>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_receiveRefresh());
+    });
   }
 
   @override
@@ -365,7 +369,12 @@ class _DeliveryViewState extends ConsumerState<_DeliveryView>
 
   @override
   Widget build(BuildContext context) {
+    final advanced =
+        ref.watch(contactAdvancedToolsProvider).asData?.value == true;
     final native = ref.watch(simplexNativeTransportProvider);
+    ref.listen(simplexNativeTransportProvider, (_, next) {
+      if (next.hasValue && !next.hasError) unawaited(_receiveRefresh());
+    });
     final refresh = ref.watch(contactDeliveryRefreshProvider);
     ref.listen(contactDeliveryRefreshProvider, (_, next) {
       if (next.hasValue && !next.hasError) unawaited(_receiveRefresh());
@@ -391,15 +400,14 @@ class _DeliveryViewState extends ConsumerState<_DeliveryView>
         loading: true,
       );
     }
-    final palette = FamiliarPalette.of(context);
+    final palette = SybilPalette.of(context);
     return _DeliveryLayout(
       children: [
-        const FamiliarPageHeader(
+        const SybilPageHeader(
           title: 'Private delivery',
-          eyebrow: 'Advanced contact tools',
-          subtitle: 'Set up a connection, then choose what to share.',
+          subtitle: 'Connect once, then exchange contact details privately.',
         ),
-        FamiliarCard(
+        SybilCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -409,7 +417,9 @@ class _DeliveryViewState extends ConsumerState<_DeliveryView>
               ),
               const SizedBox(height: AppSpacing.s),
               Text(
-                'Share a connection code or open one they sent you.',
+                'Share this code with the person you intend to connect with, '
+                'or scan a code they sent you. Contact details are only sent '
+                'after you approve them.',
                 style: AppTypography.bodyMedium.copyWith(color: palette.muted),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -438,7 +448,7 @@ class _DeliveryViewState extends ConsumerState<_DeliveryView>
                   data: _invitation!,
                   title: 'Your connection code',
                   enabled: !_busy,
-                  advanced: true,
+                  advanced: advanced,
                   onCopy: _copyCode,
                 ),
               ],
@@ -446,7 +456,7 @@ class _DeliveryViewState extends ConsumerState<_DeliveryView>
               ContactCodeInput(
                 title: 'Open their connection code',
                 enabled: !_busy,
-                advanced: true,
+                advanced: advanced,
                 onRead: (value) async {
                   _check(_epoch);
                   setState(() => _link.text = value);
@@ -455,7 +465,9 @@ class _DeliveryViewState extends ConsumerState<_DeliveryView>
               if (_link.text.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.s),
                 Text(
-                  'Connection code ready.',
+                  'Connect to the person who sent this code? This opens a '
+                  'private delivery connection; it does not accept a contact '
+                  'or send your receiving address.',
                   style: AppTypography.bodySmall.copyWith(color: palette.muted),
                 ),
                 const SizedBox(height: AppSpacing.s),
@@ -470,102 +482,151 @@ class _DeliveryViewState extends ConsumerState<_DeliveryView>
             ],
           ),
         ),
-        const FamiliarCard(
-          child: Material(
-            type: MaterialType.transparency,
-            child: ContactConnectionBindingPanel(),
-          ),
-        ),
-        FamiliarCard(
+        SybilCard(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Send a contact code',
+                _peers.isEmpty
+                    ? 'Waiting for a connection'
+                    : 'Connection available',
                 style: AppTypography.headlineSmall.copyWith(color: palette.ink),
               ),
               const SizedBox(height: AppSpacing.s),
               Text(
-                'Connection labels do not verify a person. Check the '
-                'connection with your recipient before sharing.',
+                _peers.isEmpty
+                    ? 'Both people need to open the wallet to connect. This page updates while it is open.'
+                    : 'Return to your exchange to choose the intended connection and approve what to share.',
                 style: AppTypography.bodyMedium.copyWith(color: palette.muted),
               ),
               const SizedBox(height: AppSpacing.sm),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: AppButton(
-                  variant: AppButtonVariant.secondary,
-                  onPressed: _busy ? null : () => unawaited(_run(_refresh)),
-                  child: const Text('Refresh connections and inbox'),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              DropdownButton<String>(
-                value: _peer,
-                isExpanded: true,
-                hint: Text(
-                  _peers.isEmpty
-                      ? 'No connections loaded'
-                      : 'Choose a connection',
-                ),
-                items: [
-                  for (final peer in _peers)
-                    DropdownMenuItem(
-                      value: peer.id,
-                      child: Text('${peer.label} · ${peer.id}'),
+              Wrap(
+                spacing: AppSpacing.s,
+                runSpacing: AppSpacing.s,
+                children: [
+                  if (_peers.isNotEmpty)
+                    AppButton(
+                      onPressed: _busy
+                          ? null
+                          : () => context.canPop()
+                                ? context.pop()
+                                : context.go('/contacts/exchange'),
+                      child: const Text('Continue to contact exchange'),
                     ),
+                  AppButton(
+                    variant: AppButtonVariant.secondary,
+                    onPressed: _busy ? null : () => unawaited(_run(_refresh)),
+                    child: const Text('Refresh connection status'),
+                  ),
                 ],
-                onChanged: _busy || _peers.isEmpty
-                    ? null
-                    : (value) => setState(() => _peer = value),
               ),
-              const SizedBox(height: AppSpacing.sm),
-              ContactCodeInput(
-                title: 'Open the approved contact code',
-                enabled: !_busy,
-                advanced: true,
-                onRead: (value) async {
-                  _check(_epoch);
-                  if (value.length > contactDeliveryMaxPacketBytes) {
-                    throw const ContactFailure(
-                      'This contact code is too large.',
-                    );
-                  }
-                  setState(() => _packet.text = value);
-                },
-              ),
-              if (_packet.text.isNotEmpty) ...[
+            ],
+          ),
+        ),
+        if (advanced)
+          const SybilCard(
+            child: Material(
+              type: MaterialType.transparency,
+              child: ContactConnectionBindingPanel(),
+            ),
+          ),
+        if (advanced)
+          SybilCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Send a contact code',
+                  style: AppTypography.headlineSmall.copyWith(
+                    color: palette.ink,
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.s),
                 Text(
-                  'Contact code ready. Sending shares it with the '
-                  'selected connection; it does not accept a contact or '
-                  'approve a payment.',
-                  style: AppTypography.bodySmall.copyWith(color: palette.muted),
+                  'Connection labels do not verify a person. Check the '
+                  'connection with your recipient before sharing.',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: palette.muted,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: AppButton(
-                    onPressed: _busy || _peer == null
-                        ? null
-                        : () => unawaited(_run(_send)),
-                    child: const Text('Approve and send code'),
+                    variant: AppButtonVariant.secondary,
+                    onPressed: _busy ? null : () => unawaited(_run(_refresh)),
+                    child: const Text('Refresh connections and inbox'),
                   ),
                 ),
+                const SizedBox(height: AppSpacing.sm),
+                DropdownButton<String>(
+                  value: _peer,
+                  isExpanded: true,
+                  hint: Text(
+                    _peers.isEmpty
+                        ? 'No connections loaded'
+                        : 'Choose a connection',
+                  ),
+                  items: [
+                    for (final peer in _peers)
+                      DropdownMenuItem(
+                        value: peer.id,
+                        child: Text('${peer.label} · ${peer.id}'),
+                      ),
+                  ],
+                  onChanged: _busy || _peers.isEmpty
+                      ? null
+                      : (value) => setState(() => _peer = value),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                ContactCodeInput(
+                  title: 'Open the approved contact code',
+                  enabled: !_busy,
+                  advanced: true,
+                  onRead: (value) async {
+                    _check(_epoch);
+                    if (value.length > contactDeliveryMaxPacketBytes) {
+                      throw const ContactFailure(
+                        'This contact code is too large.',
+                      );
+                    }
+                    setState(() => _packet.text = value);
+                  },
+                ),
+                if (_packet.text.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.s),
+                  Text(
+                    'Contact code ready. Sending shares it with the '
+                    'selected connection; it does not accept a contact or '
+                    'approve a payment.',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: palette.muted,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: AppButton(
+                      onPressed: _busy || _peer == null
+                          ? null
+                          : () => unawaited(_run(_send)),
+                      child: const Text('Approve and send code'),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
         if (_notice != null)
-          FamiliarCard(
+          SybilCard(
             color: palette.lilac,
             child: Text(
               _notice!,
               style: AppTypography.bodyMedium.copyWith(color: palette.ink),
             ),
           ),
-        if (_records.isNotEmpty)
-          FamiliarCard(
+        if (advanced && _records.isNotEmpty)
+          SybilCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

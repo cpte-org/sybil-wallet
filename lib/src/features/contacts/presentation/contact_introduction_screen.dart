@@ -13,7 +13,7 @@ import '../../../core/layout/mobile/mobile_top_nav.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
-import '../../../core/widgets/familiar_widgets.dart';
+import '../../../core/widgets/sybil_widgets.dart';
 import '../application/contact_exchange_controller.dart';
 import '../application/contact_introduction_coordinator.dart';
 import '../application/contact_introduction_providers.dart';
@@ -24,6 +24,7 @@ import '../domain/contact_models.dart';
 import '../domain/contact_packet_kind.dart';
 import 'contact_packet_delivery_controls.dart';
 import 'contact_code_widgets.dart';
+import 'contact_identity_code.dart';
 
 class ContactIntroductionScreen extends ConsumerWidget {
   const ContactIntroductionScreen({super.key});
@@ -39,7 +40,6 @@ class ContactIntroductionScreen extends ConsumerWidget {
             advanced:
                 ref.watch(contactAdvancedToolsProvider).asData?.value == true,
             onConnect: () => context.push('/contacts/exchange'),
-            onSettings: () => context.push('/settings/contacts'),
             onAccepted: () =>
                 ref.read(contactExchangeProvider.notifier).reload(),
             onCopy: SensitiveClipboard.copyText,
@@ -62,9 +62,7 @@ class ContactIntroductionScreen extends ConsumerWidget {
                 ),
           )
         : const Center(
-            child: Text(
-              'Unlock a test-network software account to use introductions.',
-            ),
+            child: Text('Unlock your software account to use introductions.'),
           );
     void back() {
       if (context.canPop()) {
@@ -131,11 +129,10 @@ class ContactIntroductionView extends StatefulWidget {
     this.sendBuilder,
     this.advanced = false,
     this.onConnect,
-    this.onSettings,
   });
   final ContactIntroductionCoordinator coordinator;
   final bool advanced;
-  final VoidCallback? onConnect, onSettings;
+  final VoidCallback? onConnect;
   final Future<void> Function(String)? onCopy;
   final Future<void> Function()? onAccepted;
   final Widget Function(Future<void> Function(String))? inboxBuilder;
@@ -509,7 +506,7 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
     ),
   );
   Widget _picker(String title, String? value, ValueChanged<String?> changed) {
-    final contacts = widget.advanced
+    final contacts = widget.advanced || _task == IntroductionTask.pair
         ? (_overview?.contacts.where((c) => c.canPay).toList() ??
               <VerifiedContact>[])
         : _pairedContacts;
@@ -610,7 +607,7 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
     VoidCallback? action,
   ) => Padding(
     padding: const EdgeInsets.only(bottom: 12),
-    child: FamiliarCard(
+    child: SybilCard(
       child: ListTile(
         contentPadding: EdgeInsets.zero,
         leading: Icon(icon),
@@ -623,7 +620,7 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
     ),
   );
 
-  Widget _pairingNotice(int pairs) => FamiliarCard(
+  Widget _pairingNotice(int pairs) => SybilCard(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -639,7 +636,7 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
         ),
         const SizedBox(height: 8),
         const Text(
-          'For now, that check uses Advanced contact tools in Settings. Saving a name and address does not need it.',
+          'Checking compares the exact keys you and your peer accepted from each other. Saving a name and address does not need it.',
         ),
         const SizedBox(height: 12),
         Wrap(
@@ -649,11 +646,6 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
             AppButton(
               onPressed: widget.onConnect,
               child: const Text('Connect privately'),
-            ),
-            AppButton(
-              variant: AppButtonVariant.ghost,
-              onPressed: widget.onSettings,
-              child: const Text('Contact settings'),
             ),
           ],
         ),
@@ -683,6 +675,13 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
             'Start with the request one of them shared.',
             Icons.people_outline,
             _busy ? null : () => _start(IntroductionTask.offer),
+          ),
+        if (_overview?.contacts.any((c) => c.canPay) ?? false)
+          _choice(
+            'Check a connection',
+            'Confirm a private connection in both directions.',
+            Icons.verified_user_outlined,
+            _busy ? null : () => _start(IntroductionTask.pair),
           ),
         _choice(
           'Open an invitation',
@@ -727,13 +726,13 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const FamiliarPageHeader(
+              const SybilPageHeader(
                 title: 'Introductions',
                 subtitle: 'Meet through someone you know.',
               ),
               const SizedBox(height: AppSpacing.sm),
               if (_busy) const LinearProgressIndicator(),
-              if (!widget.advanced && !active) _guidedOverview(),
+              if (!active || widget.advanced) _guidedOverview(),
               if (!widget.advanced && active) ...[
                 TextButton.icon(
                   onPressed: _busy
@@ -751,7 +750,7 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
                 Text(_stepTitle, style: AppTypography.headlineSmall),
                 const SizedBox(height: 16),
               ],
-              if (widget.inboxBuilder != null && widget.advanced)
+              if (widget.inboxBuilder != null)
                 widget.inboxBuilder!(_importPacket),
               if (active) ...[
                 if (widget.advanced)
@@ -794,15 +793,68 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
                         ? 'Person who asked'
                         : _task == IntroductionTask.request
                         ? 'Who would you like to ask?'
+                        : _task == IntroductionTask.pair
+                        ? 'Who are you checking with?'
                         : 'Person who shared this',
                     _peer,
-                    (v) => _peer = v,
+                    (v) {
+                      _peer = v;
+                      if (_task == IntroductionTask.pair) _outgoing.clear();
+                    },
                   ),
                 if (_task == IntroductionTask.pair) ...[
-                  _text(
-                    'Complete a direct exchange in both directions. Ask your peer for the exact key they accepted from you. Compare both full keys over an independently trusted channel; matching labels or addresses is not enough.',
-                  ),
-                  _field('Your outgoing key accepted by this peer', _outgoing),
+                  if (widget.advanced)
+                    _text(
+                      'Complete a direct exchange in both directions. Ask your peer for the exact key they accepted from you. Compare both full keys over an independently trusted channel; matching labels or addresses is not enough.',
+                    )
+                  else
+                    _text(
+                      'Ask your peer to open People, choose you, and open Check connection. Scan their code in person or paste it from an independently trusted channel. You will review both full keys before confirming.',
+                    ),
+                  if (widget.advanced)
+                    _field('Your outgoing key accepted by this peer', _outgoing)
+                  else ...[
+                    if (_selectedContact != null)
+                      ExpansionTile(
+                        tilePadding: EdgeInsets.zero,
+                        title: const Text('Show the code you accepted'),
+                        children: [
+                          ContactIdentityCode(
+                            key: ValueKey(_selectedContact!.identity),
+                            identity: _selectedContact!.identity,
+                            personLabel: _selectedContact!.label,
+                            enabled: !_busy,
+                            onCopy: widget.onCopy,
+                          ),
+                        ],
+                      ),
+                    ContactCodeInput(
+                      key: ValueKey('connection-check-$_peer'),
+                      title: _outgoing.text.isEmpty
+                          ? 'The exact key your peer accepted from you'
+                          : 'Replace the code your peer shared',
+                      enabled: !_busy && _selectedContact != null,
+                      onRead: (value) async {
+                        _reset();
+                        _outgoing.clear();
+                        try {
+                          final identity = readContactIdentityCode(value);
+                          setState(() {
+                            _outgoing.text = identity;
+                            _error = null;
+                          });
+                        } on FormatException {
+                          setState(() {});
+                          rethrow;
+                        }
+                      },
+                    ),
+                    if (_outgoing.text.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      const Text('Full connection key ready to review'),
+                    ],
+                    const SizedBox(height: 16),
+                  ],
                 ],
                 if (_task == IntroductionTask.offer)
                   _picker(
@@ -871,7 +923,11 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
                 ] else
                   AppButton(
                     onPressed:
-                        !_busy && (widget.advanced || _packet.text.isNotEmpty)
+                        !_busy &&
+                            (widget.advanced ||
+                                (_task == IntroductionTask.pair
+                                    ? _outgoing.text.isNotEmpty
+                                    : _packet.text.isNotEmpty))
                         ? () => unawaited(_run(_prepare))
                         : null,
                     child: const Text('Review details'),
@@ -893,7 +949,7 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
                   if (widget.advanced)
                     ..._identityDetails(review)
                   else ...[
-                    FamiliarCard(
+                    SybilCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -997,9 +1053,7 @@ class _ContactIntroductionViewState extends State<ContactIntroductionView>
                 if (_output != null) ...[
                   const SizedBox(height: AppSpacing.sm),
                   _text(_outputInstruction ?? 'Packet ready.'),
-                  if (widget.advanced &&
-                      widget.sendBuilder != null &&
-                      _outputExpiresAt != null)
+                  if (widget.sendBuilder != null && _outputExpiresAt != null)
                     widget.sendBuilder!(
                       _output!,
                       _outputExpiresAt!,

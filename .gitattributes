@@ -12,3 +12,7 @@
 *.otf binary
 *.woff binary
 *.woff2 binary
+
+# Preserve the byte-for-byte upstream legal texts and recorded SHA-256 values.
+/tools/licensing/licenses/** -text
+/assets/legal/THIRD-PARTY-NOTICES.txt -text

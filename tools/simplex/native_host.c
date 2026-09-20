@@ -1,4 +1,4 @@
-// Anomaly's experimental Linux host for the upstream AGPL SimpleX core.
+// Sybil's experimental Linux host for the upstream AGPL SimpleX core.
 // Private inherited pipes only: no TCP listener, shell, or wallet spending keys.
 #define _POSIX_C_SOURCE 200809L
 #include <dlfcn.h>

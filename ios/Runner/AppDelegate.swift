@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import BackgroundTasks
 import CoreHaptics
 import Flutter
@@ -811,7 +812,7 @@ final class IncomingUriChannelBridge {
   static let shared = IncomingUriChannelBridge()
   static let deeplinkHost =
     (Bundle.main.object(forInfoDictionaryKey: "VizorDeeplinkHost") as? String)?
-    .lowercased() ?? "link.vizor.cash"
+    .lowercased() ?? "sybil.cash"
   private static let paymentLinkPath = "/payment-links/open"
   /// Sanity ceiling, set far above every link this app actually accepts.
   ///

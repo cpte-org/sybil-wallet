@@ -1,5 +1,5 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
-import '../../../core/widgets/familiar_widgets.dart';
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
+import '../../../core/widgets/sybil_widgets.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -1256,7 +1256,7 @@ class _SendComposeBodyState extends ConsumerState<_SendComposeBody> {
                               _addressType != 'error') ...[
                             Row(
                               children: [
-                                FamiliarAvatar(
+                                SybilAvatar(
                                   label: widget.prefill!.label!,
                                   identity:
                                       _contactRecipient?.identity ??

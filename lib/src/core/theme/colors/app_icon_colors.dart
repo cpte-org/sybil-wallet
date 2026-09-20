@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/painting.dart';
 
 import '../primitives.dart';
@@ -45,30 +45,30 @@ class AppIconColors {
   final Color brandCrimson;
 
   static const dark = AppIconColors(
-    accent: FamiliarPrimitives.accentDark,
-    regular: FamiliarPrimitives.textDark,
-    muted: FamiliarPrimitives.mutedDark,
+    accent: SybilPrimitives.accentDark,
+    regular: SybilPrimitives.textDark,
+    muted: SybilPrimitives.mutedDark,
     disabled: Color(0xFF7F9382),
-    inverse: FamiliarPrimitives.onAccentDark,
-    onPrimary: FamiliarPrimitives.onAccentDark,
-    warning: FamiliarPrimitives.warningDark,
-    destructive: FamiliarPrimitives.errorDark,
-    destructiveLight: FamiliarPrimitives.errorDark,
-    success: FamiliarPrimitives.accentDark,
-    brandCrimson: FamiliarPrimitives.accentDark,
+    inverse: SybilPrimitives.onAccentDark,
+    onPrimary: SybilPrimitives.onAccentDark,
+    warning: SybilPrimitives.warningDark,
+    destructive: SybilPrimitives.errorDark,
+    destructiveLight: SybilPrimitives.errorDark,
+    success: SybilPrimitives.accentDark,
+    brandCrimson: SybilPrimitives.accentDark,
   );
 
   static const light = AppIconColors(
-    accent: FamiliarPrimitives.accentLight,
-    regular: FamiliarPrimitives.textLight,
-    muted: FamiliarPrimitives.mutedLight,
+    accent: SybilPrimitives.accentLight,
+    regular: SybilPrimitives.textLight,
+    muted: SybilPrimitives.mutedLight,
     disabled: Color(0xFF899286),
-    inverse: FamiliarPrimitives.onAccentLight,
-    onPrimary: FamiliarPrimitives.onAccentLight,
-    warning: FamiliarPrimitives.warningLight,
-    destructive: FamiliarPrimitives.errorLight,
-    destructiveLight: FamiliarPrimitives.errorLight,
-    success: FamiliarPrimitives.accentLight,
-    brandCrimson: FamiliarPrimitives.accentLight,
+    inverse: SybilPrimitives.onAccentLight,
+    onPrimary: SybilPrimitives.onAccentLight,
+    warning: SybilPrimitives.warningLight,
+    destructive: SybilPrimitives.errorLight,
+    destructiveLight: SybilPrimitives.errorLight,
+    success: SybilPrimitives.accentLight,
+    brandCrimson: SybilPrimitives.accentLight,
   );
 }

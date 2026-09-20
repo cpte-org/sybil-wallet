@@ -1,9 +1,9 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/widgets.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_icon.dart';
-import '../../../core/widgets/familiar_widgets.dart';
+import '../../../core/widgets/sybil_widgets.dart';
 import '../../../core/widgets/review_buttons_stack.dart';
 import '../../../core/widgets/review_list_row.dart';
 import '../../../core/widgets/review_wrap_card.dart';
@@ -136,14 +136,14 @@ class SendReviewContentView extends StatelessWidget {
               'transparent',
               'tex',
             ].contains(recipientAddressType?.toLowerCase()))
-          FamiliarCard(
-            color: FamiliarPalette.of(context).peach,
+          SybilCard(
+            color: SybilPalette.of(context).peach,
             padding: const EdgeInsets.all(AppSpacing.sm),
             child: Text(
               'Public payment destination. The recipient and amount may be '
               'visible on-chain. A private memo is unavailable.',
               style: AppTypography.bodyMedium.copyWith(
-                color: FamiliarPalette.of(context).ink,
+                color: SybilPalette.of(context).ink,
               ),
             ),
           ),

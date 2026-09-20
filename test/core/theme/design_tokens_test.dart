@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zcash_wallet/src/core/layout/app_form_factor.dart';
@@ -236,7 +236,7 @@ void main() {
     expect(AppTypographyMobile.labelSmall, AppTypographyMobile.labelMedium);
   });
 
-  test('semantic colours match the approved Familiar palette', () {
+  test('semantic colours match the approved Sybil palette', () {
     final light = AppThemeData.light.colors;
     final dark = AppThemeData.dark.colors;
 
@@ -312,7 +312,7 @@ void main() {
     expect(dark.sync.lightError, const Color(0xFFF8AAA0));
   });
 
-  test('Familiar text and active controls retain readable contrast', () {
+  test('Sybil text and active controls retain readable contrast', () {
     double contrast(Color foreground, Color background) {
       final a = foreground.computeLuminance();
       final b = background.computeLuminance();
@@ -357,7 +357,7 @@ void main() {
     }
   });
 
-  test('macOS utility colours follow Familiar window surfaces', () {
+  test('macOS utility colours follow Sybil window surfaces', () {
     final light = AppThemeData.light.colors.macosUtility;
     final dark = AppThemeData.dark.colors.macosUtility;
 

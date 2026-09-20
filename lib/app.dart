@@ -1,6 +1,6 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
-import 'src/features/contacts/presentation/familiar_add_person_screen.dart';
-import 'src/features/contacts/presentation/familiar_choose_recipient_screen.dart';
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
+import 'src/features/contacts/presentation/sybil_add_person_screen.dart';
+import 'src/features/contacts/presentation/sybil_choose_recipient_screen.dart';
 import 'dart:async';
 import 'dart:io' show Platform;
 
@@ -10,17 +10,16 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:go_router/go_router.dart';
 import 'src/features/zns/presentation/zns_wallet_screen.dart';
 import 'src/features/contacts/presentation/contact_exchange_screen.dart';
-import 'src/features/contacts/presentation/familiar_people_screen.dart';
+import 'src/features/contacts/presentation/sybil_people_screen.dart';
 import 'src/features/contacts/presentation/contact_introduction_screen.dart';
 import 'src/features/contacts/presentation/contact_delivery_screen.dart';
 import 'src/features/contacts/presentation/contact_backup_screen.dart';
-import 'package:desktop_window_bootstrap/desktop_window_bootstrap.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'src/app_bootstrap.dart';
 import 'src/core/config/swap_feature_config.dart';
 import 'src/core/config/network_config.dart';
-import 'src/core/legal/sigil_legal_notices.dart';
+import 'src/core/legal/sybil_legal_notices.dart';
 import 'src/core/layout/app_layout.dart';
 import 'src/core/navigation/mobile_exit_back_guard.dart';
 import 'src/core/navigation/mobile_onboarding_routes.dart';
@@ -97,6 +96,7 @@ import 'src/features/send/services/send_flow.dart'
         sendStatusRoutePayloadProvider,
         sendStatusTerminalProvider;
 import 'src/features/settings/screens/settings_base_key_screen.dart';
+import 'src/features/settings/screens/settings_base_endpoint_screen.dart';
 import 'src/features/settings/screens/settings_screen.dart';
 import 'src/features/settings/screens/settings_change_password_screen.dart';
 import 'src/features/settings/screens/settings_endpoint_screen.dart';
@@ -144,7 +144,7 @@ void log(String message) => debugPrint('[zcash] $message');
 
 Future<void> initializeZcashWalletRuntime() async {
   WidgetsFlutterBinding.ensureInitialized();
-  registerSigilLegalNotices();
+  registerSybilLegalNotices();
   await SecureStorageDiagnostics.instance.initialize();
   log('runtime: initializing RustLib');
   await RustLib.init();
@@ -167,9 +167,6 @@ Future<void> initializeZcashWalletRuntime() async {
   await initializeDesktopWindow();
   if (isDesktopLayoutPlatform) {
     log('runtime: initializing desktop window visuals');
-    await DesktopWindowBootstrap.initialize(
-      visualStyle: DesktopWindowVisualStyle.opaque,
-    );
     if (!Platform.isWindows) {
       await showDesktopWindow();
     }
@@ -888,7 +885,7 @@ Page<dynamic> buildDesktopSendReviewPage(
 /// Main application routes for the desktop (large-form-factor) tree.
 List<RouteBase> _desktopRoutes(Ref ref) => [
   GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
-  GoRoute(path: '/people', builder: (_, _) => const FamiliarPeopleScreen()),
+  GoRoute(path: '/people', builder: (_, _) => const SybilPeopleScreen()),
   GoRoute(
     path: '/payment-links',
     builder: (_, state) => PaymentLinksScreen(
@@ -1063,7 +1060,7 @@ List<RouteBase> _desktopRoutes(Ref ref) => [
   ),
   GoRoute(
     path: '/people/add',
-    builder: (_, state) => FamiliarAddPersonScreen(
+    builder: (_, state) => SybilAddPersonScreen(
       savedId: state.extra is String ? state.extra as String : null,
     ),
   ),
@@ -1078,7 +1075,7 @@ List<RouteBase> _desktopRoutes(Ref ref) => [
       }
       return MaterialPage(
         key: state.pageKey,
-        child: const FamiliarChooseRecipientScreen(),
+        child: const SybilChooseRecipientScreen(),
       );
     },
   ),
@@ -1176,6 +1173,10 @@ List<RouteBase> _desktopRoutes(Ref ref) => [
   GoRoute(
     path: '/settings/endpoint',
     builder: (_, _) => const SettingsEndpointScreen(),
+  ),
+  GoRoute(
+    path: '/settings/base-endpoint',
+    builder: (_, _) => const SettingsBaseEndpointScreen(),
   ),
   GoRoute(
     path: '/settings/explorer',
@@ -1284,7 +1285,7 @@ class ZcashWalletApp extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
-      title: 'Sigil',
+      title: 'Sybil Beta',
       debugShowCheckedModeBanner: false,
       theme: buildLegacyLightTheme(),
       darkTheme: buildLegacyDarkTheme(),
@@ -2177,7 +2178,7 @@ class _WindowsUpdatePrompt extends StatelessWidget {
         'Update ${state.availableVersion} available',
       WindowsUpdateStatus.downloading => 'Downloading update',
       WindowsUpdateStatus.ready => 'Update ready',
-      WindowsUpdateStatus.applying => 'Restarting Sigil',
+      WindowsUpdateStatus.applying => 'Restarting Sybil',
       WindowsUpdateStatus.failed => 'Update failed',
       _ => 'Update available',
     };
@@ -2189,7 +2190,7 @@ class _WindowsUpdatePrompt extends StatelessWidget {
       WindowsUpdateStatus.downloading =>
         '${state.downloadProgress}% downloaded.',
       WindowsUpdateStatus.ready => 'Restart when you are ready.',
-      WindowsUpdateStatus.applying => 'Applying after Sigil closes.',
+      WindowsUpdateStatus.applying => 'Applying after Sybil closes.',
       WindowsUpdateStatus.failed =>
         state.message.trim().isEmpty
             ? "Couldn't complete the update. Try again."
@@ -2322,10 +2323,10 @@ class _LinuxUpdateNoticeListener extends ConsumerWidget {
           SnackBar(
             content: Text(
               torEnabled
-                  ? 'Upstream Vizor ${update.assetVersion} is available. The release '
-                        'page opens in your browser, outside Sigil’s Tor '
+                  ? 'Sybil ${update.assetVersion} is available. The release '
+                        'page opens in your browser, outside Sybil’s Tor '
                         'connection.'
-                  : 'Upstream Vizor ${update.assetVersion} is available.',
+                  : 'Sybil ${update.assetVersion} is available.',
             ),
             duration: const Duration(seconds: 8),
             action: SnackBarAction(

@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zcash_wallet/src/features/swap/integrations/near_intents/near_intents_one_click_swap_adapter.dart';
 import 'package:zcash_wallet/src/features/swap/models/swap_models.dart';
@@ -5,6 +6,44 @@ import 'package:zcash_wallet/src/features/swap/providers/swap_activity_store.dar
 import 'package:zcash_wallet/src/features/swap/providers/swap_activity_tracker.dart';
 
 void main() {
+  test(
+    'unconfigured service preserves deposited activity with no-resend guidance',
+    () async {
+      final store = _MemorySwapActivityStore();
+      final provider = _StatusSwapProvider({});
+      provider.onGetStatus = (_) async {
+        throw const OneClickApiException(
+          'Missing endpoint',
+          operation: 'configuration',
+        );
+      };
+      final tracker = SwapActivityTracker(
+        activityStore: store,
+        swapProvider: provider,
+      );
+      final intent = _intent(
+        id: 'swap-config',
+        depositAddress: 'deposit-config',
+        status: SwapIntentStatus.depositObserved,
+      );
+      store.savedRecords = [SwapIntentRecord.fromIntent(intent)];
+      final result = await tracker.refreshIntent(
+        accountUuid: 'account-1',
+        currentIntents: [intent],
+        intentId: intent.id,
+      );
+      expect(result.refreshError, contains('not configured'));
+      expect(result.refreshError, contains('Do not send funds again'));
+      expect(result.intents.single.status, SwapIntentStatus.depositObserved);
+      expect(result.intents.single.id, intent.id);
+      expect(
+        store.savedRecords.single.status,
+        SwapIntentStatus.depositObserved,
+      );
+      expect(store.savedRecords.single.statusError, result.refreshError);
+    },
+  );
+
   test('refreshes every open activity for the active account', () async {
     final store = _MemorySwapActivityStore();
     final provider = _StatusSwapProvider({

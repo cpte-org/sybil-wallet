@@ -1,9 +1,8 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import Cocoa
 import FlutterMacOS
 import LocalAuthentication
 import Security
-import desktop_window_bootstrap
 #if DEBUG
 import ScreenCaptureKit
 #endif
@@ -127,9 +126,7 @@ final class WindowAppearanceChannel {
     window?.contentView?.appearance = appearance
     window?.contentViewController?.view.appearance = appearance
     visualEffectView?.appearance = appearance
-    DesktopWindowBootstrapMacOS.setOpaqueBackgroundColor(
-      appWindowBackgroundColor(for: brightness)
-    )
+    window?.backgroundColor = appWindowBackgroundColor(for: brightness)
     window?.invalidateShadow()
     restoreWindowFrameAfterAppearanceChange(frameBeforeAppearance)
   }
@@ -887,7 +884,7 @@ final class DeviceOwnerAuthChannel {
         let arguments = call.arguments as? [String: Any]
         // Fallback mirrors the Dart canonical `kWalletResetDeviceAuthReason`;
         // the Dart side always sends `reason`, so this default is defensive only.
-        let reason = (arguments?["reason"] as? String) ?? "Confirm reset Sigil"
+        let reason = (arguments?["reason"] as? String) ?? "Confirm reset Sybil"
         verify(reason: reason, result: result)
       default:
         result(FlutterMethodNotImplemented)
@@ -1049,18 +1046,19 @@ class MainFlutterWindow: NSWindow {
   }
 
   override func awakeFromNib() {
-    let desktopWindowViewController = DesktopWindowBootstrapMacOS.start(
-      mainFlutterWindow: self,
-      visualStyle: .opaque,
-      backgroundColor: appWindowBackgroundColor(for: currentSystemBrightness())
-    )
+    // Standard Flutter/AppKit window setup; no unlicensed bootstrap dependency.
+    let flutterViewController = FlutterViewController()
+    let previousFrame = frame
+    contentViewController = flutterViewController
+    setFrame(previousFrame, display: true)
+    isOpaque = true
+    backgroundColor = appWindowBackgroundColor(for: currentSystemBrightness())
     title = ""
     installVizorWindowToolbarObservers()
     applyAndScheduleVizorWindowToolbarForCurrentState()
-    let flutterViewController = desktopWindowViewController.flutterViewController
     WindowAppearanceChannel.register(
       window: self,
-      visualEffectView: desktopWindowViewController.visualEffectView,
+      visualEffectView: nil,
       messenger: flutterViewController.engine.binaryMessenger
     )
     PrivacyExposureChannel.register(

@@ -12,6 +12,7 @@ class ZnsViewData {
     this.isSoftwareAccount = true,
     this.isLocked = false,
     this.isBusy = false,
+    this.isPreparingRegistration = false,
     this.walletUnifiedAddress = '',
     this.baseOwnerAddress = '',
     this.baseRecoveryDescription = '',
@@ -40,6 +41,7 @@ class ZnsViewData {
   final bool isSoftwareAccount;
   final bool isLocked;
   final bool isBusy;
+  final bool isPreparingRegistration;
   final String walletUnifiedAddress;
   final String baseOwnerAddress;
   final String baseRecoveryDescription;
@@ -274,6 +276,14 @@ class ZnsConfigurationInput {
   final int chainId;
   final String tokenAddress;
   final String delegateAddress;
+
+  ZnsConfigurationInput withRpcUrl(String value) => ZnsConfigurationInput(
+    rpcUrl: value,
+    registryAddress: registryAddress,
+    chainId: chainId,
+    tokenAddress: tokenAddress,
+    delegateAddress: delegateAddress,
+  );
 }
 
 /// Callbacks request wallet actions. Rendering never signs or submits anything.

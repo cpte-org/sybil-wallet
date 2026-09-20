@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 // path_provider / plugin platform fakes back the broadcast flow's wallet DB
 // path resolution and Sapling params status checks.
 // ignore_for_file: depend_on_referenced_packages

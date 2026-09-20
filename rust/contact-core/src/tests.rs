@@ -68,7 +68,7 @@ fn check(exchange: &str) -> Result<Endpoint, &'static str> {
 
 #[test]
 fn direct_signing_round_trip_and_subject_binding() {
-    for network in [Network::Test, Network::Regtest] {
+    for network in [Network::Main, Network::Test, Network::Regtest] {
         for subject in [None, Some(id(1))] {
             let request = request(network, subject.as_deref());
             let exchange =
@@ -133,11 +133,34 @@ fn identity_and_requests_are_fresh_and_requests_retain_no_secret() {
 }
 
 #[test]
-fn mainnet_unknown_network_and_wrong_context_are_rejected() {
-    for network in ["main", "mainnet", "zcash-testnet", "test ", ""] {
+fn unknown_network_and_wrong_context_are_rejected() {
+    for network in ["mainnet", "zcash-mainnet", "zcash-testnet", "test ", ""] {
         assert!(Network::from_api_name(network).is_err());
     }
     assert_eq!(Network::from_api_name("test"), Ok(Network::Test));
+    assert_eq!(Network::from_api_name("main"), Ok(Network::Main));
+    for network in [Network::Main, Network::Test, Network::Regtest] {
+        let original = request(network, None);
+        let response = sign_response(
+            network,
+            &original,
+            &[1; 32],
+            TEST_ADDRESS,
+            1,
+            NOW,
+            |_, _| true,
+        )
+        .unwrap();
+        for other in [Network::Main, Network::Test, Network::Regtest] {
+            if other == network {
+                continue;
+            }
+            assert!(inspect_request(other, &original, NOW).is_err());
+            assert!(
+                verify_response(other, &request(other, None), &response, NOW, |_, _| true).is_err()
+            );
+        }
+    }
     assert!(inspect_request(Network::Regtest, &request(Network::Test, None), NOW).is_err());
     assert!(verify_response(
         Network::Regtest,

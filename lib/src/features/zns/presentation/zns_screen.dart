@@ -28,6 +28,7 @@ class _ZnsScreenState extends State<ZnsScreen> {
   final _receivingAddress = TextEditingController();
   final _operationKey = GlobalKey();
   final _reviewKey = GlobalKey();
+  final _errorKey = GlobalKey();
   bool _showAddressEditor = false;
   bool _acceptedReview = false;
   bool _showBalances = false;
@@ -99,6 +100,12 @@ class _ZnsScreenState extends State<ZnsScreen> {
     }
     if (oldWidget.data.review == null && data.review != null) {
       _scrollTo(_reviewKey);
+    }
+    if (data.review == null &&
+        data.error != null &&
+        (oldWidget.data.error != data.error ||
+            (oldWidget.data.isBusy && !data.isBusy))) {
+      _scrollTo(_errorKey);
     }
   }
 
@@ -223,6 +230,28 @@ class _ZnsScreenState extends State<ZnsScreen> {
                   color: context.colors.text.secondary,
                 ),
               ),
+              if (data.isBusy) ...[
+                const SizedBox(height: AppSpacing.s),
+                Semantics(
+                  liveRegion: true,
+                  child: Row(
+                    children: [
+                      const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: AppSpacing.s),
+                      Flexible(
+                        child: Text(
+                          data.isPreparingRegistration
+                              ? 'Preparing your registration review…'
+                              : 'Checking name service…',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               if (actions.onShowRecovery != null && data.isConfigured) ...[
                 const SizedBox(height: AppSpacing.s),
                 Align(
@@ -268,12 +297,15 @@ class _ZnsScreenState extends State<ZnsScreen> {
                 const SizedBox(height: AppSpacing.md),
               ],
               if (data.error case final error?) ...[
-                _Notice(
-                  icon: AppIcons.warningCircle,
-                  title: 'Action needed',
-                  text: error,
-                  isError: true,
-                  onDismiss: actions.onDismissError,
+                KeyedSubtree(
+                  key: _errorKey,
+                  child: _Notice(
+                    icon: AppIcons.warningCircle,
+                    title: 'Action needed',
+                    text: error,
+                    isError: true,
+                    onDismiss: actions.onDismissError,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
               ],
@@ -455,7 +487,17 @@ class _ZnsScreenState extends State<ZnsScreen> {
                     )
                   : null,
               expand: true,
-              child: const Text('Review registration'),
+              leading: data.isPreparingRegistration
+                  ? const SizedBox.square(
+                      dimension: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : null,
+              child: Text(
+                data.isPreparingRegistration
+                    ? 'Preparing review…'
+                    : 'Review registration',
+              ),
             ),
           ],
         ],
@@ -1467,11 +1509,13 @@ class ZnsConfigurationForm extends StatefulWidget {
     required this.enabled,
     required this.onSave,
     this.onClose,
+    this.showRpcEndpoint = true,
   });
   final ZnsConfigurationInput initial;
   final bool enabled;
   final ValueChanged<ZnsConfigurationInput>? onSave;
   final VoidCallback? onClose;
+  final bool showRpcEndpoint;
   @override
   State<ZnsConfigurationForm> createState() => ZnsConfigurationFormState();
 }
@@ -1527,7 +1571,7 @@ class ZnsConfigurationFormState extends State<ZnsConfigurationForm> {
         ),
         const SizedBox(height: AppSpacing.md),
         _field('Registry address', _registry, hint: '0x…'),
-        _field('RPC URL', _rpc),
+        if (widget.showRpcEndpoint) _field('RPC URL', _rpc),
         _field('Chain ID', _chain, numeric: true),
         _field('cbZEC token address', _token),
         _field(

@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 part of '../swap_screen_test.dart';
 
 class _FakeReceiveAddressService extends ReceiveAddressService {
@@ -808,6 +809,9 @@ class _FakeSwapDepositSender implements SwapDepositSender {
   });
 
   final Object? preflightError;
+  BigInt fee = BigInt.from(10000);
+  Completer<BigInt>? feeGate;
+  BigInt? lastMaximumFee;
   final String broadcastStatus;
   final String? broadcastMessage;
   final preflightRequests = <_DepositSendRequest>[];
@@ -828,14 +832,16 @@ class _FakeSwapDepositSender implements SwapDepositSender {
     );
     final error = preflightError;
     if (error != null) throw error;
-    return BigInt.from(10000);
+    return feeGate == null ? fee : await feeGate!.future;
   }
 
   @override
   Future<SwapDepositBroadcastResult> sendZecDeposit({
     required String accountUuid,
     required SwapQuote quote,
+    BigInt? maximumFeeZatoshi,
   }) async {
+    lastMaximumFee = maximumFeeZatoshi;
     requests.add(
       _DepositSendRequest(
         accountUuid: accountUuid,
@@ -870,6 +876,7 @@ class _DelayedSwapDepositSender extends _FakeSwapDepositSender {
   Future<SwapDepositBroadcastResult> sendZecDeposit({
     required String accountUuid,
     required SwapQuote quote,
+    BigInt? maximumFeeZatoshi,
   }) async {
     requests.add(
       _DepositSendRequest(

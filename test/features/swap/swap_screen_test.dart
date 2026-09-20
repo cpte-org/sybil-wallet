@@ -1,9 +1,11 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 // The platform-interface fakes below stub path_provider / flutter_secure_storage
 // so the activity tab's tap-through to the tx-status route can resolve the
 // wallet DB path under test. These are transitive deps, hence the ignore.
 // ignore_for_file: depend_on_referenced_packages
 import 'dart:async';
 import 'dart:io';
+import 'package:zcash_wallet/src/core/config/near_intents_endpoint_config.dart';
 
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
@@ -70,20 +72,54 @@ import 'support/swap_activity_fixture_intents.dart';
 part 'support/swap_screen_test_fakes.dart';
 
 void main() {
-  test('swapIntentProvider uses the Vizor proxy and referral', () {
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
+  testWidgets(
+    'unconfigured swap service is visible when the token list opens',
+    (tester) async {
+      await _setDesktopViewport(tester);
+      await tester.pumpWidget(
+        _routerHarness(
+          GoRouter(
+            initialLocation: '/swap',
+            routes: [_swapRoute(), _swapActivityRoute()],
+          ),
+          swapProvider: NearIntentsOneClickSwapAdapter(
+            endpointConfig: const NearIntentsEndpointConfig(baseUrl: ''),
+          ),
+          seedSwapActivityFixtures: false,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining(
+          'Swap service is not configured in this Sybil build',
+        ),
+        findsOneWidget,
+      );
+      final container = ProviderScope.containerOf(
+        tester.element(find.byKey(const ValueKey('swap_amount_field'))),
+      );
+      expect(
+        container.read(swapStateProvider).supportedAssetsError,
+        contains('not configured'),
+      );
+    },
+  );
 
-    final provider = container.read(swapIntentProvider);
+  test(
+    'swapIntentProvider uses shared Sybil config without client attribution',
+    () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
 
-    expect(provider, isA<NearIntentsOneClickSwapAdapter>());
-    final oneClickProvider = provider as NearIntentsOneClickSwapAdapter;
-    expect(
-      oneClickProvider.baseUri.toString(),
-      'https://functions.vizor.cash/api/near-intents/1click',
-    );
-    expect(oneClickProvider.referral, 'vizor');
-  });
+      final provider = container.read(swapIntentProvider);
+
+      expect(provider, isA<NearIntentsOneClickSwapAdapter>());
+      final oneClickProvider = provider as NearIntentsOneClickSwapAdapter;
+      expect(oneClickProvider.endpointConfig, isNotNull);
+      expect(oneClickProvider.referral, isNull);
+      expect(oneClickProvider.bearerToken, isNull);
+    },
+  );
 
   test('compactSwapAmountText truncates visible decimals without ellipsis', () {
     expect(compactSwapAmountText('~0.123456789 BTC'), '0.123456 BTC');
@@ -8341,11 +8377,21 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('swap_review_button')));
     await tester.pumpAndSettle();
+    expect(find.text('Zcash network fee'), findsOneWidget);
+    expect(find.text('Total ZEC debit'), findsOneWidget);
+    expect(find.text('0.0001 ZEC'), findsOneWidget);
+    expect(find.text('1.5001 ZEC'), findsOneWidget);
+    expect(
+      container.read(swapStateProvider).reviewDepositFeeZatoshi,
+      BigInt.from(10000),
+    );
     await tester.ensureVisible(find.byKey(const ValueKey('swap_start_button')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('swap_start_button')));
     await tester.pumpAndSettle();
 
+    expect(depositSender.lastMaximumFee, BigInt.from(10000));
+    expect(container.read(swapStateProvider).reviewDepositFeeZatoshi, isNull);
     expect(depositSender.requests, hasLength(1));
     expect(depositSender.requests.single.accountUuid, 'account-1');
     expect(depositSender.requests.single.depositAddress, 't1live-deposit');
@@ -8624,6 +8670,77 @@ void main() {
     expect(find.textContaining('Could not send ZEC deposit'), findsNothing);
   });
 
+  testWidgets('reviewed deposit fee increase keeps same quote unsigned', (
+    tester,
+  ) async {
+    await _setDesktopViewport(tester);
+    final swapProvider = _FakeSwapProvider();
+    final depositSender = _FakeSwapDepositSender();
+    await tester.pumpWidget(
+      _routerHarness(
+        GoRouter(
+          initialLocation: '/swap',
+          routes: [_swapRoute(), _swapActivityRoute()],
+        ),
+        swapProvider: swapProvider,
+        depositSender: depositSender,
+      ),
+    );
+    await tester.pumpAndSettle();
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(SwapScreen)),
+      listen: false,
+    );
+    final notifier = container.read(swapStateProvider.notifier);
+    notifier.updateAmount('0.002');
+    notifier.updateDestination('0x52908400098527886e0f7030069857d2e4169ee7');
+    await notifier.showReview();
+    final reviewedQuote = container.read(swapStateProvider).reviewQuote;
+    expect(reviewedQuote, isNotNull);
+    expect(
+      swapReviewQuoteExceedsAvailableZec(
+        reviewedQuote!,
+        BigInt.from(210000),
+        depositFeeZatoshi: BigInt.from(10000),
+      ),
+      isFalse,
+    );
+    expect(
+      swapReviewQuoteExceedsAvailableZec(
+        reviewedQuote,
+        BigInt.from(209999),
+        depositFeeZatoshi: BigInt.from(10000),
+      ),
+      isTrue,
+    );
+    expect(
+      container.read(swapStateProvider).reviewDepositFeeZatoshi,
+      BigInt.from(10000),
+    );
+    depositSender.fee = BigInt.from(15000);
+    expect(await notifier.startIntent(), isNull);
+    expect(
+      identical(container.read(swapStateProvider).reviewQuote, reviewedQuote),
+      isTrue,
+    );
+    expect(
+      container.read(swapStateProvider).statusError,
+      contains('fee increased'),
+    );
+    expect(swapProvider.startedQuotes, isEmpty);
+    expect(depositSender.requests, isEmpty);
+    notifier.updateAmount('0.003');
+    expect(container.read(swapStateProvider).reviewDepositFeeZatoshi, isNull);
+    depositSender.feeGate = Completer<BigInt>();
+    final pendingReview = notifier.showReview();
+    await tester.pump();
+    notifier.updateAmount('0.004');
+    depositSender.feeGate!.complete(BigInt.from(20000));
+    await pendingReview;
+    expect(container.read(swapStateProvider).reviewQuote, isNull);
+    expect(container.read(swapStateProvider).reviewDepositFeeZatoshi, isNull);
+  });
+
   testWidgets('ZEC deposit preflight failure does not start a swap intent', (
     tester,
   ) async {
@@ -8661,17 +8778,12 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('swap_review_button')));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const ValueKey('swap_start_button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('swap_start_button')));
-    await tester.pumpAndSettle();
-
     expect(depositSender.preflightRequests, hasLength(1));
     expect(depositSender.requests, isEmpty);
     expect(swapProvider.startedQuotes, isEmpty);
     expect(swapProvider.submittedDeposits, isEmpty);
     expect(sessionStore.savedIntents, isEmpty);
-    expect(find.byKey(const ValueKey('swap_review_panel')), findsOneWidget);
+    expect(find.byKey(const ValueKey('swap_review_panel')), findsNothing);
     expect(
       find.textContaining(
         'Not enough spendable ZEC to cover this swap and its network fee.',
@@ -8726,7 +8838,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 250));
       await tester.pump();
 
-      expect(depositSender.preflightRequests, hasLength(1));
+      expect(depositSender.preflightRequests, hasLength(2));
       expect(depositSender.requests, isEmpty);
       expect(swapProvider.startedQuotes, hasLength(1));
       expect(swapProvider.submittedDeposits, isEmpty);

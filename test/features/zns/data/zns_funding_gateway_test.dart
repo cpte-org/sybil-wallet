@@ -27,6 +27,7 @@ class Sender implements SwapDepositSender {
   Future<SwapDepositBroadcastResult> sendZecDeposit({
     required String accountUuid,
     required SwapQuote quote,
+    BigInt? maximumFeeZatoshi,
   }) async {
     sends++;
     return const SwapDepositBroadcastResult(

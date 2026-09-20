@@ -137,8 +137,7 @@ class ZnsFundingGateway {
        _provider =
            provider ??
            NearIntentsOneClickSwapAdapter(
-             baseUri: config.oneClickBaseUri,
-             referral: 'vizor',
+             endpointConfig: config.oneClickEndpoint,
            ),
        _now = now ?? DateTime.now;
   final ZnsNetworkConfig config;

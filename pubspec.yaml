@@ -1,5 +1,6 @@
+# Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 name: zcash_wallet
-description: "A new Flutter project."
+description: "Sybil: a self-custody Zcash wallet built around people."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -50,10 +51,6 @@ dependencies:
     git:
       url: https://github.com/chainapsis/mobile_scanner.git
       ref: 7224aa38c18459159acde0ae2f22685fbe46ceb4
-  desktop_window_bootstrap:
-    git:
-      url: https://github.com/chainapsis/desktop_window_bootstrap.git
-      ref: 16b1b30e08004e91521cc511db098f9561dfeb0a
   crypto: ^3.0.7
   cryptography: ^2.7.0
   window_manager: ^0.5.1
@@ -116,6 +113,8 @@ flutter:
     - assets/legal/LICENSE
     - assets/legal/NOTICE
     - assets/legal/fonts/OFL-1.1.txt
+    - assets/legal/THIRD-PARTY-NOTICES.txt
+    - tools/licensing/SYBIL-DEPENDENCY-LICENSES.md
     - tools/simplex/licenses/SimpleX-Chat-v7.0.2-LICENSE
     - tools/simplex/licenses/SIMPLEX-SOURCE-AND-BUILD.txt
     - assets/illustrations/

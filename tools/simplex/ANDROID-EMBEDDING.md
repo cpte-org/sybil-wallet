@@ -5,7 +5,7 @@ app-private `:simplex` process. The test-build script fetches and verifies the
 runtime automatically. Contact QR and copy/paste exchange remain available
 when the optional native bundle is absent. iOS embedding is not implemented.
 
-Build with `bash scripts/build-sigil-testnet.sh android`. The generated runtime
+Build with `bash scripts/build-sybil-testnet.sh android`. The generated runtime
 is selected through `SIMPLEX_ANDROID_LIBS_DIR`; a missing required library makes
 the build fail. The test APK contains only ARM64 native libraries, including
 Flutter and the bridge. Flutter's build-type ABI defaults are explicitly
@@ -163,5 +163,6 @@ Build it with `:app:assembleReleaseAndroidTest -PsimplexTestBuildType=release`
 and `-Ptarget-platform=android-arm64`, using the same runtime directory as the
 app. It uses disposable encrypted profiles. The relay case requires the explicit
 `simplexInvitation` instrumentation argument for another disposable peer.
-See `docs/SIGIL-TEST-BUILD-2026-09-18.md` for the completed checks and remaining
-device-validation limits.
+See `release_notes/v1.0.0-beta.1.md` for the public beta scope. Detailed build
+records and device-validation notes are maintained in the private
+`cpte-org/sybil-internal` repository.

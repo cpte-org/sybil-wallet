@@ -174,9 +174,9 @@ For a mobile reference, add `--form-factor mobile`. Compare the generated
 locale, content, and state. Native captures are reserved for behavior that the
 widget renderer cannot represent, such as window chrome or native insets.
 
-If a contribution explicitly modifies a Figma file, read `FIGMA-AI-FIX.md`
-before doing so. Comparing code with Figma does not by itself authorize changes
-to the design file.
+If a contribution explicitly modifies a Figma file, use the maintainer-only
+Figma workflow in the private `cpte-org/sybil-internal` repository. Comparing
+code with Figma does not by itself authorize changes to the design file.
 
 ## Testing
 

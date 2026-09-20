@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -119,7 +120,7 @@ void main() {
       tester.element(find.byType(SendScreen)),
     );
 
-    incomingUris.emit('https://link.vizor.cash/payment-links/open#malformed');
+    incomingUris.emit('https://sybil.cash/payment-links/open#malformed');
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump();

@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -222,7 +222,7 @@ class _WalletLinkConfirmAccessScreen extends StatelessWidget {
         onBack: onBack,
         child: Center(
           child: ConfirmAccessCard(
-            subtitle: 'To link Sigil Mobile.',
+            subtitle: 'To link Sybil Mobile.',
             controller: controller,
             errorText: errorText,
             isSubmitting: isSubmitting,
@@ -349,9 +349,9 @@ class _InitialContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _ContentColumn(
-      title: 'Link Sigil Mobile',
+      title: 'Link Sybil Mobile',
       body:
-          'Connect this wallet to your Sigil mobile app by scanning a one-time QR code.',
+          'Connect this wallet to your Sybil mobile app by scanning a one-time QR code.',
       visual: const _EncryptedPlaceholder(),
       action: AppButton(
         onPressed: preparing ? null : onStart,
@@ -377,8 +377,8 @@ class _ReadyContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _ContentColumn(
-      title: 'Scan with Sigil mobile',
-      body: 'Open Sigil on your phone → Add a wallet → Link Sigil Desktop',
+      title: 'Scan with Sybil mobile',
+      body: 'Open Sybil on your phone → Add a wallet → Link Sybil Desktop',
       visual: _QrTransferCard(
         qrPayload: state.qrPayload ?? '',
         remaining: state.remaining,
@@ -414,7 +414,7 @@ class _LinkedContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _ResultContentColumn(
-      title: 'Sigil Mobile linked successfully',
+      title: 'Sybil Mobile linked successfully',
       body: _linkedBody(state),
       titleMaxWidth: 264,
       bodyMaxWidth: 212,
@@ -438,7 +438,7 @@ class _LinkedContent extends StatelessWidget {
 
   String _linkedBody(WalletLinkState state) {
     if (!state.actualImportCounts) {
-      return 'Sigil Mobile was linked to this wallet.';
+      return 'Sybil Mobile was linked to this wallet.';
     }
     final accountLabel = state.accountCount == 1 ? 'account' : 'accounts';
     final contactLabel = state.contactCount == 1 ? 'contact' : 'contacts';

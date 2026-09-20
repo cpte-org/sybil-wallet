@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 @Tags(['mobile'])
 library;
 
@@ -36,10 +37,24 @@ MobileSwapReviewContent _content({
   const externalAddress = '0x9aDFd236b6ccD57bd571ca3C538dbB55FE4819E2';
   const walletAddress =
       'u1q6g2k3r4s5t6u7v8w9x0yzaabbccddeeff00112233445566778899';
-  final quote = SwapQuote.estimate(
+  final estimate = SwapQuote.estimate(
     direction: direction,
     externalAsset: SwapAsset.usdc,
     amount: 1.12,
+  );
+  final quote = SwapQuote(
+    direction: estimate.direction,
+    sellAsset: estimate.sellAsset,
+    receiveAsset: estimate.receiveAsset,
+    externalAsset: estimate.externalAsset,
+    sellAmount: estimate.sellAmount,
+    sellAmountBaseUnits: BigInt.from(112000000),
+    receiveAmount: estimate.receiveAmount,
+    minimumReceiveAmount: estimate.minimumReceiveAmount,
+    providerLabel: estimate.providerLabel,
+    feeLabel: estimate.feeLabel,
+    expiryLabel: estimate.expiryLabel,
+    depositInstruction: estimate.depositInstruction,
   );
   final addressPlan = SwapAddressPlan.fromUserInput(
     direction: direction,
@@ -49,6 +64,7 @@ MobileSwapReviewContent _content({
   );
 
   return MobileSwapReviewContent(
+    depositFeeZatoshi: BigInt.from(10000),
     quote: quote,
     addressPlan: addressPlan,
     accountLabel: 'Main account',
@@ -76,6 +92,10 @@ void main() {
       expect(find.text('Slippage tolerance'), findsOneWidget);
       expect(find.text('Guaranteed minimum'), findsOneWidget);
       expect(find.text('Swap fee'), findsOneWidget);
+      expect(find.text('Zcash network fee'), findsOneWidget);
+      expect(find.text('Total ZEC debit'), findsOneWidget);
+      expect(find.text('0.0001 ZEC'), findsOneWidget);
+      expect(find.text('1.1201 ZEC'), findsOneWidget);
     },
   );
 

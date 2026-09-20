@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zcash_wallet/src/core/navigation/incoming_link_dispatch.dart';
 import 'package:zcash_wallet/src/core/navigation/vizor_deep_link.dart';
@@ -11,14 +12,14 @@ void main() {
   final host = VizorDeepLink.host;
 
   group('host is tested before scheme', () {
-    test('a Gift Card link on the Vizor origin is a gift card', () {
+    test('a Gift Card link on the Sybil origin is a gift card', () {
       final target = classifyIncomingLink(
         'https://$host/payment-links/open#v1=abcdef',
       );
       expect(target, isA<IncomingGiftCardLink>());
     });
 
-    test('an unrecognised path on the Vizor origin is unknown, not a payment '
+    test('an unrecognised path on the Sybil origin is unknown, not a payment '
         'request', () {
       // The fragment is the mnemonic-bearing part. Falling through to the
       // scheme check would be harmless here (the scheme is https), but falling
@@ -31,7 +32,7 @@ void main() {
       expect(target, isA<IncomingLinkUnknown>());
     });
 
-    test('the bare Vizor origin opens home', () {
+    test('the bare Sybil origin opens home', () {
       expect(
         classifyIncomingLink('https://$host/'),
         isA<IncomingVizorHomeLink>(),
@@ -61,7 +62,7 @@ void main() {
     });
 
     test('host-like text after the scheme is still a payment request', () {
-      // `zcash://link.vizor.cash/...` parses with a *host* equal to the Gift
+      // `zcash://sybil.cash/...` parses with a *host* equal to the Gift
       // Card origin's host. Only the scheme separates it, so this pins that
       // the host test cannot swallow a `zcash:` link.
       for (final raw in [

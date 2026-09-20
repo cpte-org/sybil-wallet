@@ -1,7 +1,7 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/widgets.dart';
 
-import '../../../core/widgets/familiar_widgets.dart';
+import '../../../core/widgets/sybil_widgets.dart';
 
 /// Kept as an API for the existing security and recovery routes.
 enum SettingsBackdropArt {
@@ -21,7 +21,7 @@ class SettingsPaneBackdrop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
-      child: ColoredBox(color: FamiliarPalette.of(context).paper),
+      child: ColoredBox(color: SybilPalette.of(context).paper),
     );
   }
 }

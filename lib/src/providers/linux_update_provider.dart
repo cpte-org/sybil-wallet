@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:convert';
 import 'dart:ffi' show Abi;
 import 'dart:io';
@@ -206,7 +207,7 @@ String _normalizedFlavor(String flavor) {
 
 String? _normalizedRepository(String repository) {
   final trimmed = repository.trim();
-  if (trimmed.isEmpty) return 'chainapsis/vizor-wallet';
+  if (trimmed.isEmpty) return 'cpte-org/sybil-wallet';
   if (!RegExp(r'^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$').hasMatch(trimmed)) {
     return null;
   }

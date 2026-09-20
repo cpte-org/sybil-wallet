@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zcash_wallet/src/core/config/network_config.dart';
 
@@ -25,6 +26,13 @@ void main() {
   });
 
   group('resolveStoredOrDefaultZcashNetworkName', () {
+    test('preserves a saved testnet wallet in a normal mainnet build', () {
+      if (!kZcashIronwoodMasquerade) {
+        expect(resolveStoredOrDefaultZcashNetworkName('test'), 'test');
+        expect(resolveStoredOrDefaultZcashNetworkName('regtest'), 'regtest');
+      }
+    });
+
     test('uses the build-time default for missing stored values', () {
       expect(
         resolveStoredOrDefaultZcashNetworkName(null),

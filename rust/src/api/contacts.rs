@@ -362,7 +362,7 @@ mod tests {
     }
 
     #[test]
-    fn introduction_api_round_trip_gates_mainnet_and_rejects_invalid_receivers() {
+    fn introduction_api_round_trip_supports_all_networks_and_rejects_invalid_receivers() {
         use zcash_address::unified::{self, Container, Encoding};
         use zcash_protocol::consensus::NetworkType;
 
@@ -388,6 +388,7 @@ mod tests {
         let secret_ba = Zeroizing::new(ba.secret_key);
         let secret_bc = Zeroizing::new(bc.secret_key);
         for (network, wire_network) in [
+            ("main", NetworkType::Main),
             ("test", NetworkType::Test),
             ("regtest", NetworkType::Regtest),
         ] {
@@ -507,25 +508,34 @@ mod tests {
                 delivery.packet_json.clone(),
                 1900
             )
+            .is_ok());
+            assert!(contacts_verify_introduction_delivery(
+                network.into(),
+                ac.identity.clone(),
+                ca.identity.clone(),
+                ask.request_json.clone(),
+                delivery.packet_json.clone(),
+                ask.expires_at
+            )
             .is_err());
 
-            // Every public entry point rejects mainnet before wire processing.
+            // Every public entry point rejects unknown networks before wire processing.
             assert!(contacts_validate_introduction_association(
-                "main".into(),
+                "unsupported".into(),
                 ac.identity.clone(),
                 ca.identity.clone(),
                 secret_ca.to_vec()
             )
             .is_err());
             assert!(contacts_create_introduction_ask(
-                "main".into(),
+                "unsupported".into(),
                 ac.identity.clone(),
                 secret_ca.to_vec(),
                 1000
             )
             .is_err());
             assert!(contacts_verify_introduction_ask(
-                "main".into(),
+                "unsupported".into(),
                 ca.identity.clone(),
                 ac.identity.clone(),
                 ask.packet_json.clone(),
@@ -533,7 +543,7 @@ mod tests {
             )
             .is_err());
             assert!(contacts_create_introduction_offer(
-                "main".into(),
+                "unsupported".into(),
                 ask.request_json.clone(),
                 ba.identity.clone(),
                 secret_ab.to_vec(),
@@ -542,7 +552,7 @@ mod tests {
             )
             .is_err());
             assert!(contacts_verify_introduction_offer(
-                "main".into(),
+                "unsupported".into(),
                 ab.identity.clone(),
                 ba.identity.clone(),
                 offer.packet_json.clone(),
@@ -550,7 +560,7 @@ mod tests {
             )
             .is_err());
             assert!(contacts_create_introduction_consent(
-                "main".into(),
+                "unsupported".into(),
                 ab.identity.clone(),
                 secret_ba.to_vec(),
                 secret_bc.to_vec(),
@@ -560,7 +570,7 @@ mod tests {
             )
             .is_err());
             assert!(contacts_verify_introduction_consent(
-                "main".into(),
+                "unsupported".into(),
                 ba.identity.clone(),
                 ab.identity.clone(),
                 ask.request_json.clone(),
@@ -570,7 +580,7 @@ mod tests {
             )
             .is_err());
             assert!(contacts_create_introduction_delivery(
-                "main".into(),
+                "unsupported".into(),
                 ba.identity.clone(),
                 ab.identity.clone(),
                 ca.identity.clone(),
@@ -583,7 +593,7 @@ mod tests {
             )
             .is_err());
             assert!(contacts_verify_introduction_delivery(
-                "main".into(),
+                "unsupported".into(),
                 ac.identity.clone(),
                 ca.identity.clone(),
                 ask.request_json.clone(),
@@ -591,11 +601,25 @@ mod tests {
                 1000
             )
             .is_err());
+            for other in ["main", "test", "regtest"] {
+                if other == network {
+                    continue;
+                }
+                assert!(contacts_verify_introduction_delivery(
+                    other.into(),
+                    ac.identity.clone(),
+                    ca.identity.clone(),
+                    ask.request_json.clone(),
+                    delivery.packet_json.clone(),
+                    1000,
+                )
+                .is_err());
+            }
         }
     }
 
     #[test]
-    fn direct_api_round_trip_uses_real_ua_and_rejects_mainnet() {
+    fn direct_api_round_trip_uses_real_ua_and_rejects_wrong_network() {
         // Public fixture from rust/tests/regtest_import.rs; no wallet DB access.
         let address = "uregtest1ykjd398elks624qyz0d0vffn6vpqkl6atp2wsr9795eql4kw47hwlffxyyfakv0l2twj635fpmxmeu3tzyrfhf5s9eg9ea8gsa0srdfwjudp3fs0qaaqxvkxr364a8vjy3y9vglm7lf8rs0vsev9p5mzky52rq4wkr5lhc842vuf5lhn";
         let identity = contacts_create_identity().unwrap();
@@ -630,8 +654,49 @@ mod tests {
         assert_eq!(verified.network, "zcash-regtest");
         assert!(contacts_validate_unified_address("regtest".into(), address.into()).unwrap());
         assert!(!contacts_validate_unified_address("test".into(), address.into()).unwrap());
-        assert!(contacts_validate_unified_address("main".into(), address.into()).is_err());
-        assert!(contacts_create_request("main".into(), None, 1000).is_err());
+        assert!(!contacts_validate_unified_address("main".into(), address.into()).unwrap());
+        let main_request = contacts_create_request("main".into(), None, 1000).unwrap();
+        let main_address = zcash_keys::address::Address::decode(
+            &crate::wallet::network::WalletNetwork::Regtest,
+            address,
+        )
+        .unwrap()
+        .encode(&crate::wallet::network::WalletNetwork::Main);
+        let main_response = contacts_sign_response(
+            "main".into(),
+            main_request.request_json.clone(),
+            secret.to_vec(),
+            main_address.clone(),
+            1,
+            1000,
+        )
+        .unwrap();
+        let main_verified = contacts_verify_response(
+            "main".into(),
+            main_request.request_json.clone(),
+            main_response.clone(),
+            1000,
+        )
+        .unwrap();
+        assert_eq!(main_verified.address, main_address);
+        assert_eq!(main_verified.network, "zcash-mainnet");
+        assert_eq!(main_verified.identity, identity.identity);
+        assert!(contacts_verify_response(
+            "regtest".into(),
+            request.request_json.clone(),
+            main_response,
+            1000,
+        )
+        .is_err());
+        assert!(contacts_sign_response(
+            "main".into(),
+            main_request.request_json,
+            secret.to_vec(),
+            address.into(),
+            1,
+            1000,
+        )
+        .is_err());
         assert!(contacts_sign_response(
             "main".into(),
             request.request_json.clone(),

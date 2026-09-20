@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 import 'dart:ui';
 
@@ -44,7 +44,7 @@ class AppDesktopShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final background = this.background;
-    // Sigil's shell is edge-to-edge: the pane begins immediately after the
+    // Sybil's shell is edge-to-edge: the pane begins immediately after the
     // sidebar, and window-level overlays clear exactly that sidebar width.
     final paneLeftInset = sidebarWidth;
     return ContentOverlayInset(

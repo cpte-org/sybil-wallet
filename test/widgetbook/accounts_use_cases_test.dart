@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'package:flutter/material.dart' show MaterialApp;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -76,9 +76,9 @@ void main() {
   ) async {
     await _pumpAccountsUseCase(tester, buildAboutUtilityUseCase);
     expect(tester.takeException(), isNull);
-    expect(find.text('About Sigil Wallet'), findsOneWidget);
-    expect(find.text('Upstream GitHub'), findsOneWidget);
-    expect(find.text('Upstream website'), findsOneWidget);
+    expect(find.text('About Sybil Beta'), findsOneWidget);
+    expect(find.text('Sybil source'), findsOneWidget);
+    expect(find.text('Sybil website'), findsOneWidget);
 
     await _pumpAccountsUseCase(tester, buildTermsUtilityUseCase);
     expect(tester.takeException(), isNull);

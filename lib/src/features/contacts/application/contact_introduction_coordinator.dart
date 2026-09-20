@@ -81,7 +81,7 @@ class _IntroductionAddressCheck {
   final String requestHash;
 }
 
-/// Stateful authority boundary for the gated testnet experiment. No UI or
+/// Stateful authority boundary for network-scoped introductions. No UI or
 /// transport is implicit: every signature/export and acceptance requires an
 /// explicit caller approval of the returned review. Storage owns the replay
 /// record; this instance alone owns live requests and unfinished consent.
@@ -173,10 +173,10 @@ class ContactIntroductionCoordinator {
     final current = scope();
     if (_disposed ||
         current == null ||
-        !['test', 'regtest'].contains(current.network) ||
+        !['main', 'test', 'regtest'].contains(current.network) ||
         !ContactLifecycle.allowed(current.accountUuid)) {
       throw const ContactFailure(
-        'Unlock this test-network software account to use introductions.',
+        'Unlock your software account to use introductions.',
       );
     }
     return current;
@@ -498,7 +498,7 @@ class ContactIntroductionCoordinator {
           (a.incomingContactId != peer.id &&
               a.outgoingIdentity == review.outgoingIdentity)) {
         throw const ContactFailure(
-          'These keys already belong to another pairing. This experiment does not replace pairings.',
+          'These keys already belong to another pairing. Existing pairings cannot be replaced.',
         );
       }
     }

@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
@@ -47,7 +47,7 @@ class ForgotPasscodeSheet extends ConsumerWidget {
         children: [
           Text(
             "If you can't remember your passcode, the only way to "
-            'recover your account is to completely reset the Sigil app, '
+            'recover your account is to completely reset the Sybil app, '
             'which means deleting all accounts and requiring you to '
             'import accounts again. Unshared gift card links will be '
             'permanently lost.',
@@ -69,7 +69,7 @@ class ForgotPasscodeSheet extends ConsumerWidget {
             constrainContent: true,
             minWidth: _kForgotPasscodeButtonMinWidth,
             onPressed: () => Navigator.of(context).pop(true),
-            child: const _ModalButtonLabel('Continue to reset Sigil'),
+            child: const _ModalButtonLabel('Continue to reset Sybil'),
           ),
           const SizedBox(height: AppSpacing.s),
           AppButton(
@@ -89,7 +89,7 @@ class ForgotPasscodeSheet extends ConsumerWidget {
 
 /// Figma `Forgot Passcode Last warning` (4885:23490): the second,
 /// irreversible-action confirmation shown after [ForgotPasscodeSheet].
-/// Pops `true` only when the user taps the destructive "Reset Sigil"
+/// Pops `true` only when the user taps the destructive "Reset Sybil"
 /// button, so wiping the wallet always takes two deliberate confirmations.
 class ForgotPasscodeLastWarningSheet extends StatelessWidget {
   const ForgotPasscodeLastWarningSheet({super.key});
@@ -140,7 +140,7 @@ class _ForgotPasscodeLastWarningContentState
   Widget build(BuildContext context) {
     final colors = context.colors;
     final resetLabel = _armed
-        ? 'Reset Sigil'
+        ? 'Reset Sybil'
         : 'Reset after ${_remainingSeconds}s...';
     return MobileModalScaffold(
       title: 'Are you sure?',

@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'dart:async';
 
 import 'package:flutter/material.dart' show Scaffold;
@@ -392,7 +392,7 @@ class _MobileUnlockScreenState extends ConsumerState<MobileUnlockScreen> {
                             Text(
                               _submitting
                                   ? 'Opening your wallet...'
-                                  : 'Enter your passcode to open Sigil',
+                                  : 'Enter your passcode to open Sybil',
                               textAlign: TextAlign.center,
                               style: AppTypography.bodyMediumStrong.copyWith(
                                 color: colors.text.primary,

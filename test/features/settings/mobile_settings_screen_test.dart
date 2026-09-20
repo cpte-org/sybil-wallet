@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sigil fork.
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 @Tags(['mobile'])
 library;
 
@@ -313,12 +313,12 @@ void main() {
               ),
               findsNothing,
             );
-            expect(find.text('About Sigil'), findsNothing);
+            expect(find.text('About Sybil'), findsNothing);
             final semantics = tester.ensureSemantics();
             try {
               await tester.pump();
               expect(
-                find.bySemanticsLabel('Sigil, version $kVizorReleaseVersion'),
+                find.bySemanticsLabel('Sybil, version $kVizorReleaseVersion'),
                 findsOneWidget,
               );
             } finally {
@@ -747,6 +747,7 @@ void main() {
 
     expect(find.text('Settings'), findsOneWidget);
     expect(find.text('You and your wallet'), findsOneWidget);
+    expect(find.text('Exchange ZEC'), findsOneWidget);
     expect(find.text('Security and recovery'), findsOneWidget);
     expect(find.text('John'), findsOneWidget);
     expect(find.text('Knight'), findsOneWidget);
@@ -791,7 +792,7 @@ void main() {
       findsOneWidget,
     );
     // The About entry stays hidden until the legal documents are ready.
-    expect(find.text('About Sigil'), findsNothing);
+    expect(find.text('About Sybil'), findsNothing);
     // Endpoint shows the live RPC host:port.
     expect(
       find.text(defaultRpcEndpointConfig('main').hostPort),
@@ -819,15 +820,21 @@ void main() {
     expect(top('You and your wallet'), lessThan(top('People and names')));
     expect(top('People and names'), lessThan(top('Network and app')));
 
-    // People is the public contact surface; gift cards stay out of Settings.
-    expect(find.text('People'), findsOneWidget);
+    // People remains a primary tab, without a duplicate settings shortcut.
+    expect(find.text('People'), findsNothing);
     expect(find.text('My gift cards'), findsNothing);
     expect(find.text('Contacts'), findsNothing);
-    expect(top('Account name'), lessThan(top('People')));
+    expect(find.text('Connection backup'), findsOneWidget);
+    expect(
+      find.text('Private connections need a separate backup'),
+      findsOneWidget,
+    );
+    expect(top('Wallet recovery phrase'), lessThan(top('Connection backup')));
+    expect(top('Connection backup'), lessThan(top('You and your wallet')));
 
     // Mobile keeps its own pieces and never offers to link to itself.
     expect(find.text('Syncing'), findsOneWidget);
-    expect(find.textContaining('Link Sigil'), findsNothing);
+    expect(find.textContaining('Link Sybil'), findsNothing);
   });
 
   testWidgets('theme row opens the sheet and applies the selection', (
@@ -975,10 +982,11 @@ void main() {
     await tester.pump();
 
     for (final label in [
-      'People',
+      'Connection backup',
       'Wallet recovery phrase',
       'Viewing key',
       'Base / Ethereum private key',
+      'Exchange ZEC',
       'Keep screen awake',
     ]) {
       final row = tester.widget<Text>(find.text(label));
