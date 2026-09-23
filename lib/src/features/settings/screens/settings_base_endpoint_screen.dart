@@ -12,6 +12,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/sybil_widgets.dart';
 import '../../zns/application/zns_controller.dart';
+import '../../zns/data/zns_build_defaults.dart';
 import '../../zns/presentation/zns_view_data.dart';
 
 /// Compact labels must not expose a provider's API key in its path or query.
@@ -97,8 +98,8 @@ class _BaseRpcEndpointEditorState extends State<BaseRpcEndpointEditor> {
   int _submission = 0;
 
   String? get _recommended => switch (widget.data.configuration.chainId) {
-    8453 => 'https://base.drpc.org',
-    84532 => 'https://sepolia.base.org',
+    8453 => znsMainnetRpc,
+    84532 => znsSepoliaRpc,
     _ => null,
   };
   String get _selected => _useCustom ? _custom.text.trim() : _recommended!;

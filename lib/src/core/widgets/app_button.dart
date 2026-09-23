@@ -190,11 +190,11 @@ _VariantPalette _paletteFor(AppButtonVariant variant, AppColors c) {
   }
 }
 
-/// A pill-shaped button with three style variants and three size variants.
+/// A button with a default pill shape and three style variants.
 ///
 /// Width and height are intrinsic — the button wraps the leading icon +
-/// label + trailing icon and centers them both axes. Only the pill radius
-/// is fixed; padding and typography determine the rest.
+/// label + trailing icon and centers them both axes. Composed rows can
+/// override [borderRadius]; padding and typography determine the rest.
 ///
 /// States handled:
 /// * default / hover / pressed — ambient fill swaps via [_Sizing] + palette
@@ -212,6 +212,7 @@ class AppButton extends StatefulWidget {
     this.height,
     this.growWithContent = false,
     this.contentPadding,
+    this.borderRadius,
     this.leading,
     this.trailing,
     this.minWidth,
@@ -252,6 +253,10 @@ class AppButton extends StatefulWidget {
   /// keeps the design-system sizing for all regular buttons; narrow composed
   /// rows can opt in without changing the global component metrics.
   final EdgeInsets? contentPadding;
+
+  /// Optional corner radius for composed rows. Null keeps the default pill.
+  /// The focus ring follows the same shape outside the button.
+  final BorderRadius? borderRadius;
 
   /// Optional widget shown before [child]. Auto-sized to 16×16 and tinted
   /// to the label color via [IconTheme].
@@ -365,6 +370,9 @@ class _AppButtonState extends State<AppButton> {
     final borderWidth = _enabled ? palette.borderWidth : 0.0;
     final iconGap = widget.iconGap ?? sizing.gap;
     final contentPadding = widget.contentPadding ?? sizing.padding;
+    final OutlinedBorder shape = widget.borderRadius == null
+        ? const StadiumBorder()
+        : RoundedRectangleBorder(borderRadius: widget.borderRadius!);
 
     final rowChildren = <Widget>[];
     if (widget.leading != null) {
@@ -425,8 +433,8 @@ class _AppButtonState extends State<AppButton> {
         height: widget.growWithContent ? null : height,
         decoration: ShapeDecoration(
           color: currentBg,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+
+          shape: shape.copyWith(
             side: borderWidth == 0
                 ? BorderSide.none
                 : BorderSide(color: borderColor, width: borderWidth),
@@ -457,6 +465,12 @@ class _AppButtonState extends State<AppButton> {
       AppButtonVariant.destructive => 3.5,
       AppButtonVariant.secondary || AppButtonVariant.ghost => 2.0,
     };
+    final OutlinedBorder focusShape = widget.borderRadius == null
+        ? const StadiumBorder()
+        : RoundedRectangleBorder(
+            borderRadius:
+                widget.borderRadius! + BorderRadius.circular(focusRingOutset),
+          );
 
     // Keep the stack's layout size equal to the pill's design height and
     // paint the focus ring outside via overflow. Reserving outer padding
@@ -479,8 +493,7 @@ class _AppButtonState extends State<AppButton> {
               opacity: (_focused && _enabled) ? 1.0 : 0.0,
               child: DecoratedBox(
                 decoration: ShapeDecoration(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                  shape: focusShape.copyWith(
                     side: BorderSide(
                       color: focusRingColor,
                       width: focusRingWidth,

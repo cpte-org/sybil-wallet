@@ -20,8 +20,12 @@ import 'package:zcash_wallet/src/core/widgets/app_pane_modal_overlay.dart';
 import 'package:zcash_wallet/src/features/activity/screens/activity_screen.dart';
 import 'package:zcash_wallet/src/features/activity/gift_card_activity_index.dart';
 import 'package:zcash_wallet/src/features/home/screens/home_screen.dart';
+
 import 'package:zcash_wallet/src/features/home/widgets/sybil_home_dashboard.dart';
 import 'package:zcash_wallet/src/features/activity/widgets/activity_feed.dart';
+
+import 'package:zcash_wallet/src/features/ledger/services/ledger_signing_service.dart';
+import 'package:zcash_wallet/src/features/ledger/services/ledger_signed_operation_service.dart';
 import 'package:zcash_wallet/src/features/migration/providers/ironwood_migration_announcement_provider.dart';
 import 'package:zcash_wallet/src/features/migration/providers/ironwood_migration_coordinator_provider.dart';
 import 'package:zcash_wallet/src/features/migration/screens/ironwood_migration_flow_screen.dart';
@@ -82,9 +86,7 @@ void main() {
 
       expect(
         tester
-            .widget<Text>(
-              find.byKey(const ValueKey('sybil_available_balance')),
-            )
+            .widget<Text>(find.byKey(const ValueKey('sybil_available_balance')))
             .data,
         '****** ZEC',
       );
@@ -270,10 +272,7 @@ void main() {
         AppThemeData.light.colors.text.disabled,
       );
       await tester.tap(find.byKey(const ValueKey('home_desktop_send_button')));
-      await _pumpUntilPresent(
-        tester,
-        find.byType(SybilChooseRecipientScreen),
-      );
+      await _pumpUntilPresent(tester, find.byType(SybilChooseRecipientScreen));
       expect(find.byType(SybilChooseRecipientScreen), findsOneWidget);
     },
   );
@@ -626,9 +625,7 @@ void main() {
 
     expect(
       tester
-          .widget<Text>(
-            find.byKey(const ValueKey('sybil_available_balance')),
-          )
+          .widget<Text>(find.byKey(const ValueKey('sybil_available_balance')))
           .data,
       '143.12 ZEC',
     );
@@ -657,9 +654,7 @@ void main() {
 
     expect(
       tester
-          .widget<Text>(
-            find.byKey(const ValueKey('sybil_available_balance')),
-          )
+          .widget<Text>(find.byKey(const ValueKey('sybil_available_balance')))
           .data,
       '0.44291 ZEC',
     );
@@ -694,9 +689,7 @@ void main() {
       expect(find.text('Shielded balance'), findsNothing);
       expect(
         tester
-            .widget<Text>(
-              find.byKey(const ValueKey('sybil_available_balance')),
-            )
+            .widget<Text>(find.byKey(const ValueKey('sybil_available_balance')))
             .data,
         '40.11 ZEC',
       );
@@ -724,10 +717,7 @@ void main() {
 
       expect(find.text('Yours to spend'), findsOneWidget);
       expect(find.byKey(const ValueKey('sybil_home_send')), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('sybil_home_receive')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const ValueKey('sybil_home_receive')), findsOneWidget);
       for (final label in [
         'Swap and Pay',
         'Swap',
@@ -974,6 +964,37 @@ void main() {
     expect(shieldButton.onPressed, isNotNull);
   });
 
+  testWidgets('Ledger hardware account opens direct shielding approval', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _appHarness(
+        '/home',
+        hardwareSignerKind: HardwareSignerKind.ledger,
+        syncState: SyncState(
+          accountUuid: 'account-1',
+          hasAccountScopedData: true,
+          transparentBalance: BigInt.from(242_000_000),
+          canShieldTransparentBalance: true,
+          totalBalance: BigInt.from(242_000_000),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('home_shield_balance_button')));
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey('ledger_shield_signing_overlay_surface')),
+      findsOneWidget,
+    );
+    expect(find.text('Preparing transaction'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
   testWidgets('home desktop keeps recovery notice visible', (tester) async {
     await tester.pumpWidget(
       _appHarness('/home', passwordRotationRecoveryFailed: true),
@@ -1170,9 +1191,7 @@ void main() {
     );
     await tester.pump();
 
-    final balanceFinder = find.byKey(
-      const ValueKey('sybil_available_balance'),
-    );
+    final balanceFinder = find.byKey(const ValueKey('sybil_available_balance'));
     final activityFinder = find
         .descendant(
           of: find.byType(SybilHomeDashboard),
@@ -1314,6 +1333,7 @@ Widget _appHarness(
   OrchardMigrationStatusGetter? migrationStatusGetter,
   bool failIfMigrationResolverLoads = false,
   _FakeNetworkPrivacyNotifier? networkPrivacy,
+  HardwareSignerKind? hardwareSignerKind,
 }) {
   return ProviderScope(
     overrides: [
@@ -1329,11 +1349,16 @@ Widget _appHarness(
           privacyModeEnabled: privacyModeEnabled,
           passwordRotationRecoveryFailed: passwordRotationRecoveryFailed,
           themeMode: themeMode,
+          hardwareSignerKind: hardwareSignerKind,
         ),
       ),
       syncProvider.overrideWith(
         () => FakeSyncNotifier(syncState ?? _syncedSyncState),
       ),
+      ledgerSignedOperationServiceProvider.overrideWithValue(
+        const _EmptyLedgerSignedOperationService(),
+      ),
+      ledgerOperationCancellerProvider.overrideWithValue(() async {}),
       paySelectedAssetStoreProvider.overrideWithValue(
         const _FakePaySelectedAssetStore(),
       ),
@@ -1415,6 +1440,34 @@ Widget _appHarness(
   );
 }
 
+class _EmptyLedgerSignedOperationService
+    implements LedgerSignedOperationService {
+  const _EmptyLedgerSignedOperationService();
+
+  @override
+  Future<List<LedgerSignedOperationMetadata>> list() async => const [];
+
+  @override
+  Future<void> checkpoint({
+    required String operationId,
+    required String accountUuid,
+    required LedgerSignedOperationKind kind,
+    required List<int> pcztWithProofsBytes,
+    required List<int> pcztWithSignaturesBytes,
+    String? externalRef,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<LedgerSignedOperationBroadcastResult> broadcast({
+    required String operationId,
+    String? spendParamsPath,
+    String? outputParamsPath,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> acknowledge(String operationId) => throw UnimplementedError();
+}
+
 Future<void> _pumpUntilPresent(WidgetTester tester, Finder finder) async {
   for (var i = 0; i < 20; i++) {
     await tester.pump(const Duration(milliseconds: 50));
@@ -1427,11 +1480,20 @@ AppBootstrapState _bootstrap(
   required bool privacyModeEnabled,
   required bool passwordRotationRecoveryFailed,
   required ThemeMode themeMode,
+  HardwareSignerKind? hardwareSignerKind,
 }) {
   return AppBootstrapState(
     initialLocation: initialLocation,
-    initialAccountState: const AccountState(
-      accounts: [AccountInfo(uuid: 'account-1', name: 'Account 1', order: 0)],
+    initialAccountState: AccountState(
+      accounts: [
+        AccountInfo(
+          uuid: 'account-1',
+          name: 'Account 1',
+          order: 0,
+          isHardware: hardwareSignerKind != null,
+          hardwareSignerKind: hardwareSignerKind,
+        ),
+      ],
       activeAccountUuid: 'account-1',
       activeAddress: 'u1testaddress',
     ),

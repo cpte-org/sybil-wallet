@@ -31,7 +31,7 @@ void main() {
       tester.getSize(
         find.byKey(const ValueKey('mobile_keystone_scan_widgetbook_card')),
       ),
-      const Size(361, 694),
+      const Size(361, 710),
     );
     expect(
       tester.getTopLeft(
@@ -59,7 +59,7 @@ void main() {
       tester.getSize(
         find.byKey(const ValueKey('mobile_keystone_scan_widgetbook_card')),
       ),
-      const Size(361, 694),
+      const Size(361, 710),
     );
     expect(
       tester.getTopLeft(
@@ -84,7 +84,7 @@ void main() {
       tester.getSize(
         find.byKey(const ValueKey('mobile_keystone_scan_widgetbook_card')),
       ),
-      const Size(361, 694),
+      const Size(361, 710),
     );
     expect(
       tester.getTopLeft(
@@ -106,7 +106,13 @@ void main() {
       tester.getSize(
         find.byKey(const ValueKey('mobile_keystone_scan_widgetbook_card')),
       ),
-      const Size(361, 694),
+      const Size(361, 710),
+    );
+    expect(
+      tester.getTopLeft(
+        find.byKey(const ValueKey('mobile_keystone_scan_widgetbook_card')),
+      ),
+      const Offset(16, 126),
     );
   });
 

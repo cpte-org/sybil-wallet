@@ -163,18 +163,19 @@ const _accountState = AccountState(
   activeAddress: 'u1homeaddress',
 );
 
-AppBootstrapState _bootstrap() => AppBootstrapState(
-  initialLocation: '/home',
-  initialAccountState: _accountState,
-  initialSyncSnapshot: AppSyncSnapshot.empty,
-  network: 'main',
-  rpcEndpointConfig: defaultRpcEndpointConfig('main'),
-  themeMode: ThemeMode.dark,
-  privacyModeEnabled: false,
-  isPasswordConfigured: true,
-  isUnlocked: true,
-  passwordRotationRecoveryFailed: false,
-);
+AppBootstrapState _bootstrap({AccountState accountState = _accountState}) =>
+    AppBootstrapState(
+      initialLocation: '/home',
+      initialAccountState: accountState,
+      initialSyncSnapshot: AppSyncSnapshot.empty,
+      network: 'main',
+      rpcEndpointConfig: defaultRpcEndpointConfig('main'),
+      themeMode: ThemeMode.dark,
+      privacyModeEnabled: false,
+      isPasswordConfigured: true,
+      isUnlocked: true,
+      passwordRotationRecoveryFailed: false,
+    );
 
 Widget _app(
   SyncState syncState, {
@@ -197,6 +198,7 @@ Widget _app(
   Set<String> seenMigrationAttentionFingerprints = const {},
   SwapActivityStore? swapActivityStore,
   AppThemeData theme = AppThemeData.dark,
+  AccountState accountState = _accountState,
 }) {
   final effectiveSyncNotifier = syncNotifier ?? FakeSyncNotifier(syncState);
   final router = GoRouter(
@@ -231,6 +233,13 @@ Widget _app(
         GoRoute(path: '/home', builder: (_, _) => const MobileHomeScreen()),
       GoRoute(path: '/send', builder: (_, _) => const Text('send route')),
       GoRoute(path: '/receive', builder: (_, _) => const Text('receive route')),
+      GoRoute(
+        path: '/home/ledger-shield',
+        builder: (_, _) => const Text(
+          'ledger shield route',
+          key: ValueKey('mobile_ledger_shield_route'),
+        ),
+      ),
       GoRoute(
         path: '/activity',
         builder: (_, _) => const Text('activity route'),
@@ -269,7 +278,9 @@ Widget _app(
 
   return ProviderScope(
     overrides: [
-      appBootstrapProvider.overrideWithValue(_bootstrap()),
+      appBootstrapProvider.overrideWithValue(
+        _bootstrap(accountState: accountState),
+      ),
       if (migrationCompletion != null || migrationCompletionFuture != null)
         ironwoodMigrationCompletionProvider.overrideWith(
           (ref) =>
@@ -319,6 +330,13 @@ Widget _app(
       builder: (_, child) => AppTheme(data: theme, child: child!),
     ),
   );
+}
+
+TextStyle _effectiveTextStyle(WidgetTester tester, Finder finder) {
+  final text = tester.widget<Text>(finder);
+  final inherited = DefaultTextStyle.of(tester.element(finder)).style;
+  final style = text.style;
+  return style == null || style.inherit ? inherited.merge(style) : style;
 }
 
 SyncState _syncedState({
@@ -1748,7 +1766,7 @@ void main() {
         status,
         currentHeight: currentHeight,
         broadcastHeight: currentHeight,
-        isHardware: false,
+        isKeystone: false,
       )!;
       final fingerprint = mobileIronwoodMigrationAttentionFingerprint(
         accountUuid: 'account-1',
@@ -1966,6 +1984,173 @@ void main() {
   testWidgets('zero balance keeps the wallet actions available', (
     tester,
   ) async {
+    await tester.pumpWidget(
+      _app(
+        _syncedState(
+          orchardBalance: BigInt.from(14312000000),
+          transparentBalance: BigInt.from(242000000),
+          canShieldTransparentBalance: true,
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey('mobile_home_transparent_balance_strip')),
+      findsOneWidget,
+    );
+    expect(find.text('Transparent: 2.42 ZEC'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('mobile_home_shield_balance_button')),
+      findsOneWidget,
+    );
+    expect(find.text('Shield'), findsOneWidget);
+  });
+
+  testWidgets('Ledger shielding opens the dedicated mobile Ledger route', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        _syncedState(
+          transparentBalance: BigInt.from(242000000),
+          canShieldTransparentBalance: true,
+        ),
+        accountState: const AccountState(
+          accounts: [
+            AccountInfo(
+              uuid: 'account-1',
+              name: 'Ledger',
+              order: 0,
+              isHardware: true,
+              hardwareSignerKind: HardwareSignerKind.ledger,
+            ),
+          ],
+          activeAccountUuid: 'account-1',
+          activeAddress: 'u1homeaddress',
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(
+      find.byKey(const ValueKey('mobile_home_shield_balance_button')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('mobile_ledger_shield_route')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('animates transparent balance tray away before removal', (
+    tester,
+  ) async {
+    final syncNotifier = FakeSyncNotifier(
+      _syncedState(
+        orchardBalance: BigInt.from(14312000000),
+        transparentBalance: BigInt.from(242000000),
+        canShieldTransparentBalance: true,
+      ),
+    );
+    await tester.pumpWidget(
+      _app(syncNotifier.initialState!, syncNotifier: syncNotifier),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    final stripFinder = find.byKey(
+      const ValueKey('mobile_home_transparent_balance_strip'),
+    );
+    expect(stripFinder, findsOneWidget);
+    final expandedHeight = tester.getSize(stripFinder).height;
+    expect(expandedHeight, moreOrLessEquals(57));
+
+    syncNotifier.setSyncState(
+      _syncedState(orchardBalance: BigInt.from(14312000000)),
+    );
+    await tester.pump();
+    expect(stripFinder, findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 70));
+    expect(tester.getSize(stripFinder).height, lessThan(expandedHeight));
+
+    await tester.pumpAndSettle();
+    expect(stripFinder, findsNothing);
+  });
+
+  testWidgets('matches the Figma balance card and Sybil wallet actions', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(_syncedState(orchardBalance: BigInt.from(14312000000))),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    final privacyButtonRect = tester.getRect(
+      find.byKey(const ValueKey('mobile_home_privacy_button')),
+    );
+    final privacyIcon = tester.widget<AppIcon>(
+      find.descendant(
+        of: find.byKey(const ValueKey('mobile_home_privacy_button')),
+        matching: find.byType(AppIcon),
+      ),
+    );
+    final sendRect = tester.getRect(
+      find.byKey(const ValueKey('mobile_home_send')),
+    );
+    final receiveRect = tester.getRect(
+      find.byKey(const ValueKey('mobile_home_receive')),
+    );
+    final sendLabelStyle = _effectiveTextStyle(tester, find.text('Send'));
+    final receiveLabelStyle = _effectiveTextStyle(tester, find.text('Receive'));
+    final shieldedLabel = tester.widget<Text>(find.text('Shielded balance'));
+    final fiatLabel = tester.widget<Text>(
+      find.byKey(const ValueKey('mobile_home_balance_fiat_text')),
+    );
+    final balanceText = tester.widget<Text>(
+      find.byKey(const ValueKey('mobile_home_shielded_balance')),
+    );
+    final balanceSpan = balanceText.textSpan! as TextSpan;
+    final amountSpan = balanceSpan.children![0] as TextSpan;
+    final tickerSpan = balanceSpan.children![1] as TextSpan;
+
+    expect(privacyButtonRect.size, const Size(32, 32));
+    expect(privacyIcon.size, 16);
+    expect(receiveRect.left, greaterThan(sendRect.right));
+    expect(find.byKey(const ValueKey('mobile_home_pay')), findsNothing);
+    expect(find.bySemanticsLabel('Pay'), findsNothing);
+    expect(find.text('NEW'), findsNothing);
+    expect(find.bySemanticsLabel('New: Pay in USDC'), findsNothing);
+    expect(sendRect.height, AppButtonSizing.largeHeight);
+    expect(sendLabelStyle.fontSize, AppTypography.labelLarge.fontSize);
+    expect(sendLabelStyle.height, AppTypography.labelLarge.height);
+    expect(sendLabelStyle.fontWeight, AppTypography.labelLarge.fontWeight);
+    expect(
+      sendLabelStyle.letterSpacing,
+      AppTypography.labelLarge.letterSpacing,
+    );
+    expect(receiveLabelStyle.fontSize, AppTypography.labelLarge.fontSize);
+    expect(receiveLabelStyle.height, AppTypography.labelLarge.height);
+    expect(receiveLabelStyle.fontWeight, AppTypography.labelLarge.fontWeight);
+    expect(
+      receiveLabelStyle.letterSpacing,
+      AppTypography.labelLarge.letterSpacing,
+    );
+    expect(shieldedLabel.style?.fontSize, 14);
+    expect(shieldedLabel.style?.height, 16 / 14);
+    expect(fiatLabel.style?.fontSize, 14);
+    expect(amountSpan.style?.fontSize, 45);
+    expect(amountSpan.style?.height, 48 / 45);
+    expect(tickerSpan.style?.fontSize, 32);
+    expect(tickerSpan.style?.height, 33 / 32);
+  });
+
+  testWidgets('zero balance offers the first-receive action', (tester) async {
     await tester.pumpWidget(_app(_syncedState()));
     await tester.pump();
 
@@ -2162,9 +2347,7 @@ void main() {
     );
     await tester.pump();
 
-    final balanceFinder = find.byKey(
-      const ValueKey('sybil_available_balance'),
-    );
+    final balanceFinder = find.byKey(const ValueKey('sybil_available_balance'));
     final activityFinder = find.byType(ActivityFeedRow).first;
     final balanceBeforeTicks = tester.widget(balanceFinder);
     final activityBeforeTicks = tester.widget(activityFinder);

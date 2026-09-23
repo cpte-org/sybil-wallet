@@ -11,6 +11,7 @@ import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_pane_modal_overlay.dart';
 import '../../core/widgets/app_tooltip.dart';
 import '../settings/widgets/custom_endpoint_settings_panel.dart';
+import '../ledger/ledger_capability.dart';
 import 'shared/onboarding_welcome_art.dart';
 
 const double _welcomeCanvasHeight = 720;
@@ -74,7 +75,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             _showEndpointSettings = false;
           });
         },
-        child: const _Content(),
+        child: _Content(
+          allowLedgerConnect: ref
+              .watch(ledgerStaticCapabilityProvider)
+              .supported,
+        ),
       ),
     );
   }
@@ -367,19 +372,23 @@ class _BackRow extends StatelessWidget {
 /// legal footer pinned to the pane bottom (Figma: text bottom 45px above
 /// the pane edge — 13px inside the 32px vertical padding).
 class _Content extends StatelessWidget {
-  const _Content();
+  const _Content({required this.allowLedgerConnect});
+
+  final bool allowLedgerConnect;
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(
+    return Padding(
+      padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.base,
       ),
       child: Stack(
         children: [
-          Center(child: _MainWelcomeContent()),
-          Align(
+          Center(
+            child: _MainWelcomeContent(allowLedgerConnect: allowLedgerConnect),
+          ),
+          const Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
               padding: EdgeInsets.only(bottom: 13),
@@ -406,16 +415,18 @@ class _LegalFooterSpace extends StatelessWidget {
 }
 
 class _MainWelcomeContent extends StatelessWidget {
-  const _MainWelcomeContent();
+  const _MainWelcomeContent({required this.allowLedgerConnect});
+
+  final bool allowLedgerConnect;
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _TitleBlock(),
-        SizedBox(height: AppSpacing.base),
-        _WelcomeButtonsWrap(),
+        const _TitleBlock(),
+        const SizedBox(height: AppSpacing.base),
+        _WelcomeButtonsWrap(allowLedgerConnect: allowLedgerConnect),
       ],
     );
   }
@@ -453,7 +464,9 @@ class _TitleBlock extends StatelessWidget {
 }
 
 class _WelcomeButtonsWrap extends StatelessWidget {
-  const _WelcomeButtonsWrap();
+  const _WelcomeButtonsWrap({required this.allowLedgerConnect});
+
+  final bool allowLedgerConnect;
 
   @override
   Widget build(BuildContext context) {
@@ -472,6 +485,21 @@ class _WelcomeButtonsWrap extends StatelessWidget {
           leading: const AppIcon(AppIcons.qrCodeFill, size: 18),
           child: const Text('Connect Keystone'),
         ),
+        if (allowLedgerConnect) ...[
+          const SizedBox(height: AppSpacing.s),
+          AppButton(
+            key: const ValueKey('welcome_connect_ledger_button'),
+            onPressed: () => context.go('/onboarding/ledger'),
+            variant: AppButtonVariant.ghost,
+            minWidth: _welcomeActionWidth,
+            leading: const AppIcon(
+              AppIcons.ledger,
+              size: 18,
+              semanticLabel: 'Ledger',
+            ),
+            child: const Text('Connect Ledger'),
+          ),
+        ],
       ],
     );
   }

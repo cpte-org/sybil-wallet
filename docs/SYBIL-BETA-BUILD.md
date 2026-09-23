@@ -24,6 +24,12 @@ uses the existing checksum-verified runtime fetch/extraction script and cached
 official APK. `SIMPLEX_ANDROID_APK_PATH` and `SIMPLEX_ANDROID_DEST_DIR` remain
 available for those cached inputs.
 
+The source includes Ledger account onboarding and signing for Zcash mainnet.
+New Ledger accounts require Zcash app v3.9.4 or newer; this build uses USB on
+Linux and Bluetooth on Android, subject to platform and device capability
+checks. This describes implemented source paths and does not claim physical
+device or release qualification for these artifacts.
+
 The beta script fixes these public settings:
 
 | Setting | Value |
@@ -46,18 +52,28 @@ confirmed at block 51,543,513 with the expected runtime and canonical
 token/oracle/protocol configuration. Existing saved Names configuration takes
 precedence over build defaults; the build does not overwrite it.
 
-The default Base RPC for new builds is `https://base.drpc.org`. Earlier defaults
-encountered HTTP 429 during registration reads or rejected transaction-receipt
-access with HTTP 403. The dedicated endpoint settings allow an explicit change
-without discarding saved registration progress.
-The RPC client now paces requests and retries rate-limited reads with bounded
-backoff, respecting `Retry-After`. Signed transaction submission is not
-automatically retried by that layer. Saved RPC overrides remain unchanged. Edit them
-in Settings → Network and app → Base RPC endpoint, also accessible from Public
-Zcash names. Choose Recommended to replace an older saved endpoint explicitly,
-or enter a custom HTTPS URL. The wallet verifies the same network and registry
-before saving. This changes only the RPC; a paused operation retains its saved
-progress and still requires review before resuming.
+The default Base RPC for new builds is `https://api.sybil.cash/api/base/rpc`.
+The Sybil Worker forwards supported JSON-RPC methods to PublicNode's
+archive-enabled Base endpoint; its provider token stays in a Cloudflare secret
+and is not compiled into wallet builds. The gateway has separate per-client and
+service rate limits from the NEAR routes, and it does not retry signed
+transaction submissions. RPC invocation logs and traces are disabled.
+Cloudflare and the upstream RPC provider process requests, so this is not
+anonymous transport. The client batches contract reads through Multicall3 and
+paces shared-endpoint requests across Names clients. Deployment checks remain
+fresh; only Multicall3 availability is cached. Chains without Multicall3 use
+serialized reads. Free upstream access has no guaranteed capacity.
+
+The dedicated endpoint settings allow an explicit change without discarding
+saved registration progress. A keyed or private endpoint keeps its own quota
+and spacing. Rate-limited reads retry with bounded backoff, respecting
+`Retry-After`; signed transaction submissions are not automatically retried.
+Saved RPC overrides remain unchanged. Edit them in Settings → Network and app
+→ Base RPC endpoint, also accessible from Public Zcash names. Choose Recommended
+to replace an older saved endpoint explicitly, or enter a custom HTTPS URL. The
+wallet verifies the same network and registry before saving. This changes only
+the RPC; a paused operation retains its saved progress and still requires
+review before resuming.
 
 The batch-account default is
 `0x4f93112eb41dbec6fada4494272d3d410187a942`, deployed by transaction

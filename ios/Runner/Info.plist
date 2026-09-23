@@ -18,6 +18,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Sybil uses the camera to scan addresses, gift cards, and Keystone QR codes.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Sybil uses Bluetooth to connect to your Ledger device.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Sybil uses Face ID to unlock your wallet and confirm sensitive actions.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>

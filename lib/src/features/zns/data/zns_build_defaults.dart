@@ -5,9 +5,12 @@ import '../../../core/config/network_config.dart';
 const znsTestnetPreset =
     kZcashDefaultNetworkRaw == 'test' &&
     bool.fromEnvironment('ZNS_BASE_SEPOLIA', defaultValue: false);
-const znsDefaultRpc = znsTestnetPreset
-    ? 'https://sepolia.base.org'
-    : 'https://base.drpc.org';
+
+/// The mainnet gateway keeps the provider token on the server. Saved custom
+/// endpoints take precedence over these build defaults.
+const znsMainnetRpc = 'https://api.sybil.cash/api/base/rpc';
+const znsSepoliaRpc = 'https://sepolia.base.org';
+const znsDefaultRpc = znsTestnetPreset ? znsSepoliaRpc : znsMainnetRpc;
 const znsDefaultChainId = znsTestnetPreset ? 84532 : 8453;
 const znsDefaultRegistry = znsTestnetPreset
     ? '0x402c249649ccb865fe4f16bd26e61007244b2102'

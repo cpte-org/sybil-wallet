@@ -102,6 +102,7 @@ class _RecordRpc extends ZnsRpcClient {
   _RecordRpc() : super(fixture.configuration());
   int expiresAt = 500;
   bool closed = false;
+  ZnsDataException? failure;
   @override
   Future<ZnsBlock> block([String tag = 'latest']) async => ZnsBlock(
     number: BigInt.one,
@@ -109,15 +110,20 @@ class _RecordRpc extends ZnsRpcClient {
     timestamp: BigInt.from(100),
   );
   @override
-  Future<ZnsNameRecord> readNameRecord(String name) async => ZnsNameRecord(
-    name: name,
-    owner: fixture.owner,
-    unifiedAddress: 'test-only-unified-address',
-    expiresAt: BigInt.from(expiresAt),
-    active: true,
-    positionId: BigInt.one,
-    block: await block(),
-  );
+  Future<ZnsNameRecord> readNameRecord(String name) async {
+    final failure = this.failure;
+    if (failure != null) throw failure;
+    return ZnsNameRecord(
+      name: name,
+      owner: fixture.owner,
+      unifiedAddress: 'test-only-unified-address',
+      expiresAt: BigInt.from(expiresAt),
+      active: true,
+      positionId: BigInt.one,
+      block: await block(),
+    );
+  }
+
   @override
   void close() => closed = true;
 }
@@ -169,6 +175,33 @@ void main() {
       valid = true;
       rpc.expiresAt = 100;
       await expectLater(lookup(), throwsA(isA<PublicNameLookupFailure>()));
+    },
+  );
+
+  test(
+    'a throttled endpoint keeps its own wording instead of blaming the registry',
+    () async {
+      final rpc = _RecordRpc()
+        ..failure = const ZnsRateLimitException(rpcMethod: 'eth_call');
+      final service = PublicNameLookupService(
+        rpcFactory: (_) => rpc,
+        validateAddress: (_, _) async => true,
+      );
+      await expectLater(
+        service.lookup(
+          configuration: _configuration,
+          network: 'test',
+          name: 'mara.zec',
+        ),
+        throwsA(
+          isA<PublicNameLookupFailure>().having(
+            (error) => error.message,
+            'message',
+            'Base RPC eth_call is temporarily busy. Wait a moment, then try again.',
+          ),
+        ),
+      );
+      expect(rpc.closed, isTrue);
     },
   );
 

@@ -1,4 +1,5 @@
 // Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
+import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' show PointerDeviceKind;
 
@@ -27,6 +28,7 @@ import 'package:zcash_wallet/src/features/zns/application/public_name_lookup.dar
 import 'package:zcash_wallet/src/features/zns/presentation/zns_view_data.dart';
 import 'package:zcash_wallet/src/features/settings/settings_platform.dart';
 import 'package:zcash_wallet/src/features/settings/widgets/network_privacy_control.dart';
+import 'package:zcash_wallet/src/features/payment_links/providers/payment_link_cards_provider.dart';
 import 'package:zcash_wallet/src/providers/account_models.dart';
 import 'package:zcash_wallet/src/providers/network_privacy_provider.dart';
 import 'package:zcash_wallet/src/providers/sync_provider.dart';
@@ -167,7 +169,180 @@ void main() {
     expect(_hasFocusRing(tester), isTrue);
   });
 
-  testWidgets('settings sections stay grouped without duplicate People links', (
+  for (final kind in HardwareSignerKind.values) {
+    testWidgets('${kind.name} account disables secret passphrase', (
+      tester,
+    ) async {
+      final hardwareAccount = AccountState(
+        accounts: [
+          AccountInfo(
+            uuid: 'ledger-account',
+            name: 'Ledger account',
+            order: 0,
+            isHardware: true,
+            hardwareSignerKind: kind,
+          ),
+        ],
+        activeAccountUuid: 'ledger-account',
+        activeAddress: 'u1ledgeraddress',
+      );
+
+      await tester.pumpWidget(_settingsHarness(accountState: hardwareAccount));
+      await tester.pump();
+
+      expect(find.text('Secret passphrase'), findsOneWidget);
+      expect(find.text('Account details'), findsNothing);
+      expect(
+        find.ancestor(
+          of: find.text('Secret passphrase'),
+          matching: find.byType(FocusableActionDetector),
+        ),
+        findsNothing,
+      );
+      await tester.tap(find.text('Secret passphrase'));
+      await tester.pumpAndSettle();
+      expect(find.text('secret passphrase route'), findsNothing);
+    });
+  }
+
+  testWidgets('software account preserves secret passphrase navigation', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_settingsHarness());
+    await tester.pump();
+
+    expect(find.text('Secret passphrase'), findsOneWidget);
+    expect(find.text('Account details'), findsNothing);
+
+    await tester.tap(find.text('Secret passphrase'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('secret passphrase route'), findsOneWidget);
+  });
+
+  testWidgets('Gift Cards waits for its data before opening', (tester) async {
+    final cards = Completer<PaymentLinkCardsSnapshot>();
+    await tester.pumpWidget(
+      _settingsHarness(
+        extraOverrides: [
+          paymentLinkCardsLoaderProvider.overrideWithValue(() => cards.future),
+        ],
+      ),
+    );
+    await tester.pump();
+
+    final row = find.byKey(const ValueKey('settings_gift_cards_row'));
+    expect(row, findsOneWidget);
+    expect(
+      tester
+          .widgetList<AppIcon>(
+            find.descendant(of: row, matching: find.byType(AppIcon)),
+          )
+          .first
+          .name,
+      AppIcons.giftCardOutline,
+    );
+    expect(find.text('My gift cards'), findsOneWidget);
+    expect(find.text('New'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('My gift cards')).dy,
+      lessThan(tester.getTopLeft(find.text('Link Vizor mobile')).dy),
+    );
+
+    await tester.tap(row);
+    await tester.pump();
+
+    expect(find.text('Settings'), findsWidgets);
+    expect(find.text('payment links route with data'), findsNothing);
+
+    cards.complete(const PaymentLinkCardsSnapshot(created: [], received: []));
+    await tester.pumpAndSettle();
+
+    expect(find.text('payment links route with data'), findsOneWidget);
+  });
+
+  testWidgets('Gift Cards opens without data when the load fails', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _settingsHarness(
+        extraOverrides: [
+          paymentLinkCardsLoaderProvider.overrideWithValue(
+            () => Future<PaymentLinkCardsSnapshot>.error(StateError('x')),
+          ),
+        ],
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(const ValueKey('settings_gift_cards_row')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('payment links route without data'), findsOneWidget);
+    expect(find.text('payment links route with data'), findsNothing);
+  });
+
+  testWidgets('Gift Cards does not navigate after leaving settings', (
+    tester,
+  ) async {
+    final cards = Completer<PaymentLinkCardsSnapshot>();
+    await tester.pumpWidget(
+      _settingsHarness(
+        extraOverrides: [
+          paymentLinkCardsLoaderProvider.overrideWithValue(() => cards.future),
+        ],
+      ),
+    );
+    await tester.pump();
+
+    final row = find.byKey(const ValueKey('settings_gift_cards_row'));
+    final router = GoRouter.of(tester.element(row));
+    await tester.tap(row);
+    await tester.pump();
+
+    router.go('/home');
+    await tester.pumpAndSettle();
+    cards.complete(const PaymentLinkCardsSnapshot(created: [], received: []));
+    await tester.pumpAndSettle();
+
+    expect(find.text('home route'), findsOneWidget);
+    expect(find.textContaining('payment links route'), findsNothing);
+  });
+
+  testWidgets('Gift Cards drops a slow open once a modal takes over', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1512, 982));
+    addTearDown(() async {
+      await tester.binding.setSurfaceSize(null);
+    });
+    final cards = Completer<PaymentLinkCardsSnapshot>();
+    await tester.pumpWidget(
+      _settingsHarness(
+        extraOverrides: [
+          paymentLinkCardsLoaderProvider.overrideWithValue(() => cards.future),
+        ],
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(const ValueKey('settings_gift_cards_row')));
+    await tester.pump();
+
+    // The pane stays interactive while the cards load, so the user can open
+    // a modal the late navigation would replace.
+    await tester.tap(find.text('Theme'));
+    await tester.pumpAndSettle();
+    expect(find.text('System (Auto)'), findsOneWidget);
+
+    cards.complete(const PaymentLinkCardsSnapshot(created: [], received: []));
+    await tester.pumpAndSettle();
+
+    expect(find.text('System (Auto)'), findsOneWidget);
+    expect(find.textContaining('payment links route'), findsNothing);
+  });
+
+  testWidgets('settings sections are grouped Personal to Danger zone', (
     tester,
   ) async {
     await tester.pumpWidget(_settingsHarness());
@@ -752,11 +927,13 @@ Widget _settingsHarness({
   NetworkPrivacyState networkPrivacyState = const NetworkPrivacyState.off(),
   List<bool>? networkPrivacyCalls,
   List<Override> extraOverrides = const [],
+  AccountState? accountState,
 }) {
   final router = GoRouter(
     initialLocation: '/settings',
     routes: [
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
+
       GoRoute(path: '/swap', builder: (_, _) => const Text('swap route')),
       GoRoute(
         path: '/settings/contacts',
@@ -778,6 +955,10 @@ Widget _settingsHarness({
         path: '/settings/base-key',
         builder: (_, _) => const SettingsBaseKeyScreen(),
       ),
+      GoRoute(
+        path: '/settings/secret-passphrase',
+        builder: (_, _) => const Text('secret passphrase route'),
+      ),
       GoRoute(path: '/home', builder: (_, _) => const Text('home route')),
       GoRoute(
         path: '/names',
@@ -795,7 +976,9 @@ Widget _settingsHarness({
   return ProviderScope(
     retry: (_, _) => null,
     overrides: [
-      appBootstrapProvider.overrideWithValue(_bootstrap),
+      appBootstrapProvider.overrideWithValue(
+        _settingsBootstrap(accountState ?? _bootstrap.initialAccountState),
+      ),
       syncProvider.overrideWith(FakeSyncNotifier.new),
       networkPrivacyProvider.overrideWith(
         () => _FakeNetworkPrivacyNotifier(
@@ -907,6 +1090,20 @@ final _bootstrap = AppBootstrapState(
   isUnlocked: true,
   passwordRotationRecoveryFailed: false,
 );
+
+AppBootstrapState _settingsBootstrap(AccountState accountState) =>
+    AppBootstrapState(
+      initialLocation: _bootstrap.initialLocation,
+      initialAccountState: accountState,
+      initialSyncSnapshot: _bootstrap.initialSyncSnapshot,
+      network: _bootstrap.network,
+      rpcEndpointConfig: _bootstrap.rpcEndpointConfig,
+      themeMode: _bootstrap.themeMode,
+      privacyModeEnabled: _bootstrap.privacyModeEnabled,
+      isPasswordConfigured: _bootstrap.isPasswordConfigured,
+      isUnlocked: _bootstrap.isUnlocked,
+      passwordRotationRecoveryFailed: _bootstrap.passwordRotationRecoveryFailed,
+    );
 
 double _toggleTrackOpacity(WidgetTester tester) {
   final opacity = tester.widget<Opacity>(
