@@ -121,12 +121,13 @@ fresh mainnet wallet is an explicit user action.
 
 ## GitHub Actions releases
 
-The `Sybil beta release` workflow builds Android ARM64, Linux x64, Windows x64, and macOS Apple Silicon on
-GitHub-hosted Linux, Windows, and macOS runners. Run it manually with a version (without
+The `Sybil beta release` workflow builds Android ARM64, Linux x64, and Windows x64 on
+GitHub-hosted runners. macOS Apple Silicon is deferred from releases but remains
+available through the explicit `macos` target. Run it manually with a version (without
 `v`) to test builds without publishing, or push a `v*` version tag to prepare a
 draft prerelease. Manual runs can select a single target to retry platform-specific changes.
 Draft creation is available only with all targets selected. Existing releases are
-never overwritten. All four builds must pass before a draft is created; publishing
+never overwritten. All three release builds must pass before a draft is created; publishing
 that draft remains a manual step.
 
 Configure these repository Actions secrets using the existing Android signing
@@ -150,7 +151,7 @@ run number plus one (the original beta used code 1); reruns retain their code.
 Keep this workflow's run numbering when releasing updates, or explicitly plan
 a higher version-code baseline before replacing it.
 
-Each draft includes all four platform bundles, `SHA256SUMS`, the exact wallet source tree,
+Each draft includes all three release platform bundles, `SHA256SUMS`, the exact wallet source tree,
 and the checksum-verified SimpleX corresponding-source archive from the first
 beta. Update the pinned source asset and its checksum whenever bundled SimpleX
 inputs change. Windows bundles are unsigned; macOS apps are ad-hoc signed, not notarized.

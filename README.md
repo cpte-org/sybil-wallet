@@ -62,9 +62,9 @@ fvm flutter analyze
 ```
 
 Use [CONTRIBUTING.md](CONTRIBUTING.md) for development guidance. GitHub Actions
-packages Android ARM64, Linux x64, Windows x64, and macOS Apple Silicon.
-Windows downloads are unsigned; macOS downloads are ad-hoc signed without
-notarization. iOS is not yet a Sybil release target.
+packages Android ARM64, Linux x64, and Windows x64. Windows downloads are
+unsigned. macOS builds are deferred and remain available as a manual CI target;
+iOS is not yet a Sybil release target.
 
 ## Licenses and attribution
 
