@@ -118,3 +118,38 @@ migrate Vizor data; import recovery material explicitly into a disposable test
 wallet when appropriate. The build scripts do not wipe storage or migrate
 testnet accounts. A saved testnet wallet remains a testnet wallet; setting up a
 fresh mainnet wallet is an explicit user action.
+
+## GitHub Actions releases
+
+The `Sybil beta release` workflow builds Android ARM64 and Linux x64 on
+GitHub-hosted Ubuntu 24.04 runners. Run it manually with a version (without
+`v`) to test builds without publishing, or push a `v*` version tag to prepare a
+draft prerelease. Manual runs can also request a draft. Existing releases are
+never overwritten. Both builds must pass before a draft is created; publishing
+that draft remains a manual step.
+
+Configure these repository Actions secrets using the existing Android signing
+identity, not a newly generated key:
+
+- `ANDROID_KEYSTORE_BASE64`: base64-encoded existing PKCS12 keystore.
+- `ANDROID_KEYSTORE_PASSWORD`: its store password.
+- `ANDROID_KEY_ALIAS`: the signing key alias.
+- `ANDROID_KEY_PASSWORD`: its key password.
+
+Secrets are provided only to the Android signing/build step, never to pull
+requests. The temporary keystore is removed when that step finishes. Only
+trusted maintainers should be able to change or dispatch release workflows.
+No NEAR or Base provider credentials are needed: clients use the public Sybil
+Worker endpoint.
+
+Flutter comes from `.fvmrc`; FVM is pinned to 4.3.0 and Rust comes from
+`scripts/release-config/android-reproducible-rust-version.txt`. Android keeps
+the explicit SDK/NDK versions in Gradle. Android version codes are the workflow
+run number plus one (the original beta used code 1); reruns retain their code.
+Keep this workflow's run numbering when releasing updates, or explicitly plan
+a higher version-code baseline before replacing it.
+
+Each draft includes both binaries, `SHA256SUMS`, the exact wallet source tree,
+and the checksum-verified SimpleX corresponding-source archive from the first
+beta. Update the pinned source asset and its checksum whenever bundled SimpleX
+inputs change. CI compilation does not replace on-device release testing.

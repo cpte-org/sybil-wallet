@@ -1,0 +1,133 @@
+name: Sybil beta release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version without v (for example 1.0.0-beta.2)'
+        required: true
+        type: string
+      publish:
+        description: 'Create a draft release (both targets must succeed)'
+        default: false
+        type: boolean
+permissions:
+  contents: read
+concurrency:
+  group: sybil-release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.repository == 'cpte-org/sybil-wallet'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [linux, android]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Set release identity
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          version="${INPUT_VERSION:-${GITHUB_REF_NAME#v}}"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || exit 1
+          echo "SYBIL_RELEASE_VERSION=$version" >> "$GITHUB_ENV"
+          echo "SYBIL_RELEASE_BUILD=$((GITHUB_RUN_NUMBER + 1))" >> "$GITHUB_ENV"
+      - name: Install native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libsecret-1-dev libjsoncpp-dev libssl-dev libudev-dev libusb-1.0-0-dev liblzma-dev libstdc++-12-dev unzip
+      - name: Install pinned Flutter and Rust
+        run: bash scripts/ci-sybil-setup.sh
+      - name: Resolve dependencies
+        run: |
+          fvm flutter pub get --enforce-lockfile
+          cargo fetch --locked --manifest-path rust/Cargo.toml
+      - name: Check source and unlock flows
+        run: |
+          fvm flutter analyze --no-pub
+          if [[ '${{ matrix.target }}' == linux ]]; then
+            fvm flutter test --no-pub test/features/onboarding/unlock_screen_payment_uri_test.dart test/features/onboarding/lost_password_screen_test.dart
+          else
+            fvm flutter test --no-pub --tags mobile --run-skipped --dart-define=VIZOR_FORM_FACTOR=mobile test/features/onboarding/mobile_unlock_screen_payment_uri_test.dart
+          fi
+      - name: Prepare Linux SimpleX runtime
+        if: matrix.target == 'linux'
+        run: |
+          mkdir -p "$RUNNER_TEMP/simplex"
+          curl --fail --location --retry 3 https://github.com/simplex-chat/simplex-chat-libs/releases/download/v7.0.2/simplex-chat-libs-linux-x86_64.zip -o "$RUNNER_TEMP/simplex.zip"
+          echo "235e8afc1942f098e6ad27b7e2947eced0a670e2ed35f064d802b71bbcfc1610  $RUNNER_TEMP/simplex.zip" | sha256sum --check
+          unzip -q "$RUNNER_TEMP/simplex.zip" -d "$RUNNER_TEMP/simplex"
+          runtime=$(find "$RUNNER_TEMP/simplex" -name libsimplex.so -print -quit)
+          test -n "$runtime"
+          echo "SIMPLEX_LIBS_DIR=$(dirname "$runtime")" >> "$GITHUB_ENV"
+      - name: Build Linux
+        if: matrix.target == 'linux'
+        run: bash scripts/build-sybil-beta.sh linux
+      - name: Build signed Android APK
+        if: matrix.target == 'android'
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          : "${ANDROID_KEYSTORE_BASE64:?Configure the existing Sybil release key in GitHub secrets}"
+          : "${ANDROID_KEYSTORE_PASSWORD:?Missing keystore password}"
+          : "${ANDROID_KEY_ALIAS:?Missing key alias}"
+          : "${ANDROID_KEY_PASSWORD:?Missing key password}"
+          export JAVA_HOME="$JAVA_HOME_17_X64"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          sdkmanager 'platforms;android-36' 'build-tools;36.0.0' 'ndk;28.2.13676358'
+          export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/sybil-release.p12"
+          trap 'rm -f "$ANDROID_KEYSTORE_PATH"' EXIT
+          umask 077
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$ANDROID_KEYSTORE_PATH"
+          unset ANDROID_KEYSTORE_BASE64
+          bash scripts/build-sybil-beta.sh android
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose dist/android/*.apk
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sybil-${{ matrix.target }}
+          path: dist/${{ matrix.target }}/sybil-beta-mainnet-*
+          if-no-files-found: error
+          retention-days: 14
+  draft-release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.publish
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: sybil-*
+          path: release-assets
+          merge-multiple: true
+      - name: Attach corresponding source and create draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          version="${INPUT_VERSION:-${GITHUB_REF_NAME#v}}"
+          tag="v$version"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo 'Release already exists; refusing to replace its assets.' >&2
+            exit 1
+          fi
+          gh release download v1.0.0-beta.1 --repo "$GITHUB_REPOSITORY" --pattern sybil-simplex-source-v7.0.2.tar.gz --dir release-assets
+          echo 'a65f863415b69ab2b8e40e842f91da5cd0281fcceb6ec63102a8ca1306922aa7  release-assets/sybil-simplex-source-v7.0.2.tar.gz' | sha256sum --check
+          git archive --format=tar.gz --prefix=sybil-wallet/ HEAD > release-assets/sybil-wallet-source.tar.gz
+          (cd release-assets && sha256sum ./*.apk ./*.tar.gz > SHA256SUMS)
+          printf 'Sybil beta %s\n\nCommit: %s\nAndroid version code: %s\n\nAndroid ARM64 and Linux x64. Review artifacts before publishing.\n' "$version" "$GITHUB_SHA" "$((GITHUB_RUN_NUMBER + 1))" > "$RUNNER_TEMP/release-notes.md"
+          gh release create "$tag" release-assets/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --draft --prerelease --title "Sybil Wallet $version" --notes-file "$RUNNER_TEMP/release-notes.md"
