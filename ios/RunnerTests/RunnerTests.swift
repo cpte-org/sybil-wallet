@@ -1,4 +1,5 @@
 import Flutter
+import QuartzCore
 import Security
 import UIKit
 import UserNotifications
@@ -6,7 +7,147 @@ import XCTest
 
 @testable import Runner
 
+private final class TextFieldWithoutSecureCanvas: UITextField {
+  override var subviews: [UIView] { [] }
+}
+
 class RunnerTests: XCTestCase {
+  func testScreenshotShieldRetriesOnActivationAndCanDisableBeforeRetry() {
+    let done = expectation(description: "lifecycle")
+    DispatchQueue.main.async {
+      let notifications = NotificationCenter()
+      var activeWindow: UIWindow?
+      let host = CALayer()
+      let canvas = CALayer()
+      let shield = SecureScreenshotShield(
+        windowProvider: { activeWindow },
+        canvasProvider: { field in field.layer.addSublayer(canvas); return canvas },
+        notificationCenter: notifications
+      )
+      var states: [String] = []
+      shield.onStatusChanged = { states.append($0["state"] as! String) }
+      shield.setSensitiveContentVisible(true)
+      XCTAssertEqual(shield.status["state"] as? String, "pending")
+      let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 393, height: 852))
+      host.addSublayer(window.layer)
+      activeWindow = window
+      notifications.post(name: UIScene.didActivateNotification, object: nil)
+      XCTAssertEqual(shield.status["state"] as? String, "applied")
+      XCTAssertTrue(window.layer.superlayer === canvas)
+      XCTAssertEqual(canvas.frame.size, window.bounds.size)
+      shield.setSensitiveContentVisible(false)
+      XCTAssertEqual(shield.status["state"] as? String, "disabled")
+      XCTAssertEqual(shield.status["visible"] as? Bool, false)
+      XCTAssertEqual(states, ["pending", "applied", "disabled"])
+      done.fulfill()
+    }
+    wait(for: [done], timeout: 2)
+  }
+
+  func testScreenshotShieldDoesNotAttachAfterPendingRequestIsDisabled() {
+    let done = expectation(description: "cancel pending")
+    DispatchQueue.main.async {
+      let notifications = NotificationCenter()
+      var resolutions = 0
+      let shield = SecureScreenshotShield(
+        windowProvider: { resolutions += 1; return nil },
+        notificationCenter: notifications
+      )
+      shield.setSensitiveContentVisible(true)
+      shield.setSensitiveContentVisible(false)
+      notifications.post(name: UIScene.didActivateNotification, object: nil)
+      XCTAssertEqual(resolutions, 1)
+      XCTAssertEqual(shield.status["state"] as? String, "disabled")
+      done.fulfill()
+    }
+    wait(for: [done], timeout: 2)
+  }
+
+  func testScreenshotShieldRestoresOldWindowOnReplacement() {
+    let done = expectation(description: "window replacement")
+    DispatchQueue.main.async {
+      let host = CALayer()
+      let first = UIWindow(frame: CGRect(x: 0, y: 0, width: 393, height: 852))
+      let second = UIWindow(frame: CGRect(x: 0, y: 0, width: 852, height: 393))
+      host.addSublayer(first.layer)
+      host.addSublayer(second.layer)
+      var active = first
+      let canvas = CALayer()
+      let notifications = NotificationCenter()
+      let shield = SecureScreenshotShield(
+        windowProvider: { active },
+        canvasProvider: { field in field.layer.addSublayer(canvas); return canvas },
+        notificationCenter: notifications
+      )
+      shield.setSensitiveContentVisible(true)
+      active = second
+      notifications.post(name: UIScene.didActivateNotification, object: nil)
+      XCTAssertTrue(first.layer.superlayer === host)
+      XCTAssertTrue(second.layer.superlayer === canvas)
+      XCTAssertEqual(canvas.frame.size, second.bounds.size)
+      XCTAssertEqual(shield.status["state"] as? String, "applied")
+      done.fulfill()
+    }
+    wait(for: [done], timeout: 2)
+  }
+
+  func testScreenshotShieldRejectsUnknownCanvasWithoutChangingWindow() {
+    let done = expectation(description: "no guessed canvas")
+    DispatchQueue.main.async {
+      let host = CALayer()
+      let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 393, height: 852))
+      host.addSublayer(window.layer)
+      let shield = SecureScreenshotShield(
+        windowProvider: { window }, canvasProvider: { _ in nil },
+        notificationCenter: NotificationCenter()
+      )
+      shield.setSensitiveContentVisible(true)
+      XCTAssertTrue(window.layer.superlayer === host)
+      XCTAssertEqual(shield.status["state"] as? String, "failed")
+      XCTAssertEqual(shield.status["reason"] as? String, "secure_canvas_unavailable")
+      let plainField = TextFieldWithoutSecureCanvas()
+      plainField.layer.addSublayer(CALayer())
+      XCTAssertNil(SecureScreenshotShield.secureCanvasLayer(of: plainField))
+      done.fulfill()
+    }
+    wait(for: [done], timeout: 2)
+  }
+
+  func testScreenshotShieldAppliesInlineOnMainThread() {
+    let applied = expectation(description: "secure flag applied inline")
+
+    DispatchQueue.main.async {
+      var didApply = false
+      SecureScreenshotShield.performOnMain {
+        didApply = true
+      }
+
+      XCTAssertTrue(didApply)
+      applied.fulfill()
+    }
+
+    wait(for: [applied], timeout: 1)
+  }
+
+  func testScreenshotShieldRestoresWindowLayerBeforeRegrafting() {
+    let hostLayer = CALayer()
+    let secureLayer = CALayer()
+    let canvasLayer = CALayer()
+    let windowLayer = CALayer()
+    hostLayer.addSublayer(secureLayer)
+    secureLayer.addSublayer(canvasLayer)
+    canvasLayer.addSublayer(windowLayer)
+
+    SecureScreenshotShield.restoreLayerHierarchy(
+      windowLayer: windowLayer,
+      secureLayer: secureLayer
+    )
+
+    XCTAssertTrue(windowLayer.superlayer === hostLayer)
+    XCTAssertNil(secureLayer.superlayer)
+    XCTAssertFalse(canvasLayer.sublayers?.contains(windowLayer) ?? false)
+  }
+
 
   func testIncomingDeeplinkAcceptsOnlySupportedHTTPSRoutes() {
     let bridge = IncomingUriChannelBridge.shared
@@ -3179,5 +3320,52 @@ private final class KeychainAccessibilityMigrationCompletionStoreHarness:
 
   private func key(service: String, version: Int) -> String {
     "\(version):\(service)"
+  }
+}
+
+final class ModalCornerCacheTests: XCTestCase {
+  func testMemoryLifetimeAndProfileSeparation() {
+    let cache = ModalCornerCache()
+    cache.store([46, 48], for: "portrait", limit: 201)
+    XCTAssertEqual(cache.radii(for: "portrait", limit: 201), [46, 48])
+    XCTAssertNil(cache.radii(for: "landscape", limit: 201))
+    XCTAssertNil(ModalCornerCache().radii(for: "portrait", limit: 201))
+  }
+
+  func testHeightIndependentReferenceAndConservativeEligibility() {
+    let bounds = CGRect(x: 0, y: 0, width: 402, height: 874)
+    let short = CGRect(x: 16, y: 607, width: 370, height: 251)
+    let tall = CGRect(x: 16, y: 306, width: 370, height: 552)
+    let reference = ModalCornerGeometry.referenceRect(for: short, in: bounds)
+    XCTAssertEqual(reference, ModalCornerGeometry.referenceRect(for: tall, in: bounds))
+    XCTAssertEqual(reference, CGRect(x: 16, y: 0, width: 370, height: 858))
+    XCTAssertNotEqual(reference,
+      ModalCornerGeometry.referenceRect(for: short.offsetBy(dx: 0, dy: -1), in: bounds))
+    XCTAssertTrue(ModalCornerGeometry.supports(short, radii: [46, 48]))
+    XCTAssertTrue(ModalCornerGeometry.supports(
+      CGRect(x: 16, y: 698, width: 370, height: 160), radii: [46, 48]))
+    XCTAssertFalse(ModalCornerGeometry.supports(
+      CGRect(x: 16, y: 699, width: 370, height: 159), radii: [46, 48]))
+    XCTAssertFalse(ModalCornerGeometry.supports(
+      CGRect(x: 16, y: 0, width: 180, height: 400), radii: [46, 48]))
+    let cache = ModalCornerCache()
+    cache.store([46, 48], for: NSCoder.string(for: reference), limit: 201)
+    XCTAssertEqual(cache.radii(for: NSCoder.string(for:
+      ModalCornerGeometry.referenceRect(for: tall, in: bounds)), limit: 201), [46, 48])
+  }
+
+  func testInvalidEntriesAndBoundedLRU() {
+    let cache = ModalCornerCache()
+    for value in [[-1.0, 46], [999.0, 999], [46.0], [Double.nan, 46]] {
+      cache.store(value, for: "invalid", limit: 201)
+      XCTAssertNil(cache.radii(for: "invalid", limit: 201))
+    }
+    cache.store([32, 32], for: "valid32", limit: 201)
+    XCTAssertEqual(cache.radii(for: "valid32", limit: 201), [32, 32])
+    for i in 0..<64 { cache.store([46, 46], for: "\(i)", limit: 201) }
+    XCTAssertNotNil(cache.radii(for: "0", limit: 201))
+    cache.store([46, 46], for: "64", limit: 201)
+    XCTAssertNotNil(cache.radii(for: "0", limit: 201))
+    XCTAssertNil(cache.radii(for: "1", limit: 201))
   }
 }

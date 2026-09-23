@@ -7,6 +7,8 @@ import '../../../core/widgets/amount_price_loading_bar.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/sybil_widgets.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/comma_to_dot_input_formatter.dart';
+import '../../../core/widgets/decimal_amount_input_formatter.dart';
 
 /// Recipient address type used to choose the leading icon.
 ///
@@ -299,6 +301,13 @@ class SendComposeView extends StatelessWidget {
       inlineSuffixStyle: amountAffixStyle,
       showClearButton: true,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: [
+        const CommaToDotInputFormatter(),
+        DecimalAmountInputFormatter(
+          maxFractionDigits: amountInputIsUsd ? 2 : 8,
+          maxLength: amountInputIsUsd ? 12 : 17,
+        ),
+      ],
     );
   }
 

@@ -374,6 +374,10 @@ class MobileSendReviewScreen extends StatelessWidget {
 }
 
 const _kMobileSendRecipientLineHeight = 17.0;
+
+/// The memo error is the one message here that does not fit on a line at
+/// phone width, so its slot holds two.
+const _kMobileSendMemoErrorHeight = _kMobileSendRecipientLineHeight * 2;
 const _kMobileSendAddressActionHeight = 36.0;
 const _kMobileSendAddressActionSlotWidth = 96.0;
 const _kMobileSendAddressPasteWidth = 76.0;
@@ -611,9 +615,7 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
     if (_contactRecipient != null) _contactLabel = _contactRecipient!.label;
     final initialMemo = widget.initialMemo;
     if (initialMemo != null) {
-      final memo = widget.preserveInitialMemoWhitespace
-          ? initialMemo
-          : initialMemo.trim();
+      final memo = initialMemo;
       if (memo.isNotEmpty) {
         _memo = memo;
         _preserveMemoWhitespace = widget.preserveInitialMemoWhitespace;
@@ -688,10 +690,12 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
 
   static const _notEnoughZecText = 'Not enough ZEC';
 
-  bool get _activeAccountIsHardware {
+  HardwareSignerKind? get _activeHardwareSignerKind {
     final uuid = ref.read(accountProvider).value?.activeAccountUuid;
-    if (uuid == null) return false;
-    return ref.read(accountProvider.notifier).isHardwareAccount(uuid);
+    if (uuid == null) return null;
+    return ref
+        .read(accountProvider.notifier)
+        .hardwareSignerKindForAccount(uuid);
   }
 
   bool get _showRecipientContinue =>
@@ -1837,9 +1841,9 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
     }
     final accountUuid = ref.read(accountProvider).value?.activeAccountUuid;
     if (accountUuid == null) return;
-    final isHardware = ref
+    final hardwareSignerKind = ref
         .read(accountProvider.notifier)
-        .isHardwareAccount(accountUuid);
+        .hardwareSignerKindForAccount(accountUuid);
     final amountZatoshi = parseZecAmount(_amountText.trim());
     if (amountZatoshi == null || amountZatoshi <= BigInt.zero) return;
     final reviewedFeeZatoshi = _feeZatoshi!;
@@ -1917,8 +1921,22 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
       _reviewFeeNotice = null;
     });
 
+    if (hardwareSignerKind == HardwareSignerKind.ledger) {
+      final ledger = await context.push<LedgerBroadcastArgs>(
+        '/send/ledger-sign',
+        extra: args,
+      );
+      if (ledger == null) {
+        await _recoverCancelledProposal(args);
+        return;
+      }
+      if (!mounted) return;
+      _openStatusRoute(ledger);
+      return;
+    }
+
     KeystoneBroadcastArgs? keystone;
-    if (isHardware) {
+    if (hardwareSignerKind == HardwareSignerKind.keystone) {
       // Hand the PCZT to the device for the spend-auth signature; the
       // signing screen owns the QR display/scan round trip.
       keystone = await context.push<KeystoneBroadcastArgs>(
@@ -2624,6 +2642,19 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
 
   Widget _buildAmountStep(BuildContext context) {
     final colors = context.colors;
+    final recipient = sendReviewRecipientFor(
+      contacts:
+          ref.watch(addressBookProvider).value?.contacts ??
+          const <AddressBookContact>[],
+      address: _addressController.text.trim(),
+      ownAccounts: ref.watch(ownAccountAddressesProvider).value ?? const {},
+    );
+    final recipientLabel = recipient is SendReviewContactRecipient
+        ? recipient.name
+        : _contactLabel;
+    final recipientPictureId = recipient is SendReviewContactRecipient
+        ? recipient.profilePictureId
+        : _contactPictureId;
     final zecUsdUnitPrice = ref.watch(zecLiveUsdUnitPriceProvider);
     final spendableText = ZecAmount.fromZatoshi(
       _spendable,
@@ -2704,7 +2735,7 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
                                     key: const ValueKey(
                                       'mobile_send_amount_recipient_picture',
                                     ),
-                                    profilePictureId: _contactPictureId ?? '',
+                                    profilePictureId: recipientPictureId ?? '',
                                     size: AppProfilePictureSize.navLarge,
                                   ),
                                   const SizedBox(width: AppSpacing.s),
@@ -2714,7 +2745,7 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
                                           MainAxisAlignment.center,
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
-                                      children: _contactLabel == null
+                                      children: recipientLabel == null
                                           ? [
                                               _RecipientLineText(
                                                 _truncateAddress(
@@ -2725,7 +2756,7 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
                                             ]
                                           : [
                                               _RecipientLineText(
-                                                _contactLabel!,
+                                                recipientLabel,
                                                 color: colors.text.accent,
                                               ),
                                               const SizedBox(
@@ -2761,19 +2792,21 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
             AppSpacing.sm,
             AppSpacing.s,
           ),
-          child: SizedBox(
-            width: double.infinity,
-            child: AppButton(
-              key: const ValueKey('mobile_send_review_button'),
-              expand: true,
-              constrainContent: true,
-              onPressed: _amountReady ? _continueToReview : null,
-              child: Text(
-                _amountCtaLabel,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppButton(
+                key: const ValueKey('mobile_send_review_button'),
+                expand: true,
+                constrainContent: true,
+                onPressed: _amountReady ? _continueToReview : null,
+                child: Text(
+                  _amountCtaLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ],
@@ -3142,7 +3175,9 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
       contacts: addressBookContacts,
       ownAccounts: ownAccounts,
     );
-    final isHardware = _activeAccountIsHardware;
+    final hardwareSignerKind = _activeHardwareSignerKind;
+    final isKeystone = hardwareSignerKind == HardwareSignerKind.keystone;
+    final isLedger = hardwareSignerKind == HardwareSignerKind.ledger;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -3285,7 +3320,11 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
                               : _confirmAndSend(),
                         ),
                   leading: AppIcon(
-                    isHardware ? AppIcons.qr : AppIcons.plane,
+                    isKeystone
+                        ? AppIcons.qr
+                        : isLedger
+                        ? AppIcons.ledger
+                        : AppIcons.plane,
                     size: 20,
                   ),
                   child: Text(
@@ -3300,7 +3339,9 @@ class _MobileSendScreenState extends ConsumerState<MobileSendScreen> {
                         ? 'Calculating fee...'
                         : !_hasCurrentReviewFeeQuote
                         ? 'Fee unavailable'
-                        : isHardware
+                        : isLedger
+                        ? 'Confirm with Ledger'
+                        : isKeystone
                         ? 'Confirm with Keystone'
                         : 'Confirm & Send',
                   ),
@@ -4072,12 +4113,13 @@ class _MemoSheetState extends State<_MemoSheet> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final overLimit = _usedBytes > _memoByteLimit;
+    final error = overLimit ? 'Message is too long' : null;
     final labelStyle = AppTypography.labelLarge.copyWith(
       color: colors.text.secondary,
       fontWeight: FontWeight.w400,
     );
     final primaryIsClear = _showClearMemo;
-    final primaryDisabled = overLimit && !primaryIsClear;
+    final primaryDisabled = error != null && !primaryIsClear;
 
     return MobileModalScaffold(
       title: 'Add Memo',
@@ -4124,12 +4166,15 @@ class _MemoSheetState extends State<_MemoSheet> {
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   SizedBox(
-                    height: _kMobileSendRecipientLineHeight,
+                    height: _kMobileSendMemoErrorHeight,
                     child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: overLimit
+                      // Top, so a one-line message keeps the position it had
+                      // before this slot grew.
+                      alignment: Alignment.topLeft,
+                      child: error != null
                           ? Text(
-                              'Message is too long',
+                              error,
+                              maxLines: 2,
                               style: labelStyle.copyWith(
                                 color: colors.text.destructive,
                               ),
@@ -4250,7 +4295,9 @@ class _MemoTextAreaState extends State<_MemoTextArea> {
     final focused = widget.focusNode.hasFocus;
 
     return Container(
-      height: 148,
+      // The memo error slot below holds two lines, and the sheet keeps its
+      // height: the second line comes from here. This area scrolls.
+      height: 148 - _kMobileSendRecipientLineHeight,
       decoration: BoxDecoration(
         color: colors.background.ground,
         borderRadius: BorderRadius.circular(AppRadii.small),

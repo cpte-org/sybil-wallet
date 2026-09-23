@@ -5,10 +5,13 @@ use std::num::NonZeroU32;
 
 use zcash_client_backend::data_api::wallet::ConfirmationsPolicy;
 
+pub(crate) mod addresses;
 pub(crate) mod db;
 pub mod contacts;
 pub mod keys;
+pub(crate) mod gift_card_tracking;
 pub mod keystone;
+pub mod ledger;
 pub mod network;
 pub mod secret_payload;
 pub mod secret_store;

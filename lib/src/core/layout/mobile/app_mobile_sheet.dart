@@ -2,12 +2,16 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform;
-import 'package:flutter/material.dart' show Material, showModalBottomSheet;
+import 'package:flutter/material.dart'
+    show Material, MaterialLocalizations, showModalBottomSheet;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../theme/app_theme.dart';
 import '../../widgets/app_icon.dart';
+import '../../widgets/app_modal_shape.dart';
+import 'mobile_modal_corners.dart';
+import 'prepared_modal_sheet_route.dart';
 
 /// Shows a mobile modal as a floating card — the Figma modal base
 /// (`_Modal Type`, e.g. 4600:50437). It still rises from the bottom, but
@@ -16,14 +20,13 @@ import '../../widgets/app_icon.dart';
 ///
 /// - 16px side margins ([AppSpacing.sm]) — card x=16, width=361 on the
 ///   393-wide artboard.
-/// - 32px bottom gap ([AppSpacing.base]) — bottom-anchored cards end at
-///   y=820 on the 852-tall artboard. On iOS the home indicator is a
-///   ~13pt overlay, so the fixed gap already clears it and the safe-area
-///   inset is not stacked on top (matching the project's
-///   `MobileBottomSafeArea` rule). On Android the navigation bar takes
-///   real, device-dependent space, so its inset is added on top of the
-///   visual gap.
-/// - All-corner radius of [AppRadii.xLarge] (radii/L = 32) on a
+/// - 16px bottom gap ([AppSpacing.sm]) to match the side margins. On iOS
+///   this gap includes the home-indicator clearance without adding the
+///   bottom safe-area inset. Android adds its device-dependent navigation
+///   inset to the same visual gap.
+/// - iOS continuous corners: fixed 32 at the top; at least 32 at the bottom,
+///   adapted to the display when native geometry is available. Other hosts
+///   keep the all-corner radius of [AppRadii.xLarge] (radii/L = 32) on a
 ///   `background.base` surface with the Figma shadow overlay.
 /// - When the software keyboard is open the card floats 16px above it
 ///   (Figma `Review Add Memo`, 4638:74505), so text-entry modals like the
@@ -55,6 +58,31 @@ Future<T?> showAppMobileSheet<T>({
     final container = providerContainer;
     if (container == null) return themed;
     return UncontrolledProviderScope(container: container, child: themed);
+  }
+
+  if (defaultTargetPlatform == TargetPlatform.iOS && !transparentBackground) {
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final localizations = MaterialLocalizations.of(context);
+    return navigator.push(
+      PreparedModalSheetRoute<T>(
+        capturedThemes: InheritedTheme.capture(
+          from: context,
+          to: navigator.context,
+        ),
+        modalBarrierColor: colors.background.neutralScrim,
+        barrierLabel: localizations.scrimLabel,
+        barrierOnTapHint: localizations.scrimOnTapHint(
+          localizations.bottomSheetLabel,
+        ),
+        isDismissible: isDismissible,
+        enableDrag: enableDrag,
+        builder: (_) => wrapSheet(
+          Builder(
+            builder: (context) => MobileModalCard(child: builder(context)),
+          ),
+        ),
+      ),
+    );
   }
 
   return showModalBottomSheet<T>(
@@ -98,6 +126,7 @@ class MobileModalCard extends StatelessWidget {
     required this.child,
     this.transparentBackground = false,
     this.margin,
+    this.followsScreenCorners = true,
     super.key,
   });
 
@@ -111,9 +140,13 @@ class MobileModalCard extends StatelessWidget {
   /// Bottom sheets retain the default side and safe-area-aware bottom gaps.
   final EdgeInsets? margin;
 
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
+  /// Only bottom-anchored sheets adapt to the display. Centered dialogs still
+  /// use iOS continuous corners, with the original fixed radius.
+  final bool followsScreenCorners;
+
+  /// Default bottom clearance shared by the card and content that sizes
+  /// itself to the space above it. Explicit [margin] overrides this gap.
+  static double bottomGapFor(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final keyboardInset = mediaQuery.viewInsets.bottom;
 
@@ -123,36 +156,48 @@ class MobileModalCard extends StatelessWidget {
       // the software keyboard.
       bottomGap = keyboardInset + AppSpacing.sm;
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
-      // The home indicator floats inside the 32px gap; do not stack the
+      // The home indicator floats inside the 16px gap; do not stack the
       // safe-area inset on top of it.
-      bottomGap = AppSpacing.base;
+      bottomGap = AppSpacing.sm;
     } else {
       // Android nav bars vary per device and occupy real space — keep the
-      // 32px visual gap above whatever inset the device reports.
-      bottomGap = AppSpacing.base + mediaQuery.viewPadding.bottom;
+      // 16px visual gap above whatever inset the device reports.
+      bottomGap = AppSpacing.sm + mediaQuery.viewPadding.bottom;
+    }
+    return bottomGap;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    final ios = defaultTargetPlatform == TargetPlatform.iOS;
+    Widget surface(BorderRadius radius) {
+      final shape = appModalShape(radius);
+      return DecoratedBox(
+        decoration: ios
+            ? ShapeDecoration(shape: shape, shadows: _modalShadow)
+            : BoxDecoration(borderRadius: radius, boxShadow: _modalShadow),
+        child: Material(
+          color: colors.background.base,
+          clipBehavior: Clip.antiAlias,
+          shape: shape,
+          child: CustomPaint(
+            foregroundPainter: _ModalInnerHighlightPainter(shape),
+            child: child,
+          ),
+        ),
+      );
     }
 
     final Widget card = transparentBackground
         ? child
-        : DecoratedBox(
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(AppRadii.xLarge)),
-              boxShadow: _modalShadow,
-            ),
-            child: Material(
-              color: colors.background.base,
-              clipBehavior: Clip.antiAlias,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(AppRadii.xLarge),
-                ),
-              ),
-              child: CustomPaint(
-                foregroundPainter: const _ModalInnerHighlightPainter(),
-                child: child,
-              ),
-            ),
-          );
+        : ios
+        ? MobileModalCorners(
+            followsScreenCorners: followsScreenCorners,
+            builder: (_, radius) => surface(radius),
+          )
+        : surface(const BorderRadius.all(Radius.circular(AppRadii.xLarge)));
 
     // The card carries the Figma 16px side margins. Transparent content
     // is already its own card and owns its horizontal sizing, so only the
@@ -164,7 +209,7 @@ class MobileModalCard extends StatelessWidget {
           EdgeInsets.only(
             left: sideMargin,
             right: sideMargin,
-            bottom: bottomGap,
+            bottom: bottomGapFor(context),
           ),
       child: card,
     );
@@ -207,24 +252,24 @@ class MobileModalOverlay extends StatelessWidget {
 /// Figma `Shadow Overlay` inner shadow (#FFFFFF26, blur radius 2) — a
 /// soft rim that separates the card from the scrim without a hard stroke.
 class _ModalInnerHighlightPainter extends CustomPainter {
-  const _ModalInnerHighlightPainter();
+  const _ModalInnerHighlightPainter(this.shape);
+
+  final ShapeBorder shape;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rrect = RRect.fromRectAndRadius(
-      Offset.zero & size,
-      const Radius.circular(AppRadii.xLarge),
-    );
+    final path = shape.getOuterPath(Offset.zero & size);
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
       ..color = const Color(0x26FFFFFF)
       ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.inner, 2);
-    canvas.drawRRect(rrect, paint);
+    canvas.drawPath(path, paint);
   }
 
   @override
-  bool shouldRepaint(_ModalInnerHighlightPainter oldDelegate) => false;
+  bool shouldRepaint(_ModalInnerHighlightPainter oldDelegate) =>
+      oldDelegate.shape != shape;
 }
 
 /// Figma `Shadow Overlay` — a soft, mostly-downward elevation behind the
