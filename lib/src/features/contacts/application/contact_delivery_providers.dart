@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
 import '../../../core/storage/app_secure_store.dart';
 import '../../../providers/network_privacy_provider.dart';
@@ -25,9 +26,27 @@ import 'contact_mutation_gate.dart';
   const libraryOverride = String.fromEnvironment('SIMPLEX_NATIVE_LIBRARY');
   final bundle = File(Platform.resolvedExecutable).parent.path;
   return (
-    host: hostOverride.isEmpty ? '$bundle/simplex-host' : hostOverride,
+    host: hostOverride.isEmpty
+        ? p.join(
+            bundle,
+            Platform.isWindows ? 'simplex-host.exe' : 'simplex-host',
+          )
+        : hostOverride,
     library: libraryOverride.isEmpty
-        ? '$bundle/lib/simplex/libsimplex.so'
+        ? (Platform.isMacOS
+              ? p.join(
+                  bundle,
+                  '..',
+                  'Frameworks',
+                  'simplex',
+                  'libsimplex.dylib',
+                )
+              : p.join(
+                  bundle,
+                  'lib',
+                  'simplex',
+                  Platform.isWindows ? 'libsimplex.dll' : 'libsimplex.so',
+                ))
         : libraryOverride,
   );
 }
@@ -46,12 +65,12 @@ final contactDeliveryUnavailableReasonProvider = Provider<String?>((ref) {
         ? 'Checking the Android private delivery component.'
         : 'The SimpleX native component is not installed in this Android build. Exchange contact codes with QR or copy and paste.';
   }
-  if (!Platform.isLinux) {
-    return 'Private delivery is available only in supported Linux and Android builds. Manual exchange is available.';
+  if (!(Platform.isLinux || Platform.isMacOS || Platform.isWindows)) {
+    return 'Private delivery is available only in supported desktop and Android builds. Manual exchange is available.';
   }
   final paths = _simplexPaths();
   if (!File(paths.host).existsSync() || !File(paths.library).existsSync()) {
-    return 'The SimpleX native component is not installed in this Linux build. Manual exchange is available.';
+    return 'The SimpleX native component is not installed in this build. Manual exchange is available.';
   }
   return null;
 });

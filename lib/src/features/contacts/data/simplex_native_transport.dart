@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:path/path.dart' as p;
+
 import '../application/contact_delivery_coordinator.dart';
 import '../application/contact_delivery_receiver.dart';
 import '../domain/contact_delivery.dart';
@@ -82,10 +84,10 @@ class SimplexNativeTransport
     }
     _check();
     if ((_embeddedHost == null &&
-            (!Platform.isLinux ||
-                !hostPath.startsWith('/') ||
-                !libraryPath.startsWith('/'))) ||
-        !databasePath.startsWith('/') ||
+            (!(Platform.isLinux || Platform.isMacOS || Platform.isWindows) ||
+                !p.isAbsolute(hostPath) ||
+                !p.isAbsolute(libraryPath))) ||
+        !p.isAbsolute(databasePath) ||
         [databasePath, databaseKey].any(
           (v) => v.contains('\n') || v.contains('\r') || v.contains('\x00'),
         ) ||

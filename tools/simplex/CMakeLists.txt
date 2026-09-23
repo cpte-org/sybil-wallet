@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.16)
+project(sybil_simplex_host C)
+add_executable(simplex-host native_host.c)
+if(WIN32)
+  # Match the upstream SimpleX DLL's shared Universal CRT allocator.
+  set_property(TARGET simplex-host PROPERTY MSVC_RUNTIME_LIBRARY MultiThreadedDLL)
+  target_link_libraries(simplex-host PRIVATE wer)
+else()
+  target_link_libraries(simplex-host PRIVATE ${CMAKE_DL_LIBS})
+endif()

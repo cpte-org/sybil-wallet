@@ -9,7 +9,7 @@ on:
         required: true
         type: string
       publish:
-        description: 'Create a draft release (both targets must succeed)'
+        description: 'Create a draft release (all targets must succeed)'
         default: false
         type: boolean
 permissions:
@@ -98,8 +98,54 @@ jobs:
           path: dist/${{ matrix.target }}/sybil-beta-mainnet-*
           if-no-files-found: error
           retention-days: 14
+  desktop:
+    if: github.repository == 'cpte-org/sybil-wallet'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: windows
+            runner: windows-2022
+          - target: macos
+            runner: macos-26
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    env:
+      CARGO_BUILD_JOBS: '2'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Set release identity
+        shell: pwsh
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          $version = $env:INPUT_VERSION
+          if (-not $version) { $version = $env:GITHUB_REF_NAME -replace '^v', '' }
+          if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') { throw 'Invalid release version' }
+          "SYBIL_RELEASE_VERSION=$version", "SYBIL_RELEASE_BUILD=$([int]$env:GITHUB_RUN_NUMBER + 1)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Install pinned Flutter and Rust
+        shell: pwsh
+        run: ./scripts/ci-sybil-desktop-setup.ps1
+      - name: Resolve dependencies
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          fvm flutter pub get --enforce-lockfile
+          cargo fetch --locked --manifest-path rust/Cargo.toml
+      - name: Build and package desktop with SimpleX
+        shell: pwsh
+        run: python scripts/build-sybil-desktop.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sybil-${{ matrix.target }}
+          path: dist/${{ matrix.target }}/sybil-beta-mainnet-*.zip
+          if-no-files-found: error
+          retention-days: 14
   draft-release:
-    needs: build
+    needs: [build, desktop]
     if: startsWith(github.ref, 'refs/tags/v') || inputs.publish
     runs-on: ubuntu-24.04
     permissions:
@@ -127,7 +173,9 @@ jobs:
           fi
           gh release download v1.0.0-beta.1 --repo "$GITHUB_REPOSITORY" --pattern sybil-simplex-source-v7.0.2.tar.gz --dir release-assets
           echo 'a65f863415b69ab2b8e40e842f91da5cd0281fcceb6ec63102a8ca1306922aa7  release-assets/sybil-simplex-source-v7.0.2.tar.gz' | sha256sum --check
+          curl --fail --location --retry 3 https://github.com/openssl/openssl/releases/download/openssl-3.0.15/openssl-3.0.15.tar.gz -o release-assets/openssl-3.0.15.tar.gz
+          echo '23c666d0edf20f14249b3d8f0368acaee9ab585b09e1de82107c66e1f3ec9533  release-assets/openssl-3.0.15.tar.gz' | sha256sum --check
           git archive --format=tar.gz --prefix=sybil-wallet/ HEAD > release-assets/sybil-wallet-source.tar.gz
-          (cd release-assets && sha256sum ./*.apk ./*.tar.gz > SHA256SUMS)
-          printf 'Sybil beta %s\n\nCommit: %s\nAndroid version code: %s\n\nAndroid ARM64 and Linux x64. Review artifacts before publishing.\n' "$version" "$GITHUB_SHA" "$((GITHUB_RUN_NUMBER + 1))" > "$RUNNER_TEMP/release-notes.md"
+          (cd release-assets && sha256sum ./*.apk ./*.tar.gz ./*.zip > SHA256SUMS)
+          printf 'Sybil beta %s\n\nCommit: %s\nAndroid version code: %s\n\nAndroid ARM64, Linux x64, Windows x64, and macOS Apple Silicon. Windows is unsigned; macOS is ad-hoc signed without notarization. Review artifacts before publishing.\n' "$version" "$GITHUB_SHA" "$((GITHUB_RUN_NUMBER + 1))" > "$RUNNER_TEMP/release-notes.md"
           gh release create "$tag" release-assets/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --draft --prerelease --title "Sybil Wallet $version" --notes-file "$RUNNER_TEMP/release-notes.md"

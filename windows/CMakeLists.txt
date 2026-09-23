@@ -1,15 +1,16 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.14)
-project(Vizor LANGUAGES CXX)
+project(Sybil LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "Vizor")
+set(BINARY_NAME "Sybil")
 
 if(DEFINED ENV{VIZOR_WINDOWS_STORAGE_PREFIX} AND NOT "$ENV{VIZOR_WINDOWS_STORAGE_PREFIX}" STREQUAL "")
   set(VIZOR_WINDOWS_STORAGE_PREFIX "$ENV{VIZOR_WINDOWS_STORAGE_PREFIX}")
 else()
-  set(VIZOR_WINDOWS_STORAGE_PREFIX "Vizor")
+  set(VIZOR_WINDOWS_STORAGE_PREFIX "Sybil")
 endif()
 set(STORAGE_PREFIX "${VIZOR_WINDOWS_STORAGE_PREFIX}")
 

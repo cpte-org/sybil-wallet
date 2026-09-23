@@ -1,4 +1,4 @@
-# Linux and Android SimpleX transport
+# Desktop and Android SimpleX transport
 
 The Sybil beta includes optional foreground contact delivery through SimpleX.
 The process boundary is not a licensing exemption: preserve the upstream
@@ -166,3 +166,19 @@ lifecycle boundaries and validation limits.
 The contact archive cannot repair a lost SimpleX database key or restore its
 ratchets; the missing-key path preserves the encrypted database and offers
 manual contact code exchange.
+
+## Windows and macOS packaging
+
+`scripts/build-sybil-desktop.py` packages the official v7.0.2 Windows x64 or
+macOS ARM64 libraries with the same private-pipe host. Exact archive hashes
+are in `fetch-desktop.py`; the loader accepts only absolute library paths.
+Windows uses a shared Universal CRT host and restricts DLL dependency searches
+to the runtime directory and Windows system libraries. macOS dylib references
+are rewritten to sibling `@loader_path` locations before ad-hoc signing.
+The sandboxed helper inherits its parent app's sandbox.
+
+Windows adds OpenSSL 3.0.15 (official source SHA-256
+`23c666d0edf20f14249b3d8f0368acaee9ab585b09e1de82107c66e1f3ec9533`)
+to the release's source attachments; its notice is retained in
+`tools/simplex/licenses/OPENSSL-3.0.15-LICENSE.txt`. The existing source archive
+retains the upstream platform build recipes, Haskell dependencies and GHC.

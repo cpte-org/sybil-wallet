@@ -1,11 +1,19 @@
-// Sybil's experimental Linux host for the upstream AGPL SimpleX core.
+// Sybil desktop host for the upstream AGPL SimpleX core.
 // Private inherited pipes only: no TCP listener, shell, or wallet spending keys.
 #define _POSIX_C_SOURCE 200809L
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <werapi.h>
+#include <fcntl.h>
+#include <io.h>
+#else
 #include <dlfcn.h>
+#include <sys/resource.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/resource.h>
 
 static void wipe(char *p, size_t n) {
   volatile char *v = p;
@@ -25,21 +33,40 @@ static void output(char *value) {
   wipe(value, strlen(value));
   free(value);
 }
+#ifdef _WIN32
+int wmain(int argc, wchar_t **argv) {
+#else
 int main(int argc, char **argv) {
+#endif
   if (argc != 2) return 2;
+#ifdef _WIN32
+  // Avoid crash dialogs and heap collection by Windows Error Reporting.
+  SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX);
+  WerSetFlags(WER_FAULT_REPORTING_FLAG_NOHEAP);
+  _setmode(_fileno(stdin), _O_BINARY);
+  _setmode(_fileno(stdout), _O_BINARY);
+  // Restrict dependent DLL loading to this pinned library directory and Windows.
+  HMODULE lib = LoadLibraryExW(argv[1], NULL,
+      LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32);
+  if (!lib) return 2;
+#define HOST_SYMBOL(name) GetProcAddress(lib, name)
+#else
   struct rlimit limit = {0, 0};
   if (setrlimit(RLIMIT_CORE, &limit) != 0) return 2;
   setvbuf(stdin, NULL, _IONBF, 0);
   void *lib = dlopen(argv[1], RTLD_NOW | RTLD_GLOBAL);
   if (!lib) return 2;
-  void (*init)(int *, char ***) = dlsym(lib, "hs_init_with_rtsopts");
+#define HOST_SYMBOL(name) dlsym(lib, name)
+#endif
+  setvbuf(stdin, NULL, _IONBF, 0);
+  void (*init)(int *, char ***) = (void (*)(int *, char ***))HOST_SYMBOL("hs_init_with_rtsopts");
   char *(*migrate)(const char *, const char *, const char *, void **) =
-      dlsym(lib, "chat_migrate_init");
-  char *(*command)(void *, const char *) = dlsym(lib, "chat_send_cmd");
-  char *(*receive)(void *, int) = dlsym(lib, "chat_recv_msg_wait");
+      (char *(*)(const char *, const char *, const char *, void **))HOST_SYMBOL("chat_migrate_init");
+  char *(*command)(void *, const char *) = (char *(*)(void *, const char *))HOST_SYMBOL("chat_send_cmd");
+  char *(*receive)(void *, int) = (char *(*)(void *, int))HOST_SYMBOL("chat_recv_msg_wait");
   if (!init || !migrate || !command || !receive) return 2;
   int n = 6;
-  char *args[] = {"anomaly-simplex", "+RTS", "-A64m", "-H64m", "-xn",
+  char *args[] = {"sybil-simplex", "+RTS", "-A64m", "-H64m", "-xn",
                   "--install-signal-handlers=no", NULL};
   char **rts = args;
   init(&n, &rts);

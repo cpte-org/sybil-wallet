@@ -121,11 +121,11 @@ fresh mainnet wallet is an explicit user action.
 
 ## GitHub Actions releases
 
-The `Sybil beta release` workflow builds Android ARM64 and Linux x64 on
-GitHub-hosted Ubuntu 24.04 runners. Run it manually with a version (without
+The `Sybil beta release` workflow builds Android ARM64, Linux x64, Windows x64, and macOS Apple Silicon on
+GitHub-hosted Linux, Windows, and macOS runners. Run it manually with a version (without
 `v`) to test builds without publishing, or push a `v*` version tag to prepare a
 draft prerelease. Manual runs can also request a draft. Existing releases are
-never overwritten. Both builds must pass before a draft is created; publishing
+never overwritten. All four builds must pass before a draft is created; publishing
 that draft remains a manual step.
 
 Configure these repository Actions secrets using the existing Android signing
@@ -149,7 +149,17 @@ run number plus one (the original beta used code 1); reruns retain their code.
 Keep this workflow's run numbering when releasing updates, or explicitly plan
 a higher version-code baseline before replacing it.
 
-Each draft includes both binaries, `SHA256SUMS`, the exact wallet source tree,
+Each draft includes all four platform bundles, `SHA256SUMS`, the exact wallet source tree,
 and the checksum-verified SimpleX corresponding-source archive from the first
 beta. Update the pinned source asset and its checksum whenever bundled SimpleX
-inputs change. CI compilation does not replace on-device release testing.
+inputs change. Windows bundles are unsigned; macOS apps are ad-hoc signed, not notarized.
+Beta users provide device feedback. CI checks compilation and packaging; it
+does not establish on-device feature qualification.
+
+Desktop bundles include the official checksum-pinned SimpleX v7.0.2 runtime
+and the private-pipe host. No public TCP listener is exposed. Lock, account,
+foreground, and Tor gates are unchanged. macOS currently targets Apple Silicon;
+the upstream Intel runtime is available for a future build lane. Build locally
+with `python scripts/build-sybil-desktop.py` after installing pinned FVM/Rust.
+The Windows runtime uses OpenSSL 3.0.15; its corresponding source archive is
+also attached to each draft.
