@@ -80,7 +80,7 @@ final class WindowAppearanceChannel {
 
   private init(
     window: NSWindow,
-    visualEffectView: NSVisualEffectView,
+    visualEffectView: NSVisualEffectView?,
     messenger: FlutterBinaryMessenger
   ) {
     self.window = window
@@ -96,7 +96,7 @@ final class WindowAppearanceChannel {
 
   static func register(
     window: NSWindow,
-    visualEffectView: NSVisualEffectView,
+    visualEffectView: NSVisualEffectView?,
     messenger: FlutterBinaryMessenger
   ) {
     shared = WindowAppearanceChannel(
