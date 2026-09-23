@@ -1,4 +1,4 @@
-// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
+# Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.14)
 project(Sybil LANGUAGES CXX)

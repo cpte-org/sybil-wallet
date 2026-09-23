@@ -20,7 +20,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: sybil-release-${{ github.ref }}
+  group: sybil-release-${{ github.ref }}-${{ inputs.target || 'all' }}
   cancel-in-progress: false
 jobs:
   build:
