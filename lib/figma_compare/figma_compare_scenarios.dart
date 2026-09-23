@@ -1,3 +1,4 @@
+// Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
 import 'ledger_pairing_capture.dart';
 // ignore_for_file: depend_on_referenced_packages
 // Figma comparison tooling is dev-only and may reuse Widgetbook fixtures.
@@ -65,6 +66,25 @@ class FigmaCompareScenario {
 /// storage, network, wallet, and Rust state. Widgetbook fixtures are preferred
 /// because they are already used to review the same UI states.
 const figmaCompareScenarios = <FigmaCompareScenario>[
+  FigmaCompareScenario(
+    id: 'sybil-unlock',
+    description: 'Sybil desktop unlock',
+    builder: buildUnlockLoginUseCase,
+  ),
+  FigmaCompareScenario(
+    id: 'sybil-unlock-passcode',
+    description: 'Sybil mobile passcode unlock',
+    builder: buildMobileUnlockPasscodeUseCase,
+    desktop: false,
+    mobile: true,
+  ),
+  FigmaCompareScenario(
+    id: 'sybil-unlock-biometric',
+    description: 'Sybil biometric unlock backdrop',
+    builder: buildMobileUnlockBiometricBackdropUseCase,
+    desktop: false,
+    mobile: true,
+  ),
   FigmaCompareScenario(
     id: 'ledger-recovery-picker-permission',
     description: 'Ledger onboarding: permission recovery',

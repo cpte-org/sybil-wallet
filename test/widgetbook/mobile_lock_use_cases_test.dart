@@ -2,9 +2,6 @@
 @Tags(['mobile'])
 library;
 
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart' show Icons, MaterialApp;
 import 'package:flutter/services.dart' show FontLoader, rootBundle;
 import 'package:flutter/widgets.dart';
@@ -48,7 +45,10 @@ void main() {
           find.byKey(const ValueKey('mobile_unlock_biometric_footer')),
         )
         .dy;
-    expect(footerTop - keypadBottomWithoutMethod, closeTo(AppSpacing.md, 0.1));
+    expect(
+      footerTop - keypadBottomWithoutMethod,
+      greaterThanOrEqualTo(AppSpacing.md),
+    );
 
     await _pumpMobileLockUseCase(tester, buildMobileUnlockFaceIdUseCase);
     expect(tester.takeException(), isNull);
@@ -191,28 +191,10 @@ void main() {
       find.byKey(const ValueKey('mobile_biometric_sign_in_background')),
       findsOneWidget,
     );
-    final backgroundImage = tester.widget<Image>(
-      find.byKey(const ValueKey('mobile_biometric_sign_in_background')),
-    );
-    expect(
-      (backgroundImage.image as AssetImage).assetName,
-      mobileBiometricSignInBackgroundAsset,
-    );
-    final backgroundSize = tester.getSize(
-      find.byKey(const ValueKey('mobile_biometric_sign_in_background')),
-    );
-    expect(backgroundSize.width, closeTo(392, 0.1));
-    expect(backgroundSize.height, closeTo(720, 0.1));
-    expect(
-      find.byKey(const ValueKey('mobile_biometric_sign_in_badge')),
-      findsOneWidget,
-    );
-    expect(
-      tester.getSize(
-        find.byKey(const ValueKey('mobile_biometric_sign_in_badge')),
-      ),
-      const Size(130, 130),
-    );
+    expect(find.byType(SybilUnlockBrand), findsOneWidget);
+    expect(find.text('sybil.'), findsOneWidget);
+    expect(find.text('Your people. Your wallet.'), findsOneWidget);
+    expect(find.byType(Image), findsNothing);
     expect(
       find.byKey(const ValueKey('mobile_biometric_prompt_preview')),
       findsNothing,
@@ -245,16 +227,6 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(tester.getSize(find.byType(PasscodeNumpad)).width, 288);
-  });
-
-  testWidgets('keeps desktop and mobile auth backgrounds separate', (
-    tester,
-  ) async {
-    expect(_pngSize(onboardingAuthBackgroundAsset), const Size(1344, 720));
-    expect(
-      _pngSize(mobileBiometricSignInBackgroundAsset),
-      const Size(392, 720),
-    );
   });
 
   testWidgets('forgot-passcode sheet warns about an in-flight Gift Card', (
@@ -424,15 +396,6 @@ void main() {
     expect(find.text('Reset Sybil'), findsOneWidget);
     expect(resetButton().onPressed, isNotNull);
   });
-}
-
-Size _pngSize(String assetPath) {
-  final bytes = File(assetPath).readAsBytesSync();
-  final data = ByteData.sublistView(Uint8List.fromList(bytes));
-  return Size(
-    data.getUint32(16, Endian.big).toDouble(),
-    data.getUint32(20, Endian.big).toDouble(),
-  );
 }
 
 Future<void> _pumpMobileLockUseCase(

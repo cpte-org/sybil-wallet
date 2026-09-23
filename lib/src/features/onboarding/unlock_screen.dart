@@ -139,7 +139,6 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
           card: OnboardingAuthCard(
             width: DesktopUnlockContent.cardWidth,
             height: DesktopUnlockContent.cardHeight,
-            borderRadius: AppSpacing.base,
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.sm,
               AppSpacing.xl,
@@ -149,6 +148,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
             child: DesktopUnlockContent(
               passwordController: _passwordController,
               canSubmit: _canSubmit,
+              isSubmitting: _isSubmitting,
               messageText: _errorText ?? _passwordPolicyMessage,
               onChanged: () {
                 setState(() {
@@ -174,6 +174,7 @@ class DesktopUnlockContent extends StatelessWidget {
     required this.onSubmit,
     this.onForgotPassword,
     this.autofocus = false,
+    this.isSubmitting = false,
     this.showForgotPassword = true,
     this.reserveForgotPasswordSpace = false,
     this.descriptionText = 'Enter your password to open Sybil.',
@@ -187,16 +188,16 @@ class DesktopUnlockContent extends StatelessWidget {
   final Future<void> Function() onSubmit;
   final VoidCallback? onForgotPassword;
   final bool autofocus;
+  final bool isSubmitting;
   final bool showForgotPassword;
   final bool reserveForgotPasswordSpace;
   final String descriptionText;
 
   static const double cardWidth = 396;
   static const double cardHeight = 509;
-  static const double _fieldWidth = 256;
-  static const double _buttonWidth = 196;
+  static const double _fieldWidth = 320;
+  static const double _buttonWidth = 320;
   static const double _titleWidth = 364;
-  static const double _fieldGroupHeight = 66;
 
   @override
   Widget build(BuildContext context) {
@@ -205,12 +206,6 @@ class DesktopUnlockContent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Image.asset(
-          'assets/illustrations/welcome_badge.png',
-          width: 50,
-          height: 50,
-        ),
-        const SizedBox(height: AppSpacing.base),
         SizedBox(
           width: _titleWidth,
           child: Column(
@@ -222,8 +217,6 @@ class DesktopUnlockContent extends StatelessWidget {
                   color: colors.text.accent,
                   height: 48 / 45,
                 ),
-                maxLines: 1,
-                softWrap: false,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -232,8 +225,6 @@ class DesktopUnlockContent extends StatelessWidget {
                 style: AppTypography.bodyMediumStrong.copyWith(
                   color: colors.text.accent,
                 ),
-                maxLines: 1,
-                softWrap: false,
                 textAlign: TextAlign.center,
               ),
             ],
@@ -245,19 +236,18 @@ class DesktopUnlockContent extends StatelessWidget {
           children: [
             SizedBox(
               width: _fieldWidth,
-              height: _fieldGroupHeight,
               child: PasswordTextField(
                 key: const ValueKey('unlock_password_field'),
                 label: 'Password',
                 hintText: 'Enter password',
                 showLabel: false,
-                // Figma Field Type=Secondary on the auth card.
                 surface: AppTextFieldSurface.secondary,
                 leadingSlotWidth: 32,
                 inputHorizontalPadding: AppSpacing.s,
                 controller: passwordController,
+                enabled: !isSubmitting,
                 autofocus: autofocus,
-                showVisibilityToggle: false,
+                showVisibilityToggle: true,
                 messageText: messageText,
                 tone: messageText == null
                     ? AppTextFieldTone.neutral
@@ -275,7 +265,7 @@ class DesktopUnlockContent extends StatelessWidget {
                   onPressed: canSubmit ? onSubmit : null,
                   variant: AppButtonVariant.primary,
                   minWidth: _buttonWidth,
-                  child: const Text('Unlock Sybil'),
+                  child: Text(isSubmitting ? 'Opening…' : 'Unlock Sybil'),
                 ),
                 if (showForgotPassword) ...[
                   const SizedBox(height: AppSpacing.s),

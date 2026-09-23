@@ -28,22 +28,11 @@ import '../../../services/device_owner_auth.dart';
 import 'forgot_passcode_sheet.dart';
 import 'mobile_passcode_screen.dart' show kMobilePasscodeLength;
 import 'passcode_widgets.dart';
+import '../shared/onboarding_auth_shell.dart';
 
-const mobileBiometricSignInBackgroundAsset =
-    'assets/illustrations/mobile_onboarding_auth_background.png';
-
-/// Backdrop assets shared by [MobileBiometricSignInView] and the unlock
-/// screen's precache, so the warmed [ImageCache] entries match the providers
-/// painted behind the Face ID sheet (same key -> cache hit, no blank frame).
-const _authBackgroundImage = AssetImage(mobileBiometricSignInBackgroundAsset);
-const _welcomeBadgeImage = AssetImage(
-  'assets/illustrations/welcome_badge_mobile.png',
-);
 const _biometricBackdropMaxWait = Duration(milliseconds: 350);
 
-/// Mobile unlock — Figma `Sign In Passcode` (4885:23041): "Welcome Back",
-/// crimson-filling dots, round numpad keys, a bottom biometric retry action,
-/// and the numpad's help action opening the Forgot Passcode reset sheet.
+/// Sybil unlock, with passcode and native biometric authentication.
 class MobileUnlockScreen extends ConsumerStatefulWidget {
   const MobileUnlockScreen({this.autoPromptBiometric = true, super.key});
 
@@ -65,33 +54,7 @@ class _MobileUnlockScreenState extends ConsumerState<MobileUnlockScreen> {
   // branded backdrop stays up across submit instead of flipping back to the
   // numpad while the Face ID sheet dismisses.
   var _biometricUnlocking = false;
-  var _didPrecacheBackdrop = false;
   String? _error;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_didPrecacheBackdrop) return;
-    _didPrecacheBackdrop = true;
-    // Warm the backdrop assets opportunistically. The auto-prompt waits for
-    // the backdrop shell frame, but image decode must not delay Face ID.
-    unawaited(_precacheBiometricBackdrop());
-  }
-
-  Future<void> _precacheBiometricBackdrop() async {
-    await Future.wait<void>([
-      precacheImage(
-        _authBackgroundImage,
-        context,
-        onError: (_, _) {},
-      ).catchError((_) {}),
-      precacheImage(
-        _welcomeBadgeImage,
-        context,
-        onError: (_, _) {},
-      ).catchError((_) {}),
-    ]);
-  }
 
   Future<void> _waitForBiometricBackdropFrame() async {
     await _waitForBackdropFrame().timeout(
@@ -365,88 +328,105 @@ class _MobileUnlockScreenState extends ConsumerState<MobileUnlockScreen> {
       _scheduleBiometricPrompt(biometric);
     }
     return Scaffold(
-      backgroundColor: colors.background.window,
+      backgroundColor: SybilPalette.of(context).paper,
       body: showBiometricSignIn
           ? const MobileBiometricSignInView()
           : SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.md,
-                ),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Welcome Back',
-                              textAlign: TextAlign.center,
-                              style: AppTypography.displayLarge.copyWith(
-                                color: colors.text.accent,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.s),
-                            Text(
-                              _submitting
-                                  ? 'Opening your wallet...'
-                                  : 'Enter your passcode to open Sybil',
-                              textAlign: TextAlign.center,
-                              style: AppTypography.bodyMediumStrong.copyWith(
-                                color: colors.text.primary,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            SizedBox(
-                              height: kPasscodePromptDigitsHeight,
-                              child: PasscodePromptField(
-                                length: kMobilePasscodeLength,
-                                filled: _entry.length,
-                                error: _error,
-                                minGap: 0,
-                              ),
-                            ),
-                          ],
-                        ),
+              child: LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: AppSpacing.md,
                       ),
-                    ),
-                    PasscodeNumpad(
-                      onDigit: _onDigit,
-                      onBackspace: _onBackspace,
-                      canDelete: _entry.isNotEmpty,
-                      onHelp: _submitting ? null : _showForgotPasscodeSheet,
-                      enabled: !_submitting,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    SizedBox(
-                      key: const ValueKey('mobile_unlock_biometric_footer'),
-                      height: 36,
-                      child: Center(
-                        child: Builder(
-                          builder: (context) {
-                            if (!biometric.usable) {
-                              return const SizedBox.shrink();
-                            }
-                            return PasscodeBiometricButton(
-                              label: biometric.availability.kind.signInLabel,
-                              icon: Center(
-                                child: BiometricIcon(
-                                  kind: biometric.availability.kind,
-                                  size: 13.5,
-                                  fingerprintSize: 16,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SybilUnlockBrand(),
+                                const SizedBox(height: AppSpacing.sm),
+                                Text(
+                                  'Welcome back',
+                                  textAlign: TextAlign.center,
+                                  style: AppTypography.headlineLarge.copyWith(
+                                    color: colors.text.accent,
+                                  ),
                                 ),
+                                const SizedBox(height: AppSpacing.s),
+                                Text(
+                                  _submitting
+                                      ? 'Opening your wallet...'
+                                      : 'Enter your passcode to open Sybil',
+                                  textAlign: TextAlign.center,
+                                  style: AppTypography.bodyMediumStrong
+                                      .copyWith(color: colors.text.primary),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                SizedBox(
+                                  height: kPasscodePromptDigitsHeight,
+                                  child: PasscodePromptField(
+                                    length: kMobilePasscodeLength,
+                                    filled: _entry.length,
+                                    error: _error,
+                                    minGap: 0,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          PasscodeNumpad(
+                            onDigit: _onDigit,
+                            onBackspace: _onBackspace,
+                            canDelete: _entry.isNotEmpty,
+                            onHelp: _submitting
+                                ? null
+                                : _showForgotPasscodeSheet,
+                            enabled: !_submitting,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          SizedBox(
+                            key: const ValueKey(
+                              'mobile_unlock_biometric_footer',
+                            ),
+                            height: 36,
+                            child: Center(
+                              child: Builder(
+                                builder: (context) {
+                                  if (!biometric.usable) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return PasscodeBiometricButton(
+                                    label:
+                                        biometric.availability.kind.signInLabel,
+                                    icon: Center(
+                                      child: BiometricIcon(
+                                        kind: biometric.availability.kind,
+                                        size: 13.5,
+                                        fingerprintSize: 16,
+                                      ),
+                                    ),
+                                    onPressed: _submitting
+                                        ? null
+                                        : () =>
+                                              unawaited(_tryBiometricUnlock()),
+                                  );
+                                },
                               ),
-                              onPressed: _submitting
-                                  ? null
-                                  : () => unawaited(_tryBiometricUnlock()),
-                            );
-                          },
-                        ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -454,51 +434,28 @@ class _MobileUnlockScreenState extends ConsumerState<MobileUnlockScreen> {
   }
 }
 
-/// Biometric sign-in backdrop shown behind the native biometric prompt.
-/// Figma `Sign In Face ID` (4596:50062 / 4596:50202) also shows iOS chrome and
-/// the system prompt layer; those are not app-rendered content.
+/// Asset-free Sybil backdrop; the operating system owns the biometric prompt.
 class MobileBiometricSignInView extends StatelessWidget {
   const MobileBiometricSignInView({super.key});
 
-  static const _figmaFrameWidth = 393.0;
-  static const _backgroundWidth = 392.0;
-  static const _backgroundHeight = 720.0;
-
   @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return ColoredBox(
-      color: colors.background.window,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final scale = constraints.maxWidth / _figmaFrameWidth;
-              return Align(
-                alignment: Alignment.topRight,
-                child: SizedBox(
-                  width: _backgroundWidth * scale,
-                  height: _backgroundHeight * scale,
-                  child: Image(
-                    image: _authBackgroundImage,
-                    key: const ValueKey('mobile_biometric_sign_in_background'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              );
-            },
-          ),
-          Center(
-            child: Image(
-              image: _welcomeBadgeImage,
-              key: const ValueKey('mobile_biometric_sign_in_badge'),
-              width: 130,
-              height: 130,
+  Widget build(BuildContext context) => ColoredBox(
+    key: const ValueKey('mobile_biometric_sign_in_background'),
+    color: SybilPalette.of(context).paper,
+    child: const SafeArea(
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SybilUnlockBrand(
+              key: ValueKey('mobile_biometric_sign_in_badge'),
+              large: true,
             ),
-          ),
-        ],
+            SizedBox(height: 24),
+            Text('Your people. Your wallet.'),
+          ],
+        ),
       ),
-    );
-  }
+    ),
+  );
 }

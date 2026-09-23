@@ -183,7 +183,6 @@ class _LostPasswordScreenState extends ConsumerState<LostPasswordScreen> {
           card: OnboardingAuthCard(
             width: _LostPasswordContent.cardWidth,
             height: _LostPasswordContent.cardHeight,
-            borderRadius: AppSpacing.md,
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.md,
               AppSpacing.xl,

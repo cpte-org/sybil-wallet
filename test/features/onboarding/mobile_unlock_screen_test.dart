@@ -453,7 +453,7 @@ void main() {
     await tester.pumpWidget(_app());
     await tester.pump();
 
-    expect(find.text('Welcome Back'), findsOneWidget);
+    expect(find.text('Welcome back'), findsOneWidget);
     expect(find.bySemanticsLabel('Passcode help'), findsOneWidget);
 
     await tester.tap(find.bySemanticsLabel('Digit 1'));
@@ -481,6 +481,23 @@ void main() {
     await tester.tap(find.bySemanticsLabel('Delete digit'));
     await tester.pump();
     expect(find.bySemanticsLabel('Delete digit'), findsNothing);
+  });
+
+  testWidgets('short screens can scroll to the last keypad row', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 568);
+    addTearDown(tester.view.resetPhysicalSize);
+    await tester.pumpWidget(_app());
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.bySemanticsLabel('Digit 0'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Digit 0'));
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(tester.widget<PasscodeDots>(find.byType(PasscodeDots)).filled, 1);
   });
 
   testWidgets('digits register on pointer down before tap up', (tester) async {

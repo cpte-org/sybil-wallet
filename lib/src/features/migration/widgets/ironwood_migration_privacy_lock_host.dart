@@ -346,7 +346,6 @@ class _IronwoodMigrationVirtualUnlockScreenState
               card: OnboardingAuthCard(
                 width: DesktopUnlockContent.cardWidth,
                 height: DesktopUnlockContent.cardHeight,
-                borderRadius: AppSpacing.base,
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.sm,
                   AppSpacing.xl,
