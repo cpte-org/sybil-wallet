@@ -982,7 +982,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('home_shield_balance_button')));
+    await tester.tap(find.text('Balance details'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Shield transparent funds'),
+      80,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Shield transparent funds'));
     await tester.pump();
 
     expect(

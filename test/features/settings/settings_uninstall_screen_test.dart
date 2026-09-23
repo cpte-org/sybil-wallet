@@ -178,8 +178,21 @@ Future<void> _runUninstallFlow(
     await tester.pumpAndSettle();
 
     if (openFromSettings) {
+      final networkSettings = find.text('Network and app settings');
+      await tester.scrollUntilVisible(
+        networkSettings,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(networkSettings);
+      await tester.pumpAndSettle();
       final uninstallEntry = find.text('Uninstall Sybil');
-      await tester.ensureVisible(uninstallEntry);
+      await tester.scrollUntilVisible(
+        uninstallEntry,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
       await tester.tap(uninstallEntry);
       await tester.pumpAndSettle();

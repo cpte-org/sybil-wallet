@@ -1981,7 +1981,7 @@ void main() {
     },
   );
 
-  testWidgets('zero balance keeps the wallet actions available', (
+  testWidgets('transparent funds stay reachable in Sybil balance details', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -1996,16 +1996,18 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(
-      find.byKey(const ValueKey('mobile_home_transparent_balance_strip')),
-      findsOneWidget,
-    );
-    expect(find.text('Transparent: 2.42 ZEC'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('mobile_home_shield_balance_button')),
-      findsOneWidget,
-    );
-    expect(find.text('Shield'), findsOneWidget);
+    expect(find.byKey(const ValueKey('sybil_home_send')), findsOneWidget);
+    expect(find.byKey(const ValueKey('sybil_home_receive')), findsOneWidget);
+    expect(find.byKey(const ValueKey('mobile_home_pay')), findsNothing);
+
+    final balanceDetails = find.text('Balance details');
+    await tester.ensureVisible(balanceDetails);
+    await tester.tap(balanceDetails);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Transparent funds'), findsOneWidget);
+    expect(find.text('2.42 ZEC'), findsOneWidget);
+    expect(find.text('Shield transparent funds'), findsOneWidget);
   });
 
   testWidgets('Ledger shielding opens the dedicated mobile Ledger route', (
@@ -2035,9 +2037,13 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    await tester.tap(
-      find.byKey(const ValueKey('mobile_home_shield_balance_button')),
-    );
+    final balanceDetails = find.text('Balance details');
+    await tester.ensureVisible(balanceDetails);
+    await tester.tap(balanceDetails);
+    await tester.pumpAndSettle();
+    final shieldAction = find.text('Shield transparent funds');
+    await tester.scrollUntilVisible(shieldAction, 200);
+    await tester.tap(shieldAction);
     await tester.pumpAndSettle();
 
     expect(
@@ -2046,108 +2052,94 @@ void main() {
     );
   });
 
-  testWidgets('animates transparent balance tray away before removal', (
+  testWidgets('transparent balance details follow live sync updates', (
     tester,
   ) async {
-    final syncNotifier = FakeSyncNotifier(
-      _syncedState(
-        orchardBalance: BigInt.from(14312000000),
-        transparentBalance: BigInt.from(242000000),
-        canShieldTransparentBalance: true,
-      ),
+    final initial = _syncedState(
+      orchardBalance: BigInt.from(14312000000),
+      transparentBalance: BigInt.from(242000000),
     );
-    await tester.pumpWidget(
-      _app(syncNotifier.initialState!, syncNotifier: syncNotifier),
-    );
-    await tester.pump();
-    await tester.pump();
+    final syncNotifier = FakeSyncNotifier(initial);
+    await tester.pumpWidget(_app(initial, syncNotifier: syncNotifier));
+    await tester.pumpAndSettle();
 
-    final stripFinder = find.byKey(
-      const ValueKey('mobile_home_transparent_balance_strip'),
-    );
-    expect(stripFinder, findsOneWidget);
-    final expandedHeight = tester.getSize(stripFinder).height;
-    expect(expandedHeight, moreOrLessEquals(57));
+    final balanceDetails = find.text('Balance details');
+    await tester.ensureVisible(balanceDetails);
+    await tester.tap(balanceDetails);
+    await tester.pumpAndSettle();
 
+    Finder transparentFundsLine() => find.ancestor(
+      of: find.text('Transparent funds'),
+      matching: find.byType(Row),
+    );
+    List<String?> transparentLineText() => tester
+        .widgetList<Text>(
+          find.descendant(
+            of: transparentFundsLine(),
+            matching: find.byType(Text),
+          ),
+        )
+        .map((text) => text.data)
+        .toList();
+
+    expect(transparentLineText(), contains('2.42 ZEC'));
     syncNotifier.setSyncState(
       _syncedState(orchardBalance: BigInt.from(14312000000)),
     );
-    await tester.pump();
-    expect(stripFinder, findsOneWidget);
-
-    await tester.pump(const Duration(milliseconds: 70));
-    expect(tester.getSize(stripFinder).height, lessThan(expandedHeight));
-
     await tester.pumpAndSettle();
-    expect(stripFinder, findsNothing);
+    expect(find.text('Transparent funds'), findsOneWidget);
+    expect(transparentLineText(), isNot(contains('2.42 ZEC')));
+    expect(transparentLineText(), contains('0 ZEC'));
   });
 
-  testWidgets('matches the Figma balance card and Sybil wallet actions', (
+  testWidgets('Sybil balance details preserve privacy and wallet actions', (
     tester,
   ) async {
+    final balanceAmount = BigInt.from(14312000000);
     await tester.pumpWidget(
-      _app(_syncedState(orchardBalance: BigInt.from(14312000000))),
-    );
-    await tester.pump();
-    await tester.pump();
-
-    final privacyButtonRect = tester.getRect(
-      find.byKey(const ValueKey('mobile_home_privacy_button')),
-    );
-    final privacyIcon = tester.widget<AppIcon>(
-      find.descendant(
-        of: find.byKey(const ValueKey('mobile_home_privacy_button')),
-        matching: find.byType(AppIcon),
+      _app(
+        _syncedState(
+          orchardBalance: balanceAmount,
+          transparentBalance: BigInt.from(242000000),
+        ).copyWith(
+          spendableBalance: balanceAmount,
+          displaySpendableBalance: balanceAmount,
+        ),
       ),
     );
-    final sendRect = tester.getRect(
-      find.byKey(const ValueKey('mobile_home_send')),
-    );
-    final receiveRect = tester.getRect(
-      find.byKey(const ValueKey('mobile_home_receive')),
-    );
-    final sendLabelStyle = _effectiveTextStyle(tester, find.text('Send'));
-    final receiveLabelStyle = _effectiveTextStyle(tester, find.text('Receive'));
-    final shieldedLabel = tester.widget<Text>(find.text('Shielded balance'));
-    final fiatLabel = tester.widget<Text>(
-      find.byKey(const ValueKey('mobile_home_balance_fiat_text')),
-    );
-    final balanceText = tester.widget<Text>(
-      find.byKey(const ValueKey('mobile_home_shielded_balance')),
-    );
-    final balanceSpan = balanceText.textSpan! as TextSpan;
-    final amountSpan = balanceSpan.children![0] as TextSpan;
-    final tickerSpan = balanceSpan.children![1] as TextSpan;
+    await tester.pumpAndSettle();
 
-    expect(privacyButtonRect.size, const Size(32, 32));
-    expect(privacyIcon.size, 16);
-    expect(receiveRect.left, greaterThan(sendRect.right));
+    final balance = find.byKey(const ValueKey('sybil_available_balance'));
+    final send = find.byKey(const ValueKey('sybil_home_send'));
+    final receive = find.byKey(const ValueKey('sybil_home_receive'));
+    final sendStyle = _effectiveTextStyle(tester, find.text('Send'));
+    final receiveStyle = _effectiveTextStyle(tester, find.text('Receive'));
+
+    expect(tester.widget<Text>(balance).data, '143.12 ZEC');
+    expect(find.text('Yours to spend'), findsOneWidget);
+    expect(find.byTooltip('Hide balances'), findsOneWidget);
+    expect(tester.widget<AppButton>(send).onPressed, isNotNull);
+    expect(tester.widget<AppButton>(receive).onPressed, isNotNull);
     expect(find.byKey(const ValueKey('mobile_home_pay')), findsNothing);
     expect(find.bySemanticsLabel('Pay'), findsNothing);
-    expect(find.text('NEW'), findsNothing);
-    expect(find.bySemanticsLabel('New: Pay in USDC'), findsNothing);
-    expect(sendRect.height, AppButtonSizing.largeHeight);
-    expect(sendLabelStyle.fontSize, AppTypography.labelLarge.fontSize);
-    expect(sendLabelStyle.height, AppTypography.labelLarge.height);
-    expect(sendLabelStyle.fontWeight, AppTypography.labelLarge.fontWeight);
+    expect(sendStyle.fontSize, AppTypography.labelLarge.fontSize);
+    expect(receiveStyle.fontSize, AppTypography.labelLarge.fontSize);
+
+    await tester.tap(find.byTooltip('Hide balances'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Show balances'), findsOneWidget);
+
+    final balanceDetails = find.text('Balance details');
+    await tester.ensureVisible(balanceDetails);
+    await tester.tap(balanceDetails);
+    await tester.pumpAndSettle();
+    expect(find.text('Transparent funds'), findsOneWidget);
+    expect(find.text('143.12 ZEC'), findsNothing);
+    expect(find.text('2.42 ZEC'), findsNothing);
     expect(
-      sendLabelStyle.letterSpacing,
-      AppTypography.labelLarge.letterSpacing,
+      find.textContaining(fixedPrivacyMask(), findRichText: true),
+      findsAtLeastNWidgets(1),
     );
-    expect(receiveLabelStyle.fontSize, AppTypography.labelLarge.fontSize);
-    expect(receiveLabelStyle.height, AppTypography.labelLarge.height);
-    expect(receiveLabelStyle.fontWeight, AppTypography.labelLarge.fontWeight);
-    expect(
-      receiveLabelStyle.letterSpacing,
-      AppTypography.labelLarge.letterSpacing,
-    );
-    expect(shieldedLabel.style?.fontSize, 14);
-    expect(shieldedLabel.style?.height, 16 / 14);
-    expect(fiatLabel.style?.fontSize, 14);
-    expect(amountSpan.style?.fontSize, 45);
-    expect(amountSpan.style?.height, 48 / 45);
-    expect(tickerSpan.style?.fontSize, 32);
-    expect(tickerSpan.style?.height, 33 / 32);
   });
 
   testWidgets('zero balance offers the first-receive action', (tester) async {
@@ -2319,7 +2311,8 @@ void main() {
 
       expect(find.byType(ActivityFeedRow), findsOneWidget);
       expect(find.byKey(const ValueKey('mobile_home_pay')), findsNothing);
-      await tester.ensureVisible(find.text('All activity'));
+      await tester.scrollUntilVisible(find.text('All activity'), 200);
+      await tester.pumpAndSettle();
       await tester.tap(find.text('All activity'));
       await tester.pumpAndSettle();
       expect(find.text('activity route'), findsOneWidget);
