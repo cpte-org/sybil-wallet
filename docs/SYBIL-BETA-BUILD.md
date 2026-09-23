@@ -124,7 +124,8 @@ fresh mainnet wallet is an explicit user action.
 The `Sybil beta release` workflow builds Android ARM64, Linux x64, Windows x64, and macOS Apple Silicon on
 GitHub-hosted Linux, Windows, and macOS runners. Run it manually with a version (without
 `v`) to test builds without publishing, or push a `v*` version tag to prepare a
-draft prerelease. Manual runs can also request a draft. Existing releases are
+draft prerelease. Manual runs can select a single target to retry platform-specific changes.
+Draft creation is available only with all targets selected. Existing releases are
 never overwritten. All four builds must pass before a draft is created; publishing
 that draft remains a manual step.
 

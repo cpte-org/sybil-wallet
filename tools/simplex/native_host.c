@@ -53,7 +53,6 @@ int main(int argc, char **argv) {
 #else
   struct rlimit limit = {0, 0};
   if (setrlimit(RLIMIT_CORE, &limit) != 0) return 2;
-  setvbuf(stdin, NULL, _IONBF, 0);
   void *lib = dlopen(argv[1], RTLD_NOW | RTLD_GLOBAL);
   if (!lib) return 2;
 #define HOST_SYMBOL(name) dlsym(lib, name)

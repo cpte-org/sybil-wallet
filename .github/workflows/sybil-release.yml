@@ -8,6 +8,11 @@ on:
         description: 'Version without v (for example 1.0.0-beta.2)'
         required: true
         type: string
+      target:
+        description: 'Build all platforms or just one (draft releases require all)'
+        default: all
+        type: choice
+        options: [all, linux, android, windows, macos]
       publish:
         description: 'Create a draft release (all targets must succeed)'
         default: false
@@ -19,13 +24,13 @@ concurrency:
   cancel-in-progress: false
 jobs:
   build:
-    if: github.repository == 'cpte-org/sybil-wallet'
+    if: github.repository == 'cpte-org/sybil-wallet' && (!inputs.target || inputs.target == 'all' || inputs.target == 'linux' || inputs.target == 'android')
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
-        target: [linux, android]
+        target: ${{ fromJSON(inputs.target == 'linux' && '["linux"]' || inputs.target == 'android' && '["android"]' || '["linux","android"]') }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -99,15 +104,11 @@ jobs:
           if-no-files-found: error
           retention-days: 14
   desktop:
-    if: github.repository == 'cpte-org/sybil-wallet'
+    if: github.repository == 'cpte-org/sybil-wallet' && (!inputs.target || inputs.target == 'all' || inputs.target == 'windows' || inputs.target == 'macos')
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - target: windows
-            runner: windows-2022
-          - target: macos
-            runner: macos-26
+        include: ${{ fromJSON(inputs.target == 'windows' && '[{"target":"windows","runner":"windows-2022"}]' || inputs.target == 'macos' && '[{"target":"macos","runner":"macos-26"}]' || '[{"target":"windows","runner":"windows-2022"},{"target":"macos","runner":"macos-26"}]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     env:
@@ -146,7 +147,7 @@ jobs:
           retention-days: 14
   draft-release:
     needs: [build, desktop]
-    if: startsWith(github.ref, 'refs/tags/v') || inputs.publish
+    if: startsWith(github.ref, 'refs/tags/v') || (inputs.publish && inputs.target == 'all')
     runs-on: ubuntu-24.04
     permissions:
       contents: write
