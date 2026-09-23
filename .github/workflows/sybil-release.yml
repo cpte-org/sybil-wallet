@@ -9,12 +9,12 @@ on:
         required: true
         type: string
       target:
-        description: 'Build all platforms or just one (draft releases require all)'
+        description: 'Build release platforms or one target (macOS is opt-in)'
         default: all
         type: choice
         options: [all, linux, android, windows, macos]
       publish:
-        description: 'Create a draft release (all targets must succeed)'
+        description: 'Create a draft release (Android, Linux, Windows must succeed)'
         default: false
         type: boolean
 permissions:
@@ -108,7 +108,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(inputs.target == 'windows' && '[{"target":"windows","runner":"windows-2022"}]' || inputs.target == 'macos' && '[{"target":"macos","runner":"macos-26"}]' || '[{"target":"windows","runner":"windows-2022"},{"target":"macos","runner":"macos-26"}]') }}
+        include: ${{ fromJSON(inputs.target == 'windows' && '[{"target":"windows","runner":"windows-2022"}]' || inputs.target == 'macos' && '[{"target":"macos","runner":"macos-26"}]' || '[{"target":"windows","runner":"windows-2022"}]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     env:
@@ -178,5 +178,5 @@ jobs:
           echo '23c666d0edf20f14249b3d8f0368acaee9ab585b09e1de82107c66e1f3ec9533  release-assets/openssl-3.0.15.tar.gz' | sha256sum --check
           git archive --format=tar.gz --prefix=sybil-wallet/ HEAD > release-assets/sybil-wallet-source.tar.gz
           (cd release-assets && sha256sum ./*.apk ./*.tar.gz ./*.zip > SHA256SUMS)
-          printf 'Sybil beta %s\n\nCommit: %s\nAndroid version code: %s\n\nAndroid ARM64, Linux x64, Windows x64, and macOS Apple Silicon. Windows is unsigned; macOS is ad-hoc signed without notarization. Review artifacts before publishing.\n' "$version" "$GITHUB_SHA" "$((GITHUB_RUN_NUMBER + 1))" > "$RUNNER_TEMP/release-notes.md"
+          printf 'Sybil beta %s\n\nCommit: %s\nAndroid version code: %s\n\nAndroid ARM64, Linux x64, and Windows x64. SimpleX delivery is bundled. Windows is unsigned. macOS is deferred. Review artifacts before publishing.\n' "$version" "$GITHUB_SHA" "$((GITHUB_RUN_NUMBER + 1))" > "$RUNNER_TEMP/release-notes.md"
           gh release create "$tag" release-assets/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --draft --prerelease --title "Sybil Wallet $version" --notes-file "$RUNNER_TEMP/release-notes.md"
