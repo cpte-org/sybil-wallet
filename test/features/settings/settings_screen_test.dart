@@ -1,5 +1,4 @@
 // Apache-2.0 section 4(b): modified from upstream by the Sybil fork.
-import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' show PointerDeviceKind;
 
@@ -28,7 +27,6 @@ import 'package:zcash_wallet/src/features/zns/application/public_name_lookup.dar
 import 'package:zcash_wallet/src/features/zns/presentation/zns_view_data.dart';
 import 'package:zcash_wallet/src/features/settings/settings_platform.dart';
 import 'package:zcash_wallet/src/features/settings/widgets/network_privacy_control.dart';
-import 'package:zcash_wallet/src/features/payment_links/providers/payment_link_cards_provider.dart';
 import 'package:zcash_wallet/src/providers/account_models.dart';
 import 'package:zcash_wallet/src/providers/network_privacy_provider.dart';
 import 'package:zcash_wallet/src/providers/sync_provider.dart';
@@ -116,8 +114,8 @@ void main() {
       GoRouter.of(tester.element(find.text('managed names route'))).pop();
       await tester.pumpAndSettle();
       if (find.text('Registry address').evaluate().isEmpty) {
-        await tester.ensureVisible(find.text('Connection details'));
-        await tester.tap(find.text('Connection details'));
+        await tester.ensureVisible(find.text('Advanced deployment settings'));
+        await tester.tap(find.text('Advanced deployment settings'));
         await tester.pumpAndSettle();
       }
       expect(find.text('Name service settings'), findsOneWidget);
@@ -170,7 +168,7 @@ void main() {
   });
 
   for (final kind in HardwareSignerKind.values) {
-    testWidgets('${kind.name} account disables secret passphrase', (
+    testWidgets('${kind.name} account disables recovery phrase export', (
       tester,
     ) async {
       final hardwareAccount = AccountState(
@@ -189,157 +187,55 @@ void main() {
 
       await tester.pumpWidget(_settingsHarness(accountState: hardwareAccount));
       await tester.pump();
+      await tester.ensureVisible(find.text('Security and recovery'));
+      await tester.tap(find.text('Security and recovery'));
+      await tester.pumpAndSettle();
 
-      expect(find.text('Secret passphrase'), findsOneWidget);
+      expect(find.text('Wallet recovery phrase'), findsOneWidget);
       expect(find.text('Account details'), findsNothing);
       expect(
         find.ancestor(
-          of: find.text('Secret passphrase'),
+          of: find.text('Wallet recovery phrase'),
           matching: find.byType(FocusableActionDetector),
         ),
         findsNothing,
       );
-      await tester.tap(find.text('Secret passphrase'));
+      await tester.tap(find.text('Wallet recovery phrase'));
       await tester.pumpAndSettle();
-      expect(find.text('secret passphrase route'), findsNothing);
+      expect(find.text('wallet recovery phrase route'), findsNothing);
     });
   }
 
-  testWidgets('software account preserves secret passphrase navigation', (
+  testWidgets('software account keeps the recovery phrase route', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_settingsHarness());
+    await tester.pump();
+    await tester.ensureVisible(find.text('Security and recovery'));
+    await tester.tap(find.text('Security and recovery'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Wallet recovery phrase'), findsOneWidget);
+    expect(find.text('Account details'), findsNothing);
+
+    await tester.tap(find.text('Wallet recovery phrase'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('wallet recovery phrase route'), findsOneWidget);
+  });
+
+  testWidgets('Gift Cards stays out of the primary Settings surface', (
     tester,
   ) async {
     await tester.pumpWidget(_settingsHarness());
     await tester.pump();
 
-    expect(find.text('Secret passphrase'), findsOneWidget);
-    expect(find.text('Account details'), findsNothing);
-
-    await tester.tap(find.text('Secret passphrase'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('secret passphrase route'), findsOneWidget);
-  });
-
-  testWidgets('Gift Cards waits for its data before opening', (tester) async {
-    final cards = Completer<PaymentLinkCardsSnapshot>();
-    await tester.pumpWidget(
-      _settingsHarness(
-        extraOverrides: [
-          paymentLinkCardsLoaderProvider.overrideWithValue(() => cards.future),
-        ],
-      ),
-    );
-    await tester.pump();
-
-    final row = find.byKey(const ValueKey('settings_gift_cards_row'));
-    expect(row, findsOneWidget);
     expect(
-      tester
-          .widgetList<AppIcon>(
-            find.descendant(of: row, matching: find.byType(AppIcon)),
-          )
-          .first
-          .name,
-      AppIcons.giftCardOutline,
+      find.byKey(const ValueKey('settings_gift_cards_row')),
+      findsNothing,
     );
-    expect(find.text('My gift cards'), findsOneWidget);
-    expect(find.text('New'), findsOneWidget);
-    expect(
-      tester.getTopLeft(find.text('My gift cards')).dy,
-      lessThan(tester.getTopLeft(find.text('Link Vizor mobile')).dy),
-    );
-
-    await tester.tap(row);
-    await tester.pump();
-
-    expect(find.text('Settings'), findsWidgets);
-    expect(find.text('payment links route with data'), findsNothing);
-
-    cards.complete(const PaymentLinkCardsSnapshot(created: [], received: []));
-    await tester.pumpAndSettle();
-
-    expect(find.text('payment links route with data'), findsOneWidget);
-  });
-
-  testWidgets('Gift Cards opens without data when the load fails', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _settingsHarness(
-        extraOverrides: [
-          paymentLinkCardsLoaderProvider.overrideWithValue(
-            () => Future<PaymentLinkCardsSnapshot>.error(StateError('x')),
-          ),
-        ],
-      ),
-    );
-    await tester.pump();
-
-    await tester.tap(find.byKey(const ValueKey('settings_gift_cards_row')));
-    await tester.pumpAndSettle();
-
-    expect(find.text('payment links route without data'), findsOneWidget);
-    expect(find.text('payment links route with data'), findsNothing);
-  });
-
-  testWidgets('Gift Cards does not navigate after leaving settings', (
-    tester,
-  ) async {
-    final cards = Completer<PaymentLinkCardsSnapshot>();
-    await tester.pumpWidget(
-      _settingsHarness(
-        extraOverrides: [
-          paymentLinkCardsLoaderProvider.overrideWithValue(() => cards.future),
-        ],
-      ),
-    );
-    await tester.pump();
-
-    final row = find.byKey(const ValueKey('settings_gift_cards_row'));
-    final router = GoRouter.of(tester.element(row));
-    await tester.tap(row);
-    await tester.pump();
-
-    router.go('/home');
-    await tester.pumpAndSettle();
-    cards.complete(const PaymentLinkCardsSnapshot(created: [], received: []));
-    await tester.pumpAndSettle();
-
-    expect(find.text('home route'), findsOneWidget);
-    expect(find.textContaining('payment links route'), findsNothing);
-  });
-
-  testWidgets('Gift Cards drops a slow open once a modal takes over', (
-    tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(1512, 982));
-    addTearDown(() async {
-      await tester.binding.setSurfaceSize(null);
-    });
-    final cards = Completer<PaymentLinkCardsSnapshot>();
-    await tester.pumpWidget(
-      _settingsHarness(
-        extraOverrides: [
-          paymentLinkCardsLoaderProvider.overrideWithValue(() => cards.future),
-        ],
-      ),
-    );
-    await tester.pump();
-
-    await tester.tap(find.byKey(const ValueKey('settings_gift_cards_row')));
-    await tester.pump();
-
-    // The pane stays interactive while the cards load, so the user can open
-    // a modal the late navigation would replace.
-    await tester.tap(find.text('Theme'));
-    await tester.pumpAndSettle();
-    expect(find.text('System (Auto)'), findsOneWidget);
-
-    cards.complete(const PaymentLinkCardsSnapshot(created: [], received: []));
-    await tester.pumpAndSettle();
-
-    expect(find.text('System (Auto)'), findsOneWidget);
-    expect(find.textContaining('payment links route'), findsNothing);
+    expect(find.text('My gift cards'), findsNothing);
+    expect(find.text('Gift Cards'), findsNothing);
   });
 
   testWidgets('settings sections are grouped Personal to Danger zone', (
@@ -957,7 +853,7 @@ Widget _settingsHarness({
       ),
       GoRoute(
         path: '/settings/secret-passphrase',
-        builder: (_, _) => const Text('secret passphrase route'),
+        builder: (_, _) => const Text('wallet recovery phrase route'),
       ),
       GoRoute(path: '/home', builder: (_, _) => const Text('home route')),
       GoRoute(

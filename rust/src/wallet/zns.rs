@@ -231,6 +231,7 @@ mod tests {
             &fingerprint,
             1,
             None,
+            keys::HardwareSignerKind::Keystone,
         )
         .unwrap();
         let envelope =

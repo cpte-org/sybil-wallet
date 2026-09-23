@@ -832,7 +832,7 @@ ShapeDecoration _continueButtonDecoration(WidgetTester tester) {
   return containers
       .map((container) => container.decoration)
       .whereType<ShapeDecoration>()
-      .firstWhere((decoration) => decoration.shape is RoundedRectangleBorder);
+      .first;
 }
 
 void main() {
@@ -2887,6 +2887,12 @@ void main() {
     await tester.tap(fieldFinder);
     await tester.pumpAndSettle();
 
+    expect(
+      tester
+          .widget<AppButton>(find.byKey(const ValueKey('mobile_send_continue')))
+          .onPressed,
+      isNull,
+    );
     var decoration = _continueButtonDecoration(tester);
     expect(
       decoration.color,
@@ -2897,6 +2903,12 @@ void main() {
     await tester.tap(scrimFinder);
     await tester.pumpAndSettle();
 
+    expect(
+      tester
+          .widget<AppButton>(find.byKey(const ValueKey('mobile_send_continue')))
+          .onPressed,
+      isNull,
+    );
     decoration = _continueButtonDecoration(tester);
     expect(decoration.color, colors.button.disabled.bg);
 
@@ -2904,8 +2916,14 @@ void main() {
     await tester.pumpAndSettle();
     await _enterAddress(tester, _shieldedAddress);
 
+    expect(
+      tester
+          .widget<AppButton>(find.byKey(const ValueKey('mobile_send_continue')))
+          .onPressed,
+      isNotNull,
+    );
     decoration = _continueButtonDecoration(tester);
-    final focusedEnabledBorder = decoration.shape as RoundedRectangleBorder;
+    final focusedEnabledBorder = decoration.shape as OutlinedBorder;
     expect(decoration.color, colors.button.primary.bg);
     expect(focusedEnabledBorder.side.color, colors.border.subtleOpacity);
     expect(focusedEnabledBorder.side.width, 1.5);
@@ -2914,7 +2932,7 @@ void main() {
     await tester.pumpAndSettle();
 
     decoration = _continueButtonDecoration(tester);
-    final normalEnabledBorder = decoration.shape as RoundedRectangleBorder;
+    final normalEnabledBorder = decoration.shape as OutlinedBorder;
     expect(decoration.color, colors.button.primary.bg);
     expect(normalEnabledBorder.side.color, colors.button.primary.border);
     expect(normalEnabledBorder.side.width, 1.5);

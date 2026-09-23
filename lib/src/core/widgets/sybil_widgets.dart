@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
@@ -134,11 +134,14 @@ class SybilCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = SybilPalette.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: color ?? palette.surface,
+    // Interactive children paint their ink on this surface, above its fill.
+    return Material(
+      color: color ?? palette.surface,
+      textStyle: DefaultTextStyle.of(context).style,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: palette.line),
+        side: BorderSide(color: palette.line),
       ),
       child: Padding(padding: padding, child: child),
     );

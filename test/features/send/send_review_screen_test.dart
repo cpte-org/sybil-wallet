@@ -106,7 +106,7 @@ void main() {
   });
 
   for (final type in ['unified', 'tex']) {
-    testWidgets('Ledger $type PCZT uses active fallback', (tester) async {
+    _reviewTest('Ledger $type PCZT uses active fallback', (tester) async {
       await _setDesktopViewport(tester);
       await tester.pumpWidget(
         _harness(
@@ -120,14 +120,14 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Confirm with Ledger'));
+      await _tapLedgerConfirm(tester);
       await _flushRealAsync(tester);
       expect(rustApi.pcztUrls, ['https://fallback.example:443']);
       expect(rustApi.createPcztCalls, 1);
     });
   }
 
-  testWidgets('a whitespace-only memo keeps its Message row, with a '
+  _reviewTest('a whitespace-only memo keeps its Message row, with a '
       'placeholder', (tester) async {
     // An edited ZIP-321 request can carry a memo made only of whitespace, and
     // the proposal sends it verbatim — so the review must not drop the row.
@@ -1172,7 +1172,7 @@ void main() {
   });
 
   for (final flowKind in [SendFlowKind.send, SendFlowKind.donation]) {
-    testWidgets(
+    _reviewTest(
       'Ledger ${flowKind.name} handoff signs directly and carries the PCZT pair',
       (tester) async {
         final statusExtras = <Object?>[];
@@ -1198,7 +1198,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Confirm with Ledger'), findsOneWidget);
-        await tester.tap(find.text('Confirm with Ledger'));
+        await _tapLedgerConfirm(tester);
         await _flushRealAsync(tester);
 
         expect(find.byType(LedgerSigningModal), findsNothing);
@@ -1226,7 +1226,7 @@ void main() {
     LedgerMobileFailure.bluetoothOff,
     LedgerMobileFailure.pairingRejected,
   ]) {
-    testWidgets(
+    _reviewTest(
       'desktop Ledger preserves Bluetooth $failure and retries signing',
       (tester) async {
         final original = LedgerMobileException(
@@ -1270,7 +1270,7 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Confirm with Ledger'));
+        await _tapLedgerConfirm(tester);
         await _flushRealAsync(tester);
         if (ledgerFailureGuidance(original)!.pairingRecovery) {
           final pairingInvalid = failure == LedgerMobileFailure.pairingInvalid;
@@ -1314,7 +1314,7 @@ void main() {
     );
   }
 
-  testWidgets(
+  _reviewTest(
     'Ledger retry reuses the consumed proposal PCZT and retries only signing',
     (tester) async {
       final statusExtras = <Object?>[];
@@ -1340,7 +1340,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Confirm with Ledger'));
+      await _tapLedgerConfirm(tester);
       await _flushRealAsync(tester);
 
       expect(find.text('Ledger signing failed'), findsOneWidget);
@@ -1363,7 +1363,7 @@ void main() {
     },
   );
 
-  testWidgets(
+  _reviewTest(
     'Ledger legacy Orchard recovery requires an app update without retrying',
     (tester) async {
       await _setDesktopViewport(tester);
@@ -1381,7 +1381,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Confirm with Ledger'));
+      await _tapLedgerConfirm(tester);
       await _flushRealAsync(tester);
 
       expect(find.text('Ledger app update required'), findsOneWidget);
@@ -1393,7 +1393,7 @@ void main() {
     },
   );
 
-  testWidgets(
+  _reviewTest(
     'Ledger memo refused by an older app asks for an update and a retry',
     (tester) async {
       var signerCalls = 0;
@@ -1413,7 +1413,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Confirm with Ledger'));
+      await _tapLedgerConfirm(tester);
       await _flushRealAsync(tester);
 
       expect(find.text('Ledger app update required'), findsOneWidget);
@@ -1426,7 +1426,7 @@ void main() {
     },
   );
 
-  testWidgets(
+  _reviewTest(
     'Ledger status 0x6a80 asks for a new transaction without blaming the user',
     (tester) async {
       var signerCalls = 0;
@@ -1448,7 +1448,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Confirm with Ledger'));
+      await _tapLedgerConfirm(tester);
       await _flushRealAsync(tester);
 
       expect(find.text('Request not accepted'), findsOneWidget);
@@ -1464,7 +1464,7 @@ void main() {
     },
   );
 
-  testWidgets('Ledger TEX signs two rounds then checkpoints one batch', (
+  _reviewTest('Ledger TEX signs two rounds then checkpoints one batch', (
     tester,
   ) async {
     final firstApproval = Completer<List<int>>();
@@ -1495,7 +1495,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Confirm with Ledger'));
+    await _tapLedgerConfirm(tester);
     await _flushRealAsync(tester);
     expect(find.text('Transaction 1 of 2'), findsOneWidget);
     expect(signingRequests, const [
@@ -1528,7 +1528,7 @@ void main() {
     expect(rustApi.addProofsCalls, 2);
   });
 
-  testWidgets('Ledger TEX second rejection can cancel without checkpointing', (
+  _reviewTest('Ledger TEX second rejection can cancel without checkpointing', (
     tester,
   ) async {
     final operationService = _FakeLedgerSignedOperationService();
@@ -1556,7 +1556,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Confirm with Ledger'));
+    await _tapLedgerConfirm(tester);
     await _flushRealAsync(tester);
     expect(find.text('Ledger signing failed'), findsOneWidget);
     expect(
@@ -1578,7 +1578,7 @@ void main() {
     expect(cancelCalls, 1);
   });
 
-  testWidgets('Ledger TEX checkpoint retry does not request approval again', (
+  _reviewTest('Ledger TEX checkpoint retry does not request approval again', (
     tester,
   ) async {
     final operationService = _FakeLedgerSignedOperationService()
@@ -1599,7 +1599,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Confirm with Ledger'));
+    await _tapLedgerConfirm(tester);
     await _flushRealAsync(tester);
     expect(find.text('Could not save signed transaction'), findsOneWidget);
     expect(signerCalls, 2);
@@ -1617,7 +1617,7 @@ void main() {
   });
 
   for (final dismissal in ['button', 'scrim', 'escape', 'back']) {
-    testWidgets(
+    _reviewTest(
       'Ledger $dismissal dismissal keeps the same review and ignores a late signature',
       (tester) async {
         final signerResult = Completer<List<int>>();
@@ -1644,7 +1644,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Confirm with Ledger'));
+        await _tapLedgerConfirm(tester);
         await _flushRealAsync(tester);
         expect(find.text('Check your Ledger'), findsOneWidget);
 
@@ -1688,7 +1688,7 @@ void main() {
     );
   }
 
-  testWidgets('Ledger cannot retry while device cancellation is pending', (
+  _reviewTest('Ledger cannot retry while device cancellation is pending', (
     tester,
   ) async {
     final cancellation = Completer<void>();
@@ -1712,7 +1712,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Confirm with Ledger'));
+    await _tapLedgerConfirm(tester);
     await _flushRealAsync(tester);
     final queuedRetry = tester
         .widget<LedgerSigningModal>(find.byType(LedgerSigningModal))
@@ -1741,7 +1741,7 @@ void main() {
     expect(rustApi.discardCalls, [(BigInt.one, 'test-send-flow')]);
   });
 
-  testWidgets('Ledger cancellation generation cannot affect the next request', (
+  _reviewTest('Ledger cancellation generation cannot affect the next request', (
     tester,
   ) async {
     final firstSignerResult = Completer<List<int>>();
@@ -1778,7 +1778,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Confirm with Ledger'));
+    await _tapLedgerConfirm(tester);
     await _flushRealAsync(tester);
     await tester.tap(
       find.descendant(
@@ -1788,7 +1788,7 @@ void main() {
     );
     await _flushRealAsync(tester);
 
-    await tester.tap(find.text('Confirm with Ledger'));
+    await _tapLedgerConfirm(tester);
     await _flushRealAsync(tester);
     expect(signerCalls, 2);
 
@@ -1804,7 +1804,7 @@ void main() {
     expect(cancelCount, 1);
   });
 
-  testWidgets(
+  _reviewTest(
     'Ledger cancellation drains creation before refreshing the review',
     (tester) async {
       final creationGate = Completer<void>();
@@ -1827,7 +1827,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Confirm with Ledger'));
+      await _tapLedgerConfirm(tester);
       await _flushRealAsync(tester);
       expect(rustApi.createPcztCalls, 1);
       await tester.tap(
@@ -1844,14 +1844,14 @@ void main() {
       expect(rustApi.discardCalls, [(BigInt.one, 'test-send-flow')]);
       expect(find.byType(LedgerSigningModal), findsNothing);
       expect(find.text('Confirm with Ledger'), findsOneWidget);
-      await tester.tap(find.text('Confirm with Ledger'));
+      await _tapLedgerConfirm(tester);
       await _flushRealAsync(tester);
       expect(rustApi.createdProposalIds, [BigInt.one, BigInt.two]);
       expect(find.text('status-route'), findsOneWidget);
     },
   );
 
-  testWidgets('Ledger expired proposal requires a new transaction', (
+  _reviewTest('Ledger expired proposal requires a new transaction', (
     tester,
   ) async {
     final operationService = _FakeLedgerSignedOperationService();
@@ -1875,7 +1875,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Confirm with Ledger'));
+    await _tapLedgerConfirm(tester);
     await _flushRealAsync(tester);
 
     expect(find.text('Transaction expired'), findsOneWidget);
@@ -1891,7 +1891,7 @@ void main() {
     expect(rustApi.discardCalls, [(BigInt.one, 'test-send-flow')]);
   });
 
-  testWidgets('Ledger checkpoint retry preserves bytes without re-signing', (
+  _reviewTest('Ledger checkpoint retry preserves bytes without re-signing', (
     tester,
   ) async {
     final operationService = _FakeLedgerSignedOperationService()
@@ -1915,7 +1915,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Confirm with Ledger'));
+    await _tapLedgerConfirm(tester);
     await _flushRealAsync(tester);
 
     expect(find.text('Could not save signed transaction'), findsOneWidget);
@@ -1961,7 +1961,7 @@ void main() {
     );
   });
 
-  testWidgets('Ledger checkpoint integrity failure blocks every retry', (
+  _reviewTest('Ledger checkpoint integrity failure blocks every retry', (
     tester,
   ) async {
     final operationService = _FakeLedgerSignedOperationService()
@@ -1988,7 +1988,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Confirm with Ledger'));
+    await _tapLedgerConfirm(tester);
     await _flushRealAsync(tester);
 
     expect(find.text('Signed transaction needs attention'), findsOneWidget);
@@ -2012,7 +2012,7 @@ void main() {
     expect(rustApi.discardCalls, isEmpty);
   });
 
-  testWidgets('Ledger saving state cannot be dismissed after signature', (
+  _reviewTest('Ledger saving state cannot be dismissed after signature', (
     tester,
   ) async {
     final checkpointGate = Completer<void>();
@@ -2038,7 +2038,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Confirm with Ledger'));
+    await _tapLedgerConfirm(tester);
     await _flushRealAsync(tester);
     expect(find.text('Finishing transaction'), findsOneWidget);
     expect(
@@ -2065,7 +2065,7 @@ void main() {
     expect(find.text('status-route'), findsOneWidget);
   });
 
-  testWidgets('Ledger Sapling parameter cancellation returns to review', (
+  _reviewTest('Ledger Sapling parameter cancellation returns to review', (
     tester,
   ) async {
     var signerCalls = 0;
@@ -2086,7 +2086,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Confirm with Ledger'));
+    await _tapLedgerConfirm(tester);
     await _flushRealAsync(tester);
     expect(find.byType(SaplingParamsPrompt), findsOneWidget);
 
@@ -2106,7 +2106,7 @@ void main() {
     expect(rustApi.discardCalls, isEmpty);
   });
 
-  testWidgets('Ledger review survives route replay while signing waits', (
+  _reviewTest('Ledger review survives route replay while signing waits', (
     tester,
   ) async {
     final args = _reviewArgs(addressType: 'unified');
@@ -2133,7 +2133,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Confirm with Ledger'));
+    await _tapLedgerConfirm(tester);
     await _flushRealAsync(tester);
     expect(find.byType(LedgerSigningModal), findsOneWidget);
 
@@ -2158,7 +2158,7 @@ void main() {
     expect(statusExtras.single, isA<LedgerBroadcastArgs>());
   });
 
-  testWidgets('Keystone status survives a router refresh after handoff', (
+  _reviewTest('Keystone status survives a router refresh after handoff', (
     tester,
   ) async {
     final routerRefresh = ChangeNotifier();
@@ -2527,6 +2527,13 @@ Future<void> _setDesktopViewport(WidgetTester tester) async {
   addTearDown(() async {
     await tester.binding.setSurfaceSize(null);
   });
+}
+
+Future<void> _tapLedgerConfirm(WidgetTester tester) async {
+  final confirm = find.text('Confirm with Ledger');
+  await tester.ensureVisible(confirm);
+  await tester.pumpAndSettle();
+  await tester.tap(confirm);
 }
 
 /// Lets real-IO futures (wallet DB path, Sapling params status) resolve —

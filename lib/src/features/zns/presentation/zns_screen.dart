@@ -1338,16 +1338,20 @@ class _Card extends StatelessWidget {
   const _Card({required this.child});
   final Widget child;
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(
-      kAppFormFactor == AppFormFactor.mobile ? AppSpacing.sm : AppSpacing.md,
-    ),
-    decoration: BoxDecoration(
-      color: context.colors.background.base,
+  Widget build(BuildContext context) => Material(
+    color: context.colors.background.base,
+    textStyle: DefaultTextStyle.of(context).style,
+    clipBehavior: Clip.antiAlias,
+    shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(AppRadii.large),
-      border: Border.all(color: context.colors.border.subtle),
+      side: BorderSide(color: context.colors.border.subtle),
     ),
-    child: child,
+    child: Padding(
+      padding: const EdgeInsets.all(
+        kAppFormFactor == AppFormFactor.mobile ? AppSpacing.sm : AppSpacing.md,
+      ),
+      child: child,
+    ),
   );
 }
 

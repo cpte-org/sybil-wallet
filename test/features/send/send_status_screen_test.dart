@@ -691,6 +691,7 @@ void main() {
     );
     await tester.pump();
     await _flushBroadcast(tester);
+    await _expandPaymentDetails(tester);
 
     expect(find.text('Sent successfully'), findsOneWidget);
     expect(find.text(truncatedTxid(_secondTxid)), findsOneWidget);
@@ -721,6 +722,7 @@ void main() {
     );
     await tester.pump();
     await _flushBroadcast(tester);
+    await _expandPaymentDetails(tester);
 
     expect(find.text(truncatedTxid(_txid)), findsOneWidget);
     expect(find.text(truncatedTxid(_secondTxid)), findsNothing);

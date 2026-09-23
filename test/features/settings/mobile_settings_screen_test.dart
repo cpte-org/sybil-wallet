@@ -774,7 +774,10 @@ void main() {
     expect(find.text('Exchange ZEC'), findsOneWidget);
     expect(find.text('Security and recovery'), findsOneWidget);
     expect(find.text('John'), findsOneWidget);
-    expect(find.text('Knight'), findsOneWidget);
+    final pictureLabel = resolveProfilePictureOption(
+      kDefaultProfilePictureId,
+    ).label;
+    expect(find.text(pictureLabel), findsOneWidget);
     final pfpRow = find.byKey(const ValueKey('mobile_settings_pfp_row'));
     final pfp = find.descendant(
       of: pfpRow,
@@ -782,7 +785,7 @@ void main() {
     );
     expect(
       tester.getTopLeft(pfp).dx,
-      lessThan(tester.getTopLeft(find.text('Knight')).dx),
+      lessThan(tester.getTopLeft(find.text(pictureLabel)).dx),
     );
     expect(
       _chevronIn(tester, const ValueKey('mobile_settings_seed_row')).color,
@@ -1022,7 +1025,7 @@ void main() {
     }
   });
 
-  testWidgets('mnemonic account keeps the enabled secret passphrase route', (
+  testWidgets('mnemonic account keeps the enabled recovery phrase route', (
     tester,
   ) async {
     final router = GoRouter(
@@ -1041,7 +1044,7 @@ void main() {
     final row = tester.widget<MobileListRow>(
       find.byKey(const ValueKey('mobile_settings_seed_row')),
     );
-    expect(find.text('Secret Passphrase'), findsOneWidget);
+    expect(find.text('Wallet recovery phrase'), findsOneWidget);
     expect(find.text('Account Details'), findsNothing);
     expect(row.enabled, isTrue);
     expect(row.onTap, isNotNull);
@@ -1055,7 +1058,7 @@ void main() {
     ('Keystone', _keystoneAccountState),
     ('Ledger', _ledgerAccountState),
   ]) {
-    testWidgets('$signerName account disables secret passphrase', (
+    testWidgets('$signerName account disables recovery phrase access', (
       tester,
     ) async {
       await tester.pumpWidget(_app(accountState: accountState));
@@ -1065,11 +1068,11 @@ void main() {
         find.byKey(const ValueKey('mobile_settings_seed_row')),
       );
       expect(find.text('Account Details'), findsNothing);
-      expect(find.text('Secret Passphrase'), findsOneWidget);
+      expect(find.text('Wallet recovery phrase'), findsOneWidget);
       expect(row.enabled, isFalse);
       expect(row.onTap, isNull);
       expect(
-        tester.widget<Text>(find.text('Secret Passphrase')).style?.color,
+        tester.widget<Text>(find.text('Wallet recovery phrase')).style?.color,
         AppThemeData.dark.colors.text.disabled,
       );
     });
@@ -1226,13 +1229,15 @@ void main() {
     await tester.pumpWidget(_app(biometricNotifier: () => biometricNotifier));
     await tester.pump();
 
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('mobile_settings_biometric_row')),
-    );
+    final row = find.byKey(const ValueKey('mobile_settings_biometric_row'));
+    await tester.scrollUntilVisible(row, 200);
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.byKey(const ValueKey('mobile_settings_biometric_row')),
+    expect(row, findsOneWidget);
+    expect(
+      find.descendant(of: row, matching: find.text('Touch ID')),
+      findsOneWidget,
     );
+    await tester.tap(row);
     await tester.pumpAndSettle();
 
     expect(find.text('Turn off Touch ID unlock?'), findsOneWidget);

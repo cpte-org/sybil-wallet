@@ -4,8 +4,6 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
-import 'app_radii.dart';
-
 import 'app_theme.dart';
 import 'primitives.dart';
 
