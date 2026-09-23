@@ -32,10 +32,14 @@ def check_native_host(host, library):
     # A disposable encrypted database checks ABI/loading only; no relay is started.
     with tempfile.TemporaryDirectory(prefix='sybil-native-check-') as directory:
         payload = f'{directory}/profile-unicode-é\n{secrets.token_hex(32)}\n'
-        result = subprocess.run([str(host), str(library)], input=payload,
-                                encoding='utf-8', capture_output=True, timeout=30)
+        result = subprocess.run([str(host), str(library)], input=payload.encode('utf-8'),
+                                capture_output=True, timeout=30)
         if result.returncode or not result.stdout or json.loads(result.stdout.splitlines()[0]).get('type') != 'ok':
-            raise RuntimeError('Bundled SimpleX host failed its local initialization check')
+            raise RuntimeError(
+                f'Bundled SimpleX initialization failed (exit {result.returncode}): '
+                f'{result.stdout.decode("utf-8", errors="replace")[:2000]} '
+                f'{result.stderr.decode("utf-8", errors="replace")[:2000]}'
+            )
 
 
 def flutter(*args):
@@ -56,6 +60,9 @@ libs = fetcher.fetch(native_target, ROOT / 'build/simplex-desktop' / native_targ
 host_build = ROOT / 'build/simplex-host'
 run('cmake', '-S', 'tools/simplex', '-B', host_build, *(['-A', 'x64'] if TARGET == 'windows' else []))
 run('cmake', '--build', host_build, '--config', 'Release')
+if TARGET == 'windows':
+    # Fail before the lengthy Flutter/Rust build if the native core cannot load.
+    check_native_host(host_build / 'Release/simplex-host.exe', libs / 'libsimplex.dll')
 
 defines = {
     'VIZOR_RELEASE_VERSION': version,
