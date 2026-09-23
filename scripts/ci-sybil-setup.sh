@@ -9,7 +9,7 @@ flutter_version=$(python3 -c 'import json; print(json.load(open(".fvmrc"))["flut
 [[ "$flutter_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
 git clone --depth 1 --branch "$flutter_version" https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter-bootstrap"
 export PATH="$RUNNER_TEMP/flutter-bootstrap/bin:$HOME/.pub-cache/bin:$PATH"
-flutter --version
+dart --version
 dart pub global activate fvm 4.3.0
 fvm install "$flutter_version"
 printf '%s\n' "$HOME/.pub-cache/bin" "$RUNNER_TEMP/flutter-bootstrap/bin" >> "$GITHUB_PATH"

@@ -10,7 +10,7 @@ $pubBin = Join-Path $env:PUB_CACHE 'bin'
 $env:PATH = "$flutterBin$([IO.Path]::PathSeparator)$pubBin$([IO.Path]::PathSeparator)$env:PATH"
 "PUB_CACHE=$env:PUB_CACHE" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 $flutterBin, $pubBin | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
-flutter --version
+dart --version
 dart pub global activate fvm 4.3.0
 fvm install $version
 $rust = (Get-Content scripts/release-config/android-reproducible-rust-version.txt).Trim()

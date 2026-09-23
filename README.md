@@ -61,8 +61,10 @@ fvm flutter test
 fvm flutter analyze
 ```
 
-Use [CONTRIBUTING.md](CONTRIBUTING.md) for development guidance. macOS and
-Windows source remains in the fork; they are not release targets for this beta.
+Use [CONTRIBUTING.md](CONTRIBUTING.md) for development guidance. GitHub Actions
+packages Android ARM64, Linux x64, Windows x64, and macOS Apple Silicon.
+Windows downloads are unsigned; macOS downloads are ad-hoc signed without
+notarization. iOS is not yet a Sybil release target.
 
 ## Licenses and attribution
 

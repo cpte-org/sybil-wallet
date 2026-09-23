@@ -108,6 +108,8 @@ class SimplexNativeTransport
         final process = await Process.start(hostPath, [
           libraryPath,
         ], runInShell: false);
+        // The host protocol is UTF-8, including paths on Windows code pages.
+        process.stdin.encoding = utf8;
         _process = process;
         if (_closed || !networkAllowed()) {
           close();
