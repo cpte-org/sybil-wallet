@@ -42,7 +42,7 @@ void main() {
       );
     } else {
       expect(config.chainId, 8453);
-      expect(config.rpcUrl, 'https://base.drpc.org');
+      expect(config.rpcUrl, 'https://api.sybil.cash/api/base/rpc');
       expect(
         config.registryAddress,
         '0x17ea278fe9bee80449e7e576fb8fa4ec2f0ec3a5',

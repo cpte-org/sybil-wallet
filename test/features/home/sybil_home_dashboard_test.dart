@@ -62,14 +62,10 @@ void main() {
       );
       expect(find.text('Synced'), findsOneWidget);
       expect(
-        tester
-            .getTopLeft(find.byKey(const ValueKey('sybil_balance_sync')))
-            .dy,
+        tester.getTopLeft(find.byKey(const ValueKey('sybil_balance_sync'))).dy,
         lessThan(
           tester
-              .getTopLeft(
-                find.byKey(const ValueKey('sybil_available_balance')),
-              )
+              .getTopLeft(find.byKey(const ValueKey('sybil_available_balance')))
               .dy,
         ),
       );

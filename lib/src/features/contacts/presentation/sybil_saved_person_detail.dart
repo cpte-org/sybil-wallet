@@ -14,8 +14,7 @@ class SybilSavedPersonDetail extends StatefulWidget {
   final ValueChanged<AddressBookContact>? onPay, onEdit;
   final Future<void> Function(AddressBookContact)? onPin;
   @override
-  State<SybilSavedPersonDetail> createState() =>
-      _SybilSavedPersonDetailState();
+  State<SybilSavedPersonDetail> createState() => _SybilSavedPersonDetailState();
 }
 
 class _SybilSavedPersonDetailState extends State<SybilSavedPersonDetail> {

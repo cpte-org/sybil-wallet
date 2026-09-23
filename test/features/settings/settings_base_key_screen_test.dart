@@ -25,9 +25,7 @@ class _MutableAccountNotifier extends AccountNotifier {
 final _bootstrap = AppBootstrapState(
   initialLocation: '/settings/base-key',
   initialAccountState: const AccountState(
-    accounts: [
-      AccountInfo(uuid: 'account-1', name: 'Account 1', order: 0),
-    ],
+    accounts: [AccountInfo(uuid: 'account-1', name: 'Account 1', order: 0)],
     activeAccountUuid: 'account-1',
     activeAddress: 'u1basekeyscreenaddress',
   ),
@@ -100,17 +98,17 @@ void main() {
   testWidgets('key loads only after authentication', (t) async {
     final bytes = Uint8List.fromList(List.filled(32, 7));
     var calls = 0;
-    await show(t, load: (password) async {
-      calls++;
-      expect(password, 'test-password');
-      return bytes;
-    });
+    await show(
+      t,
+      load: (password) async {
+        calls++;
+        expect(password, 'test-password');
+        return bytes;
+      },
+    );
     await t.pumpAndSettle();
     expect(calls, 0);
-    expect(
-      find.byKey(const ValueKey('settings_base_key_value')),
-      findsNothing,
-    );
+    expect(find.byKey(const ValueKey('settings_base_key_value')), findsNothing);
     await authenticate(t);
     await t.pumpAndSettle();
     expect(calls, 1);
@@ -122,9 +120,7 @@ void main() {
     expect(find.text('0xPublicTestAccount'), findsOneWidget);
   });
 
-  testWidgets('exported key expires and is zeroed after one minute', (
-    t,
-  ) async {
+  testWidgets('exported key expires and is zeroed after one minute', (t) async {
     final bytes = Uint8List.fromList(List.filled(32, 7));
     await show(t, load: (_) async => bytes);
     await t.pumpAndSettle();
@@ -135,10 +131,7 @@ void main() {
       findsOneWidget,
     );
     await t.pump(const Duration(minutes: 1));
-    expect(
-      find.byKey(const ValueKey('settings_base_key_value')),
-      findsNothing,
-    );
+    expect(find.byKey(const ValueKey('settings_base_key_value')), findsNothing);
     expect(bytes.every((b) => b == 0), isTrue);
   });
 
@@ -162,10 +155,7 @@ void main() {
     );
     container.invalidate(baseKeyExportAccessProvider);
     await t.pumpAndSettle();
-    expect(
-      find.byKey(const ValueKey('settings_base_key_value')),
-      findsNothing,
-    );
+    expect(find.byKey(const ValueKey('settings_base_key_value')), findsNothing);
     expect(bytes.every((b) => b == 0), isTrue);
   });
 
@@ -195,10 +185,7 @@ void main() {
     await t.pump();
     pending.complete(bytes);
     await t.pump();
-    expect(
-      find.byKey(const ValueKey('settings_base_key_value')),
-      findsNothing,
-    );
+    expect(find.byKey(const ValueKey('settings_base_key_value')), findsNothing);
     expect(
       find.text('Selected account changed. Enter your password again.'),
       findsOneWidget,
@@ -215,10 +202,7 @@ void main() {
     t.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
     await t.pump();
     expect(bytes.every((b) => b == 0), isTrue);
-    expect(
-      find.byKey(const ValueKey('settings_base_key_value')),
-      findsNothing,
-    );
+    expect(find.byKey(const ValueKey('settings_base_key_value')), findsNothing);
     t.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
   });
 

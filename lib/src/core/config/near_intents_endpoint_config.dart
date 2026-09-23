@@ -12,7 +12,8 @@ class NearIntentsEndpointConfig {
     ),
   });
 
-  static const defaultBaseUrl = 'https://api.sybil.cash/api/near-intents/1click';
+  static const defaultBaseUrl =
+      'https://api.sybil.cash/api/near-intents/1click';
   static const build = NearIntentsEndpointConfig();
   final String baseUrl;
   final bool allowLoopback;

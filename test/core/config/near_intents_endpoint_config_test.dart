@@ -202,7 +202,10 @@ void main() {
         '/api/near-intents/1click/v0/status',
         '/api/near-intents/1click/v0/deposit/submit',
       ]);
-      expect(transport.uris.every((uri) => uri.host == 'api.sybil.cash'), isTrue);
+      expect(
+        transport.uris.every((uri) => uri.host == 'api.sybil.cash'),
+        isTrue,
+      );
       expect(
         transport.headers.every(
           (headers) => !headers.containsKey('authorization'),

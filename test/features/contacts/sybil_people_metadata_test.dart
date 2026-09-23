@@ -158,10 +158,7 @@ void main() {
       await rejected;
       await quiescence;
       expect(drained, isTrue);
-      expect(
-        await container.read(sybilPeopleMetadataProvider.future),
-        isEmpty,
-      );
+      expect(await container.read(sybilPeopleMetadataProvider.future), isEmpty);
     },
   );
 }

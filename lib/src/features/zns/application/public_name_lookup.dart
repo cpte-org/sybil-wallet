@@ -5,6 +5,7 @@ import '../../../providers/account_provider.dart';
 import '../../../providers/app_security_provider.dart';
 import '../../../providers/rpc_endpoint_failover_provider.dart';
 import '../../../rust/api/zns.dart' as rust;
+import '../data/zns_http_transport.dart';
 import '../data/zns_network_config.dart';
 import '../data/zns_rpc_client.dart';
 import '../domain/zns_operation.dart';
@@ -188,6 +189,11 @@ class PublicNameLookupService {
         owner: record.owner,
         positionId: record.positionId,
       );
+    } on ZnsDataException catch (error) {
+      // A busy or throttled endpoint must not be reported as an unusable name or
+      // as a registry mistake. Keep the transport's own wording, which names the
+      // method and the wait.
+      throw PublicNameLookupFailure(error.message);
     } finally {
       rpc.close();
     }

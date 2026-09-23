@@ -7,7 +7,7 @@ import 'package:zcash_wallet/src/core/widgets/app_button.dart';
 import 'package:zcash_wallet/src/features/settings/screens/settings_base_endpoint_screen.dart';
 import 'package:zcash_wallet/src/features/zns/presentation/zns_screen.dart';
 
-const recommended = 'https://base.drpc.org';
+const recommended = 'https://api.sybil.cash/api/base/rpc';
 const custom = 'https://rpc.example/private-key?api_key=private-token';
 
 ZnsViewData view({
@@ -97,7 +97,7 @@ void main() {
     pending.complete(true);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('base-rpc-success')), findsOneWidget);
-    expect(find.text('Current: base.drpc.org'), findsOneWidget);
+    expect(find.text('Current: api.sybil.cash'), findsOneWidget);
   });
 
   testWidgets('custom URL validates HTTPS and preserves path and query', (
@@ -128,7 +128,7 @@ void main() {
     expect(submitted, custom);
     expect(find.byKey(const Key('base-rpc-error')), findsOneWidget);
     expect(find.byKey(const Key('base-rpc-success')), findsNothing);
-    expect(find.text('Current: base.drpc.org'), findsOneWidget);
+    expect(find.text('Current: api.sybil.cash'), findsOneWidget);
   });
 
   testWidgets(

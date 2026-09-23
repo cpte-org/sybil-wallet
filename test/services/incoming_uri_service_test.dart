@@ -121,9 +121,7 @@ void main() {
     });
     await service.initialize();
 
-    await pushNative(<String>[
-      'https://sybil.cash/payment-links/open#v1=warm',
-    ]);
+    await pushNative(<String>['https://sybil.cash/payment-links/open#v1=warm']);
 
     expect(received.last, 'https://sybil.cash/payment-links/open#v1=warm');
   });

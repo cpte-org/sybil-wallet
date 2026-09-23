@@ -14,8 +14,7 @@ Future<void> pumpPeople(
   String? selected,
   ValueChanged<VerifiedContact>? onPay,
   Future<void> Function(VerifiedContact, String)? onRename,
-  Future<void> Function(VerifiedContact, SybilPersonMetadata)?
-  onSaveMetadata,
+  Future<void> Function(VerifiedContact, SybilPersonMetadata)? onSaveMetadata,
   bool available = true,
   bool showAdvancedTools = false,
   VoidCallback? onIntroductions,
@@ -51,27 +50,28 @@ Future<void> pumpPeople(
 }
 
 void main() {
-  testWidgets('People hosts introductions and hides advanced tools by default', (
-    tester,
-  ) async {
-    var introductions = 0;
-    await pumpPeople(
-      tester,
-      people: [testContact()],
-      onIntroductions: () => introductions++,
-    );
-    expect(find.widgetWithText(ListTile, 'Introductions'), findsOneWidget);
-    // Adding someone (manual or connect privately) lives in the add flow.
-    expect(find.widgetWithText(ListTile, 'Connect privately'), findsNothing);
-    expect(find.widgetWithText(ListTile, 'Connection backup'), findsNothing);
-    expect(find.widgetWithText(ListTile, 'Manual key pairing'), findsNothing);
-    expect(find.widgetWithText(ListTile, 'Private delivery'), findsNothing);
-    expect(find.widgetWithText(ListTile, 'Other networks'), findsNothing);
-    expect(find.text('Reload'), findsNothing);
-    await tester.tap(find.widgetWithText(ListTile, 'Introductions'));
-    expect(introductions, 1);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'People hosts introductions and hides advanced tools by default',
+    (tester) async {
+      var introductions = 0;
+      await pumpPeople(
+        tester,
+        people: [testContact()],
+        onIntroductions: () => introductions++,
+      );
+      expect(find.widgetWithText(ListTile, 'Introductions'), findsOneWidget);
+      // Adding someone (manual or connect privately) lives in the add flow.
+      expect(find.widgetWithText(ListTile, 'Connect privately'), findsNothing);
+      expect(find.widgetWithText(ListTile, 'Connection backup'), findsNothing);
+      expect(find.widgetWithText(ListTile, 'Manual key pairing'), findsNothing);
+      expect(find.widgetWithText(ListTile, 'Private delivery'), findsNothing);
+      expect(find.widgetWithText(ListTile, 'Other networks'), findsNothing);
+      expect(find.text('Reload'), findsNothing);
+      await tester.tap(find.widgetWithText(ListTile, 'Introductions'));
+      expect(introductions, 1);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('advanced tools reveal delivery, other networks and reload', (
     tester,

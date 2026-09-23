@@ -26,15 +26,13 @@ class SybilPalette {
       _dark ? SybilPrimitives.surfaceDark : SybilPrimitives.surfaceLight;
   Color get soft =>
       _dark ? SybilPrimitives.softDark : SybilPrimitives.softLight;
-  Color get ink =>
-      _dark ? SybilPrimitives.inkDark : SybilPrimitives.inkLight;
+  Color get ink => _dark ? SybilPrimitives.inkDark : SybilPrimitives.inkLight;
   Color get muted =>
       _dark ? SybilPrimitives.mutedDark : SybilPrimitives.mutedLight;
   Color get forest =>
       _dark ? SybilPrimitives.accentDark : SybilPrimitives.accentLight;
-  Color get onForest => _dark
-      ? SybilPrimitives.onAccentDark
-      : SybilPrimitives.onAccentLight;
+  Color get onForest =>
+      _dark ? SybilPrimitives.onAccentDark : SybilPrimitives.onAccentLight;
   Color get lime =>
       _dark ? SybilPrimitives.limeDark : SybilPrimitives.limeLight;
   Color get peach =>
@@ -43,8 +41,7 @@ class SybilPalette {
       _dark ? SybilPrimitives.lilacDark : SybilPrimitives.lilacLight;
   Color get sage =>
       _dark ? SybilPrimitives.sageDark : SybilPrimitives.sageLight;
-  Color get sky =>
-      _dark ? SybilPrimitives.skyDark : SybilPrimitives.skyLight;
+  Color get sky => _dark ? SybilPrimitives.skyDark : SybilPrimitives.skyLight;
   Color get line =>
       _dark ? SybilPrimitives.lineDark : SybilPrimitives.lineLight;
 }

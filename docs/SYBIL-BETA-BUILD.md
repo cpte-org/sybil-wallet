@@ -46,13 +46,22 @@ confirmed at block 51,543,513 with the expected runtime and canonical
 token/oracle/protocol configuration. Existing saved Names configuration takes
 precedence over build defaults; the build does not overwrite it.
 
-The default Base RPC for new builds is `https://base.drpc.org`. Earlier defaults
-encountered HTTP 429 during registration reads or rejected transaction-receipt
-access with HTTP 403. The dedicated endpoint settings allow an explicit change
-without discarding saved registration progress.
-The RPC client now paces requests and retries rate-limited reads with bounded
-backoff, respecting `Retry-After`. Signed transaction submission is not
-automatically retried by that layer. Saved RPC overrides remain unchanged. Edit them
+The default Base RPC for new builds is `https://api.sybil.cash/api/base/rpc`.
+The existing Sybil Worker forwards supported JSON-RPC methods to PublicNode's
+archive-enabled Base endpoint; the provider token lives only in a Cloudflare
+secret. No provider token is compiled into wallet builds. The gateway has separate
+per-client and service rate limits from the NEAR routes and does not retry signed
+transaction submissions. RPC invocation logs and traces are disabled. Cloudflare
+and the upstream RPC provider process requests; this is not anonymous transport.
+The client batches contract reads through Multicall3 and conservatively spaces
+shared-endpoint requests across Names clients. Deployment checks remain fresh;
+only Multicall3 availability is cached. A chain without Multicall3 falls back to
+serialized reads. Free upstream access has no guaranteed capacity.
+The dedicated endpoint settings allow an explicit change without discarding saved
+registration progress; a keyed or private endpoint keeps its own quota and
+spacing. Rate-limited reads are retried with bounded backoff, respecting
+`Retry-After`. Signed transaction submission is not automatically retried by that
+layer. Saved RPC overrides remain unchanged. Edit them
 in Settings → Network and app → Base RPC endpoint, also accessible from Public
 Zcash names. Choose Recommended to replace an older saved endpoint explicitly,
 or enter a custom HTTPS URL. The wallet verifies the same network and registry

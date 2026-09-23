@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
+
 import 'zns_abi.dart';
 import '../domain/zns_operation.dart';
 import 'zns_http_transport.dart';
+import 'zns_multicall.dart';
 import 'zns_network_config.dart';
 
 /// Decode only fixed, argument-free errors from the reviewed contracts. Never
@@ -85,6 +88,26 @@ String? _safeBatchSelector(String data) {
       }.contains(selector)
       ? selector
       : null;
+}
+
+/// One reverted call becomes one reviewed message, whether it arrived as a
+/// JSON-RPC error or as a failed sub-call inside a batch.
+ZnsDataException _callFailure(String method, Object? data, {int? code}) {
+  final revertable = method == 'eth_call' || method == 'eth_estimateGas';
+  final knownRevert = revertable ? _knownRevertMessage(data) : null;
+  final batchStep = revertable ? _batchFailureStep(data) : null;
+  if (batchStep != null) {
+    return ZnsRpcRevert(
+      knownRevert ?? 'Base RPC $method failed. Refresh before retrying.',
+      code: code,
+      batchStep: batchStep,
+      revertSelector: _safeBatchSelector(data as String),
+    );
+  }
+  return ZnsDataException(
+    knownRevert ?? 'Base RPC $method failed. Refresh before retrying.',
+    code: code,
+  );
 }
 
 class ZnsCall {
@@ -270,11 +293,11 @@ class ZnsRpcClient {
   }) : _transport = transport ?? ZnsPolicyHttpTransport(),
        requestSpacing =
            requestSpacing ??
-           (_isPublicDrpc(config.rpcUri)
+           (_isPacedPublicEndpoint(config.rpcUri)
                ? const Duration(milliseconds: 1100)
                : const Duration(milliseconds: 250)),
        _sharedPublicPacing =
-           requestSpacing == null && _isPublicDrpc(config.rpcUri),
+           requestSpacing == null && _isPacedPublicEndpoint(config.rpcUri),
        _wait = wait ?? Future<void>.delayed,
        _now = now ?? DateTime.now {
     if (this.requestSpacing.isNegative) {
@@ -287,18 +310,21 @@ class ZnsRpcClient {
   final Future<void> Function(Duration) _wait;
   final DateTime Function() _now;
   final bool _sharedPublicPacing;
-  static Future<void> _publicDrpcStartQueue = Future<void>.value();
-  static DateTime? _publicDrpcLastStart;
+  static Future<void> _pacedPublicStartQueue = Future<void>.value();
+  static DateTime? _pacedPublicLastStart;
   Future<void> _queue = Future<void>.value();
   DateTime? _lastRequestAt, _rateLimitedUntil;
   bool _closed = false;
   var _id = 0;
 
-  static bool _isPublicDrpc(Uri uri) =>
+  /// Conservatively pace shared endpoints across clients in this process,
+  /// including the Sybil gateway. Custom endpoints retain their own pacing.
+  static bool _isPacedPublicEndpoint(Uri uri) =>
       uri.scheme == 'https' &&
-      uri.host == 'base.drpc.org' &&
       uri.port == 443 &&
-      (uri.path.isEmpty || uri.path == '/') &&
+      ((uri.host == 'api.sybil.cash' && uri.path == '/api/base/rpc') ||
+          (const {'mainnet.base.org', 'base.drpc.org'}.contains(uri.host) &&
+              (uri.path.isEmpty || uri.path == '/'))) &&
       !uri.hasQuery &&
       uri.userInfo.isEmpty;
 
@@ -314,17 +340,17 @@ class ZnsRpcClient {
     // Reserve actual starts across Names clients, including an endpoint editor
     // and a reopened controller. This gate holds no network request or wallet
     // state; explicit spacing overrides opt out for controlled diagnostics.
-    final turn = _publicDrpcStartQueue.then((_) async {
+    final turn = _pacedPublicStartQueue.then((_) async {
       _checkOpen();
-      final last = _publicDrpcLastStart;
+      final last = _pacedPublicLastStart;
       if (last != null) {
         final remaining = requestSpacing - _now().difference(last);
         if (remaining > Duration.zero) await _wait(remaining);
       }
       _checkOpen();
-      _publicDrpcLastStart = _now();
+      _pacedPublicLastStart = _now();
     });
-    _publicDrpcStartQueue = turn.then<void>(
+    _pacedPublicStartQueue = turn.then<void>(
       (_) {},
       onError: (Object _, StackTrace _) {},
     );
@@ -438,22 +464,9 @@ class ZnsRpcClient {
         throw const ZnsRateLimitException();
       }
       // Do not propagate provider text: it can contain calldata and addresses.
-      final knownRevert = method == 'eth_call' || method == 'eth_estimateGas'
-          ? _knownRevertMessage(error['data'])
-          : null;
-      final batchStep = method == 'eth_call' || method == 'eth_estimateGas'
-          ? _batchFailureStep(error['data'])
-          : null;
-      if (batchStep != null) {
-        throw ZnsRpcRevert(
-          knownRevert ?? 'Base RPC $method failed. Refresh before retrying.',
-          code: error['code'] is int ? error['code'] as int : null,
-          batchStep: batchStep,
-          revertSelector: _safeBatchSelector(error['data'] as String),
-        );
-      }
-      throw ZnsDataException(
-        knownRevert ?? 'Base RPC $method failed. Refresh before retrying.',
+      throw _callFailure(
+        method,
+        error['data'],
         code: error['code'] is int ? error['code'] as int : null,
       );
     }
@@ -501,13 +514,64 @@ class ZnsRpcClient {
     allowEmpty: true,
   );
 
-  Future<BigInt> _uint(String to, String data, String tag) async {
-    final result = ZnsAbi(await _call(to, data, tag));
+  Future<BigInt> _uint(String to, String data, String tag) async =>
+      _uintResult(await _call(to, data, tag));
+
+  static BigInt _uintResult(String payload) {
+    final result = ZnsAbi(payload);
     if (result.bytes.length != 32) {
       throw const ZnsDataException('Invalid registry integer response');
     }
     return result.word(0);
   }
+
+  /// Reads many contracts at one block in a single call. An endpoint whose chain
+  /// has no deployed Multicall3 keeps working through serialized reads.
+  Future<List<String>> multiCall(
+    List<ZnsReadRequest> calls,
+    String blockTag,
+  ) async {
+    if (calls.isEmpty) return const [];
+    if (!await _multicallAvailable(blockTag)) {
+      final fallback = <String>[];
+      for (final call in calls) {
+        fallback.add(await _call(call.to, call.data, blockTag));
+      }
+      return fallback;
+    }
+    final payload = await _call(
+      znsMulticall3Address,
+      znsAggregate3Calldata(calls),
+      blockTag,
+    );
+    final results = znsDecodeAggregate3(payload);
+    if (results.length != calls.length) {
+      throw const ZnsDataException('Malformed batch read response');
+    }
+    final values = <String>[];
+    for (final result in results) {
+      if (!result.success) throw _callFailure('eth_call', result.returnData);
+      values.add(znsHex(result.returnData, allowEmpty: true));
+    }
+    return values;
+  }
+
+  static final Map<String, bool> _multicallDeployments = {};
+
+  /// Deployment is a property of the chain and endpoint, so one probe serves
+  /// every client until the process restarts.
+  Future<bool> _multicallAvailable(String blockTag) async {
+    final key = '${config.chainId}|${config.rpcUri}';
+    final cached = _multicallDeployments[key];
+    if (cached != null) return cached;
+    final deployed =
+        await code(znsMulticall3Address, blockTag: blockTag) != '0x';
+    _multicallDeployments[key] = deployed;
+    return deployed;
+  }
+
+  @visibleForTesting
+  static void resetMulticallSupport() => _multicallDeployments.clear();
 
   Future<void> _canonical(ZnsBlock expected) async {
     if ((await block(znsQuantity(expected.number))).hash != expected.hash) {
@@ -584,45 +648,63 @@ class ZnsRpcClient {
       );
     }
     final ownerWord = ZnsAbi.addressWord(owner);
-    final values = await Future.wait([
-      _uint(registry, '0x2e4f692a', tag),
-      _uint(registry, '0x8ccb9ea6', tag),
-      request('eth_getBalance', [owner, tag]).then(znsParseQuantity),
-      _uint(token, '0x70a08231$ownerWord', tag),
-      _uint(token, '0xdd62ed3e$ownerWord${ZnsAbi.addressWord(registry)}', tag),
-      _uint(registry, '0x70a08231$ownerWord', tag),
-      commitment == null
-          ? Future.value(BigInt.zero)
-          : _uint(
-              registry,
-              '0x8b1592b5$ownerWord${znsHex(commitment, bytes: 32).substring(2)}',
-              tag,
-            ),
-    ]);
-    final claims = ZnsAbi(await _call(registry, '0x8903ab9d$ownerWord', tag));
+    // One batch per block instead of one request per read: public endpoints
+    // throttle bursts, and the per-account reads below share this block tag.
+    final reads = await multiCall([
+      ZnsReadRequest(registry, '0x2e4f692a'),
+      ZnsReadRequest(registry, '0x8ccb9ea6'),
+      ZnsReadRequest(token, '0x70a08231$ownerWord'),
+      ZnsReadRequest(
+        token,
+        '0xdd62ed3e$ownerWord${ZnsAbi.addressWord(registry)}',
+      ),
+      ZnsReadRequest(registry, '0x70a08231$ownerWord'),
+      ZnsReadRequest(registry, '0x8903ab9d$ownerWord'),
+      if (commitment != null)
+        ZnsReadRequest(
+          registry,
+          '0x8b1592b5$ownerWord${znsHex(commitment, bytes: 32).substring(2)}',
+        ),
+    ], tag);
+    final nativeBalance = znsParseQuantity(
+      await request('eth_getBalance', [owner, tag]),
+    );
+    final claims = ZnsAbi(reads[5]);
     if (claims.bytes.length != 64) {
       throw const ZnsDataException('Malformed claimable funds response');
     }
+    final minCommitmentAge = _uintResult(reads[0]);
+    final maxCommitmentAge = _uintResult(reads[1]);
+    final commitmentTimestamp = commitment == null
+        ? BigInt.zero
+        : _uintResult(reads[6]);
     // Bound discovery to twenty owned NFTs, all from one canonical block.
-    final total = values[5];
+    final total = _uintResult(reads[4]);
     final start = BigInt.from(offset) >= total ? 0 : offset;
     final count = (total - BigInt.from(start)) > BigInt.from(20)
         ? 20
         : (total - BigInt.from(start)).toInt();
-    final ids = await Future.wait(
-      List.generate(
-        count,
-        (i) => _uint(
-          registry,
-          '0x2f745c59$ownerWord${ZnsAbi.uintWord(BigInt.from(start + i))}',
-          tag,
-        ),
-      ),
-    );
+    final ids = [
+      for (final value in await multiCall([
+        for (var i = 0; i < count; i++)
+          ZnsReadRequest(
+            registry,
+            '0x2f745c59$ownerWord${ZnsAbi.uintWord(BigInt.from(start + i))}',
+          ),
+      ], tag))
+        _uintResult(value),
+    ];
     if (ids.toSet().length != ids.length) {
       throw const ZnsDataException('Duplicate registry inventory');
     }
-    final positions = await Future.wait(ids.map((id) => _positionInfo(id, at)));
+    final decodings = await multiCall([
+      for (final id in ids)
+        ZnsReadRequest(registry, '0x89097a6a${ZnsAbi.uintWord(id)}'),
+    ], tag);
+    final positions = <ZnsPosition>[];
+    for (var i = 0; i < ids.length; i++) {
+      positions.add(_positionFrom(ids[i], ZnsAbi(decodings[i]), at));
+    }
     if (positions.any((p) => p.owner != owner || p.retired)) {
       throw const ZnsDataException('Invalid registry NFT inventory');
     }
@@ -646,7 +728,8 @@ class ZnsRpcClient {
         ? null
         : await _registrationQuote(registrationName, at);
     await _canonical(at);
-    if (values[0] <= BigInt.zero || values[1] <= values[0]) {
+    if (minCommitmentAge <= BigInt.zero ||
+        maxCommitmentAge <= minCommitmentAge) {
       throw const ZnsDataException('Invalid registry commitment window');
     }
     return ZnsRegistrySnapshot(
@@ -655,18 +738,18 @@ class ZnsRpcClient {
       token: token,
       tokenDecimals: decimals.toInt(),
       registrationQuote: quote,
-      minimumCommitmentAge: values[0],
-      maximumCommitmentAge: values[1],
-      nativeBalance: values[2],
-      tokenBalance: values[3],
-      allowance: values[4],
+      minimumCommitmentAge: minCommitmentAge,
+      maximumCommitmentAge: maxCommitmentAge,
+      nativeBalance: nativeBalance,
+      tokenBalance: _uintResult(reads[2]),
+      allowance: _uintResult(reads[3]),
       selectedPosition: position,
       positions: positions,
       totalPositions: total,
       positionOffset: start,
       claimablePrincipal: claims.word(0),
       claimableRewardsScaled: claims.word(32),
-      commitmentTimestamp: values[6],
+      commitmentTimestamp: commitmentTimestamp,
     );
   }
 
@@ -674,13 +757,23 @@ class ZnsRpcClient {
     if (id <= BigInt.zero) {
       throw const FormatException('Position id must be positive');
     }
-    final result = ZnsAbi(
-      await _call(
-        config.registryAddress,
-        '0x89097a6a${ZnsAbi.uintWord(id)}',
-        znsQuantity(at.number),
+    return _positionFrom(
+      id,
+      ZnsAbi(
+        await _call(
+          config.registryAddress,
+          '0x89097a6a${ZnsAbi.uintWord(id)}',
+          znsQuantity(at.number),
+        ),
       ),
+      at,
     );
+  }
+
+  ZnsPosition _positionFrom(BigInt id, ZnsAbi result, ZnsBlock at) {
+    if (id <= BigInt.zero) {
+      throw const FormatException('Position id must be positive');
+    }
     final participating = result.word(224), retired = result.word(256);
     final owner = result.address(0),
         registered = result.word(96),
@@ -818,18 +911,18 @@ class ZnsRpcClient {
       }
     }
     final tag = znsQuantity(at.number);
-    final result = ZnsAbi(
-      await _call(
+    final reads = await multiCall([
+      ZnsReadRequest(
         config.registryAddress,
         ZnsAbi.stringCall('0x8ee9065d', name),
-        tag,
       ),
-    );
-    final id = await _uint(
-      config.registryAddress,
-      ZnsAbi.stringCall('0xef6bc988', name),
-      tag,
-    );
+      ZnsReadRequest(
+        config.registryAddress,
+        ZnsAbi.stringCall('0xef6bc988', name),
+      ),
+    ], tag);
+    final result = ZnsAbi(reads[0]);
+    final id = _uintResult(reads[1]);
     final owner = result.address(0),
         expiry = result.word(64),
         active = result.word(96);

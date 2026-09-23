@@ -17,14 +17,13 @@ import '../../address_book/providers/address_book_provider.dart';
 import '../application/contact_exchange_controller.dart';
 import 'contact_availability.dart';
 
-final sybilAddressValidatorProvider =
-    Provider<Future<bool> Function(String)>(
-      (ref) =>
-          (address) async => (await rust_sync.validateAddress(
-            address: address,
-            network: ref.read(rpcEndpointFailoverProvider).current.networkName,
-          )).isValid,
-    );
+final sybilAddressValidatorProvider = Provider<Future<bool> Function(String)>(
+  (ref) =>
+      (address) async => (await rust_sync.validateAddress(
+        address: address,
+        network: ref.read(rpcEndpointFailoverProvider).current.networkName,
+      )).isValid,
+);
 
 /// A reusable focused page, with the prototype's compact header and open paper.
 class SybilFlowPage extends StatelessWidget {
@@ -92,8 +91,7 @@ class SybilAddPersonScreen extends ConsumerStatefulWidget {
       _SybilAddPersonScreenState();
 }
 
-class _SybilAddPersonScreenState
-    extends ConsumerState<SybilAddPersonScreen> {
+class _SybilAddPersonScreenState extends ConsumerState<SybilAddPersonScreen> {
   final _name = TextEditingController(),
       _address = TextEditingController(),
       _note = TextEditingController();

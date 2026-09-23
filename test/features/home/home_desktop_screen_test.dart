@@ -82,9 +82,7 @@ void main() {
 
       expect(
         tester
-            .widget<Text>(
-              find.byKey(const ValueKey('sybil_available_balance')),
-            )
+            .widget<Text>(find.byKey(const ValueKey('sybil_available_balance')))
             .data,
         '****** ZEC',
       );
@@ -270,10 +268,7 @@ void main() {
         AppThemeData.light.colors.text.disabled,
       );
       await tester.tap(find.byKey(const ValueKey('home_desktop_send_button')));
-      await _pumpUntilPresent(
-        tester,
-        find.byType(SybilChooseRecipientScreen),
-      );
+      await _pumpUntilPresent(tester, find.byType(SybilChooseRecipientScreen));
       expect(find.byType(SybilChooseRecipientScreen), findsOneWidget);
     },
   );
@@ -626,9 +621,7 @@ void main() {
 
     expect(
       tester
-          .widget<Text>(
-            find.byKey(const ValueKey('sybil_available_balance')),
-          )
+          .widget<Text>(find.byKey(const ValueKey('sybil_available_balance')))
           .data,
       '143.12 ZEC',
     );
@@ -657,9 +650,7 @@ void main() {
 
     expect(
       tester
-          .widget<Text>(
-            find.byKey(const ValueKey('sybil_available_balance')),
-          )
+          .widget<Text>(find.byKey(const ValueKey('sybil_available_balance')))
           .data,
       '0.44291 ZEC',
     );
@@ -694,9 +685,7 @@ void main() {
       expect(find.text('Shielded balance'), findsNothing);
       expect(
         tester
-            .widget<Text>(
-              find.byKey(const ValueKey('sybil_available_balance')),
-            )
+            .widget<Text>(find.byKey(const ValueKey('sybil_available_balance')))
             .data,
         '40.11 ZEC',
       );
@@ -724,10 +713,7 @@ void main() {
 
       expect(find.text('Yours to spend'), findsOneWidget);
       expect(find.byKey(const ValueKey('sybil_home_send')), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('sybil_home_receive')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const ValueKey('sybil_home_receive')), findsOneWidget);
       for (final label in [
         'Swap and Pay',
         'Swap',
@@ -1170,9 +1156,7 @@ void main() {
     );
     await tester.pump();
 
-    final balanceFinder = find.byKey(
-      const ValueKey('sybil_available_balance'),
-    );
+    final balanceFinder = find.byKey(const ValueKey('sybil_available_balance'));
     final activityFinder = find
         .descendant(
           of: find.byType(SybilHomeDashboard),

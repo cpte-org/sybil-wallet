@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zcash_wallet/src/features/zns/data/zns_abi.dart';
 import 'package:zcash_wallet/src/features/zns/data/zns_http_transport.dart';
+import 'package:zcash_wallet/src/features/zns/data/zns_multicall.dart';
 import 'package:zcash_wallet/src/features/zns/data/zns_network_config.dart';
 import 'package:zcash_wallet/src/features/zns/data/zns_rpc_client.dart';
 
@@ -44,18 +45,73 @@ String tuple(List<Object> values) {
   return '0x${heads.join()}$tail';
 }
 
+String hexOf(Iterable<int> bytes) =>
+    bytes.map((v) => v.toRadixString(16).padLeft(2, '0')).join();
+
+/// Splits aggregate3 calldata the way the deployed Multicall3 contract does.
+List<({String to, String data})> decodeAggregate3(String calldata) {
+  final abi = ZnsAbi('0x${calldata.substring(10)}');
+  final array = abi.offset(0, 0, minimum: 32);
+  final count = abi.word(array).toInt();
+  return [
+    for (var i = 0; i < count; i++)
+      () {
+        final element = abi.offset(array + 32, i, minimum: 32);
+        // Head words are target, allowFailure, then the calldata offset.
+        final bytesAt = abi.offset(element, 2, minimum: 96);
+        return (
+          to: abi.address(element),
+          data: '0x${hexOf(abi.dynamicBytes(bytesAt))}',
+        );
+      }(),
+  ];
+}
+
+/// Encodes the (bool,bytes)[] a Multicall3 aggregate3 call returns.
+String encodeAggregate3(List<({bool success, String data})> results) {
+  const offsetsStart = 64;
+  final count = results.length;
+  final elementsStart = offsetsStart + 32 * count;
+  final starts = <int>[];
+  final tails = <String>[];
+  var start = elementsStart;
+  for (final result in results) {
+    final raw = result.data.substring(2);
+    final padded = raw.padRight(((raw.length + 63) ~/ 64) * 64, '0');
+    starts.add(start);
+    tails.add('${word(raw.length ~/ 2)}$padded');
+    start += 64 + 32 + padded.length ~/ 2;
+  }
+  final buffer = StringBuffer('0x${word(32)}${word(count)}');
+  for (final elementStart in starts) {
+    buffer.write(word(elementStart - offsetsStart));
+  }
+  for (var i = 0; i < count; i++) {
+    buffer
+      ..write(word(results[i].success ? 1 : 0))
+      ..write(word(64))
+      ..write(tails[i]);
+  }
+  return buffer.toString();
+}
+
 class RpcFixture implements ZnsHttpTransport {
   final selectors = <String>[];
   final readTags = <String>[];
+  final batchSizes = <int>[];
   bool incompatible = false,
       reorganize = false,
       wrongToken = false,
       wrongId = false,
-      receiptReorg = false;
+      receiptReorg = false,
+      multicallDeployed = true;
+
+  /// Revert data returned for a failed sub-call in a batch, when set.
+  String? revertRecord;
   int receiptReads = 0;
   int inventorySize = 1, lookupId = 42;
   bool enumerate = false;
-  Object? overridePosition;
+  String? overridePosition;
   @override
   void close() {}
   @override
@@ -71,7 +127,9 @@ class RpcFixture implements ZnsHttpTransport {
       case 'eth_chainId':
         result = '0x2105';
       case 'eth_getCode':
-        result = '0x6000';
+        result = !multicallDeployed && params[0] == znsMulticall3Address
+            ? '0x'
+            : '0x6000';
         readTags.add(params[1] as String);
       case 'eth_getBlockByNumber':
         result = {
@@ -99,61 +157,23 @@ class RpcFixture implements ZnsHttpTransport {
               };
       case 'eth_call':
         readTags.add(params[1] as String);
-        final selector = (params[0] as Map)['data'].toString().substring(0, 10);
-        selectors.add(selector);
-        result = switch (selector) {
-          '0xda1f12ab' =>
-            incompatible ? '0x${word(0)}' : ZnsNetworkConfig.protocolId,
-          '0x1caa5109' => tuple([
-            wrongToken ? owner : ZnsNetworkConfig.canonicalCbZec,
-          ]),
-          '0x313ce567' => tuple([8]),
-          '0xe57a4675' => tuple([500, 100, 0, 100]),
-          '0x2e4f692a' => tuple([60]),
-          '0x8ccb9ea6' => tuple([86400]),
-          '0x70a08231' => tuple([
-            (params[0] as Map)['to'] == registry ? inventorySize : 200,
-          ]),
-          '0xdd62ed3e' => tuple([500]),
-          '0x2f745c59' => tuple([
-            enumerate
-                ? 1 +
-                      int.parse(
-                        (params[0] as Map)['data'].toString().substring(74),
-                        radix: 16,
-                      )
-                : 42,
-          ]),
-          '0x8903ab9d' => tuple([
-            25,
-            ZnsNetworkConfig.rewardScale + BigInt.one,
-          ]),
-          '0x89097a6a' =>
-            overridePosition ??
-                tuple([
-                  owner,
-                  'alice',
-                  'u1publicfixture',
-                  100,
-                  115,
-                  110,
-                  120,
-                  1,
-                  0,
-                  ZnsNetworkConfig.rewardScale + BigInt.from(7),
-                  750,
-                ]),
-          '0xee0611eb' => tuple([
-            1,
-            0,
-            0,
-            500,
-            ZnsNetworkConfig.rewardScale + BigInt.from(7),
-          ]),
-          '0x8ee9065d' => tuple([owner, 'u1publicfixture', 120, 1]),
-          '0xef6bc988' => tuple([lookupId]),
-          _ => throw StateError('Unexpected selector $selector'),
-        };
+        final call = params[0] as Map;
+        final to = call['to'].toString();
+        final data = call['data'].toString();
+        if (to == znsMulticall3Address) {
+          selectors.add(data.substring(0, 10));
+          final calls = decodeAggregate3(data);
+          batchSizes.add(calls.length);
+          result = encodeAggregate3([
+            for (final call in calls)
+              if (call.data.startsWith('0x8ee9065d') && revertRecord != null)
+                (success: false, data: revertRecord!)
+              else
+                (success: true, data: _resultFor(call.to, call.data)),
+          ]);
+        } else {
+          result = _resultFor(to, data);
+        }
       default:
         throw StateError('Unexpected RPC $rpc');
     }
@@ -163,9 +183,59 @@ class RpcFixture implements ZnsHttpTransport {
       'result': result,
     };
   }
+
+  String _resultFor(String to, String data) {
+    final selector = data.substring(0, 10);
+    selectors.add(selector);
+    return switch (selector) {
+      '0xda1f12ab' =>
+        incompatible ? '0x${word(0)}' : ZnsNetworkConfig.protocolId,
+      '0x1caa5109' => tuple([
+        wrongToken ? owner : ZnsNetworkConfig.canonicalCbZec,
+      ]),
+      '0x313ce567' => tuple([8]),
+      '0xe57a4675' => tuple([500, 100, 0, 100]),
+      '0x2e4f692a' => tuple([60]),
+      '0x8ccb9ea6' => tuple([86400]),
+      '0x70a08231' => tuple([to == registry ? inventorySize : 200]),
+      '0xdd62ed3e' => tuple([500]),
+      '0x2f745c59' => tuple([
+        enumerate ? 1 + int.parse(data.substring(74), radix: 16) : 42,
+      ]),
+      '0x8903ab9d' => tuple([25, ZnsNetworkConfig.rewardScale + BigInt.one]),
+      '0x89097a6a' =>
+        overridePosition ??
+            tuple([
+              owner,
+              'alice',
+              'u1publicfixture',
+              100,
+              115,
+              110,
+              120,
+              1,
+              0,
+              ZnsNetworkConfig.rewardScale + BigInt.from(7),
+              750,
+            ]),
+      '0xee0611eb' => tuple([
+        1,
+        0,
+        0,
+        500,
+        ZnsNetworkConfig.rewardScale + BigInt.from(7),
+      ]),
+      '0x8ee9065d' => tuple([owner, 'u1publicfixture', 120, 1]),
+      '0xef6bc988' => tuple([lookupId]),
+      _ => throw StateError('Unexpected selector $selector'),
+    };
+  }
 }
 
 void main() {
+  // Deployment discovery is cached per endpoint for the process, so each case
+  // must start from an unprobed endpoint.
+  setUp(ZnsRpcClient.resetMulticallSupport);
   test(
     'inventory pages are bounded and operation identity is independent of the page',
     () async {
@@ -404,5 +474,58 @@ void main() {
     expect(() => znsParseQuantity('0x00'), throwsFormatException);
     expect(() => znsDecimalUnits('0.000000001', 8), throwsFormatException);
     expect(znsDecimalUnits('0.00000001', 8), BigInt.one);
+  });
+
+  test('a snapshot batches its reads into one call per block', () async {
+    final transport = RpcFixture()
+      ..inventorySize = 3
+      ..enumerate = true;
+    final rpc = fixtureClient(configuration(), transport: transport);
+    final snapshot = await rpc.registrySnapshot(owner);
+    expect(snapshot.positions, hasLength(3));
+    expect(transport.batchSizes, [6, 3, 3]);
+    // The per-read selectors are still recorded, but inside the batches.
+    expect(transport.selectors.where((s) => s == '0x89097a6a'), hasLength(3));
+    expect(transport.selectors.where((s) => s == '0x2f745c59'), hasLength(3));
+  });
+
+  test('an endpoint without Multicall3 keeps the serialized path', () async {
+    final transport = RpcFixture()..multicallDeployed = false;
+    final rpc = fixtureClient(configuration(), transport: transport);
+    final snapshot = await rpc.registrySnapshot(owner);
+    expect(snapshot.tokenBalance, BigInt.from(200));
+    expect(transport.batchSizes, isEmpty);
+    expect(transport.selectors, isNot(contains(znsAggregate3Selector)));
+    expect(transport.selectors.where((s) => s == '0x89097a6a'), hasLength(1));
+  });
+
+  test('a failed sub-call keeps its reviewed message and batch step', () async {
+    final transport = RpcFixture()
+      // ZnsBatchAccount.CallFailed(1, QuoteExpired()).
+      ..revertRecord =
+          '0x5c0dee5d${word(1)}${word(64)}${word(4)}8727a7f9${'0' * 56}';
+    final rpc = fixtureClient(configuration(), transport: transport);
+    await expectLater(
+      rpc.readNameRecord('alice'),
+      throwsA(
+        isA<ZnsRpcRevert>()
+            .having((e) => e.batchStep, 'batchStep', 1)
+            .having((e) => e.revertSelector, 'revertSelector', '0x8727a7f9')
+            .having(
+              (e) => e.message,
+              'message',
+              'The registration quote expired. Review again before continuing.',
+            ),
+      ),
+    );
+  });
+
+  test('public lookup batches its two record reads', () async {
+    final transport = RpcFixture();
+    final rpc = fixtureClient(configuration(), transport: transport);
+    final record = await rpc.readNameRecord('alice');
+    expect(record.name, 'alice');
+    expect(record.positionId, BigInt.from(42));
+    expect(transport.batchSizes, [2]);
   });
 }

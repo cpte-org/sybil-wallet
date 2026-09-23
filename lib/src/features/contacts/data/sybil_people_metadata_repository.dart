@@ -82,9 +82,7 @@ class SybilPeopleMetadataRepository {
       if (people.length > 100) throw const FormatException();
       return Map.unmodifiable({
         for (final entry in people.entries)
-          contactIdentity(entry.key): SybilPersonMetadata.decode(
-            entry.value,
-          ),
+          contactIdentity(entry.key): SybilPersonMetadata.decode(entry.value),
       });
     } catch (_) {
       throw const ContactFailure('Private notes and pins could not be opened.');

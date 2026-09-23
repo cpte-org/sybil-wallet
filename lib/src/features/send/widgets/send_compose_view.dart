@@ -179,10 +179,7 @@ class SendComposeView extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      SybilPageHeader(
-                        title: title,
-                        subtitle: 'Who’s it for?',
-                      ),
+                      SybilPageHeader(title: title, subtitle: 'Who’s it for?'),
                       const SizedBox(height: _sectionGap),
                       SizedBox(
                         width: formWidth,

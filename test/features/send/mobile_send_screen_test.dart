@@ -431,8 +431,7 @@ Widget _app({
           loadWalletDbPath: () async => '/tmp/zcash-test',
           openScanner:
               openScanner ?? (_, {required String networkName}) async => null,
-          initialRecipient:
-              initialRecipient,
+          initialRecipient: initialRecipient,
           initialAmount: initialAmount,
           initialAmountReady: initialAmountReady,
           initialFeeZatoshi: initialFeeZatoshi,

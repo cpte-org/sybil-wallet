@@ -2162,9 +2162,7 @@ void main() {
     );
     await tester.pump();
 
-    final balanceFinder = find.byKey(
-      const ValueKey('sybil_available_balance'),
-    );
+    final balanceFinder = find.byKey(const ValueKey('sybil_available_balance'));
     final activityFinder = find.byType(ActivityFeedRow).first;
     final balanceBeforeTicks = tester.widget(balanceFinder);
     final activityBeforeTicks = tester.widget(activityFinder);

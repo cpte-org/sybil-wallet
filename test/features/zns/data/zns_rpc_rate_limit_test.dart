@@ -68,42 +68,51 @@ void main() {
   });
   tearDown(() => rpc.close());
 
-  test(
-    'only the public dRPC endpoint receives its sustained-quota default',
-    () {
-      for (final endpoint in [
-        'https://base.drpc.org',
-        'https://base.drpc.org:443/',
-        'https://base.drpc.org/?token=custom',
-        'https://base.drpc.org/private',
-        'https://rpc.example',
-      ]) {
-        final public =
-            endpoint == 'https://base.drpc.org' ||
-            endpoint == 'https://base.drpc.org:443/';
-        final client = ZnsRpcClient(
-          ZnsNetworkConfig(
-            chainId: 8453,
-            rpcUri: Uri.parse(endpoint),
-            registryAddress: config.registryAddress,
-          ),
-          transport: _Transport(time),
-        );
-        addTearDown(client.close);
-        expect(
-          client.requestSpacing,
-          Duration(milliseconds: public ? 1100 : 250),
-        );
-      }
-    },
-  );
+  test('public Base endpoints receive their sustained-quota default', () {
+    for (final endpoint in [
+      'https://api.sybil.cash/api/base/rpc',
+      'https://api.sybil.cash:443/api/base/rpc',
+      'https://api.sybil.cash/api/base/rpc?token=custom',
+      'https://api.sybil.cash/private',
+      'https://mainnet.base.org',
+      'https://mainnet.base.org:443/',
+      'https://base.drpc.org',
+      'https://base.drpc.org:443/',
+      'https://mainnet.base.org/?token=custom',
+      'https://mainnet.base.org/private',
+      'https://base.drpc.org/?token=custom',
+      'https://base.drpc.org/private',
+      'https://rpc.example',
+    ]) {
+      final public =
+          endpoint == 'https://api.sybil.cash/api/base/rpc' ||
+          endpoint == 'https://api.sybil.cash:443/api/base/rpc' ||
+          endpoint == 'https://mainnet.base.org' ||
+          endpoint == 'https://mainnet.base.org:443/' ||
+          endpoint == 'https://base.drpc.org' ||
+          endpoint == 'https://base.drpc.org:443/';
+      final client = ZnsRpcClient(
+        ZnsNetworkConfig(
+          chainId: 8453,
+          rpcUri: Uri.parse(endpoint),
+          registryAddress: config.registryAddress,
+        ),
+        transport: _Transport(time),
+      );
+      addTearDown(client.close);
+      expect(
+        client.requestSpacing,
+        Duration(milliseconds: public ? 1100 : 250),
+      );
+    }
+  });
 
   test(
-    'public dRPC pacing spans clients, cancellation and recreation; explicit override opts out',
+    'public endpoint pacing spans clients, cancellation and recreation; explicit override opts out',
     () async {
       final publicConfig = ZnsNetworkConfig(
         chainId: 8453,
-        rpcUri: Uri.parse('https://base.drpc.org'),
+        rpcUri: Uri.parse('https://api.sybil.cash/api/base/rpc'),
         registryAddress: config.registryAddress,
       );
       final sharedTime = _Time();

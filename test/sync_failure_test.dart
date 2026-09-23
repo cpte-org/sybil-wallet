@@ -87,8 +87,9 @@ void main() {
       SyncFailureKind.databaseFatal,
     );
     expect(
-      classifySyncFailure('db: truncate_to_height(123): no safe rewind height')
-          .kind,
+      classifySyncFailure(
+        'db: truncate_to_height(123): no safe rewind height',
+      ).kind,
       SyncFailureKind.databaseFatal,
     );
     expect(
